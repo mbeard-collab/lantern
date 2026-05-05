@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>News Feed — Coming Soon</title>
+<style>
+  :root {
+    --bg: #0B0F17;
+    --bg-elev: #121826;
+    --line: #232C42;
+    --text: #E6EAF2;
+    --text-strong: #FFFFFF;
+    --muted: #8A93A6;
+    --accent: #4DA3FF;
+    --accent-2: #7C5CFF;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: -apple-system, "SF Pro Text", "Inter", Segoe UI, system-ui, sans-serif; min-height: 100vh; -webkit-font-smoothing: antialiased; }
+  main { max-width: 720px; margin: 0 auto; padding: 80px 32px; }
+  .back { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); text-decoration: none; margin-bottom: 48px; padding: 6px 12px; border-radius: 8px; transition: all 0.15s ease; }
+  .back:hover { color: var(--text); background: var(--bg-elev); }
+  .tag { display: inline-block; padding: 4px 12px; background: rgba(124,92,255,0.15); color: var(--accent-2); border-radius: 999px; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 16px; }
+  h1 { font-size: 48px; font-weight: 600; letter-spacing: -0.025em; margin: 0 0 16px; color: var(--text-strong); line-height: 1.05; }
+  .lede { font-size: 17px; color: var(--muted); line-height: 1.55; margin: 0 0 32px; max-width: 540px; }
+  .note { background: var(--bg-elev); border: 1px solid var(--line); border-radius: 12px; padding: 20px 24px; font-size: 13px; color: var(--muted); line-height: 1.55; }
+  .note strong { color: var(--text); display: block; margin-bottom: 4px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; }
+  .note code { background: rgba(255,255,255,0.05); padding: 2px 6px; border-radius: 4px; font-family: "SF Mono", Menlo, Consolas, monospace; font-size: 12px; color: var(--accent); }
+</style>
+</head>
+<body>
+<main>
+  <a class="back" href="/">← Back to all dashboards</a>
+  <div class="tag">Placeholder</div>
+  <h1>News Feed</h1>
+  <p class="lede">Curated news across customers, prospects, and the gov-tech market.</p>
+  <div class="note">
+    <strong>For whoever's wiring this up</strong>
+    Replace this file with the real dashboard HTML at <code>/news-feed/index.html</code>. The landing page links here automatically — no other changes needed.
+  </div>
+</main>
+</body>
+</html>

@@ -1,0 +1,417 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>GovSpend Dashboards</title>
+<style>
+  :root {
+    --bg: #0B0F17;
+    --bg-elev: #121826;
+    --bg-elev-2: #1A2235;
+    --bg-card-hover: #1E2840;
+    --line: #232C42;
+    --line-strong: #2E3A55;
+    --text: #E6EAF2;
+    --text-strong: #FFFFFF;
+    --muted: #8A93A6;
+    --muted-2: #6B7488;
+    --accent: #4DA3FF;
+    --accent-2: #7C5CFF;
+    --green: #39D98A;
+    --amber: #F5B556;
+    --red: #FF6B6B;
+    --gradient: linear-gradient(135deg, #4DA3FF 0%, #7C5CFF 100%);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: -apple-system, "SF Pro Text", "Inter", Segoe UI, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+  a { color: inherit; text-decoration: none; }
+  body { min-height: 100vh; }
+
+  /* ---------- Top nav ---------- */
+  .nav {
+    position: sticky; top: 0; z-index: 50;
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    background: rgba(11, 15, 23, 0.85);
+    border-bottom: 1px solid var(--line);
+  }
+  .nav-inner { max-width: 1320px; margin: 0 auto; padding: 14px 40px; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+  .logo { display: flex; align-items: center; gap: 12px; font-weight: 600; font-size: 15px; letter-spacing: -0.01em; color: var(--text-strong); }
+  .logo .mark { width: 24px; height: 24px; border-radius: 7px; background: var(--gradient); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: #0B0F17; }
+  .nav-links { display: flex; gap: 4px; }
+  .nav-link { padding: 8px 14px; border-radius: 8px; color: var(--muted); font-size: 13px; font-weight: 500; transition: all 0.15s ease; cursor: pointer; }
+  .nav-link:hover { color: var(--text); background: var(--bg-elev); }
+  .nav-right { display: flex; align-items: center; gap: 14px; font-size: 12px; color: var(--muted); }
+  .live-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); box-shadow: 0 0 10px var(--green); animation: pulse 2.4s ease-in-out infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+  /* ---------- Hero ---------- */
+  .hero { max-width: 1320px; margin: 48px auto 0; padding: 0 40px; }
+  .hero-card {
+    position: relative; overflow: hidden;
+    background: var(--bg-elev);
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    padding: 40px 44px;
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 40px;
+    align-items: center;
+    min-height: 320px;
+  }
+  .hero-card::before {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(circle at 85% 0%, rgba(124,92,255,0.18), transparent 50%),
+                radial-gradient(circle at 0% 100%, rgba(77,163,255,0.12), transparent 40%);
+    pointer-events: none;
+  }
+  .hero-content { position: relative; z-index: 1; }
+  .featured-tag { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; background: rgba(124,92,255,0.15); color: var(--accent-2); border-radius: 999px; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 16px; }
+  .hero-title { font-size: 40px; font-weight: 600; letter-spacing: -0.025em; line-height: 1.1; margin: 0 0 12px; color: var(--text-strong); }
+  .hero-desc { font-size: 16px; color: var(--muted); line-height: 1.55; margin: 0 0 24px; max-width: 480px; }
+  .hero-meta { display: flex; gap: 24px; font-size: 13px; color: var(--muted); margin-bottom: 28px; }
+  .hero-meta-item { display: flex; align-items: center; gap: 8px; }
+  .hero-meta-item .dot { width: 5px; height: 5px; border-radius: 50%; background: var(--muted-2); }
+  .hero-cta {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 12px 22px;
+    background: var(--text-strong);
+    color: var(--bg);
+    border-radius: 10px;
+    font-size: 14px; font-weight: 600;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  .hero-cta:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(255,255,255,0.12); }
+  .hero-cta .arrow { transition: transform 0.15s ease; }
+  .hero-cta:hover .arrow { transform: translateX(2px); }
+
+  /* Hero preview / chart-ish */
+  .hero-preview { position: relative; z-index: 1; height: 240px; background: var(--bg-elev-2); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; padding: 18px; }
+  .hero-preview-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
+  .hero-preview-value { font-size: 28px; font-weight: 600; color: var(--text-strong); font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+  .hero-preview-delta { font-size: 13px; color: var(--green); margin-bottom: 14px; font-variant-numeric: tabular-nums; }
+  .hero-preview svg { width: 100%; height: 130px; }
+
+  /* ---------- Sections ---------- */
+  .section { max-width: 1320px; margin: 56px auto 0; padding: 0 40px; }
+  .section-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 20px; }
+  .section-title { font-size: 13px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin: 0; }
+  .section-count { font-size: 13px; color: var(--muted-2); font-variant-numeric: tabular-nums; }
+
+  /* ---------- Grid + Cards ---------- */
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 16px; }
+  .card {
+    position: relative;
+    background: var(--bg-elev);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 22px;
+    transition: all 0.18s ease;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    min-height: 180px;
+  }
+  .card:hover { background: var(--bg-card-hover); border-color: var(--line-strong); transform: translateY(-2px); }
+  .card-head { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 10px; gap: 12px; }
+  .card-title { font-size: 17px; font-weight: 600; color: var(--text-strong); letter-spacing: -0.01em; line-height: 1.25; }
+  .card-cadence { padding: 3px 9px; border-radius: 6px; font-size: 10px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; white-space: nowrap; flex-shrink: 0; margin-top: 2px; }
+  .cadence-daily { background: rgba(57,217,138,0.13); color: var(--green); }
+  .cadence-weekly { background: rgba(77,163,255,0.13); color: var(--accent); }
+  .cadence-ondemand { background: rgba(245,181,86,0.13); color: var(--amber); }
+  .cadence-realtime { background: rgba(124,92,255,0.13); color: var(--accent-2); }
+  .card-desc { font-size: 13px; color: var(--muted); line-height: 1.5; margin: 0 0 auto; padding-bottom: 16px; }
+  .card-meta { display: flex; align-items: center; justify-content: space-between; padding-top: 14px; border-top: 1px solid var(--line); font-size: 12px; color: var(--muted-2); font-variant-numeric: tabular-nums; }
+  .card-meta-item { display: flex; align-items: center; gap: 6px; }
+  .card-meta-item svg { width: 12px; height: 12px; opacity: 0.7; }
+
+  /* ---------- Footer ---------- */
+  .footer { max-width: 1320px; margin: 80px auto 0; padding: 32px 40px; border-top: 1px solid var(--line); display: flex; justify-content: space-between; font-size: 12px; color: var(--muted-2); }
+  .footer a { color: var(--muted); }
+  .footer a:hover { color: var(--text); }
+
+  /* ---------- Responsive ---------- */
+  @media (max-width: 880px) {
+    .nav-inner, .hero, .section, .footer { padding-left: 24px; padding-right: 24px; }
+    .nav-links { display: none; }
+    .hero-card { grid-template-columns: 1fr; padding: 32px; }
+    .hero-title { font-size: 32px; }
+    .hero-preview { height: 200px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ TOP NAV ============ -->
+<nav class="nav">
+  <div class="nav-inner">
+    <a class="logo" href="#top">
+      <span class="mark">G</span>
+      <span>Dashboards</span>
+    </a>
+    <div class="nav-links">
+      <a class="nav-link" href="#operational">Operational</a>
+      <a class="nav-link" href="#intelligence">Intelligence</a>
+      <a class="nav-link" href="#ai-cost">AI &amp; Cost</a>
+      <a class="nav-link" href="#reference">Reference</a>
+    </div>
+    <div class="nav-right">
+      <span class="live-dot"></span>
+      <span id="last-sync">Synced just now</span>
+    </div>
+  </div>
+</nav>
+
+<!-- ============ HERO ============ -->
+<section class="hero" id="top">
+  <div class="hero-card">
+    <div class="hero-content">
+      <div class="featured-tag">★ Featured</div>
+      <h1 class="hero-title" id="hero-title">Sales Dashboard</h1>
+      <p class="hero-desc" id="hero-desc">Pipeline, win rates, and net new ARR across segments. The day-one read for execs and front-line sales leaders.</p>
+      <div class="hero-meta">
+        <span class="hero-meta-item"><span class="dot"></span><span id="hero-updated">Updated today</span></span>
+        <span class="hero-meta-item"><span class="dot"></span><span id="hero-owner">RevOps</span></span>
+        <span class="hero-meta-item"><span class="dot"></span><span id="hero-cadence">Daily refresh</span></span>
+      </div>
+      <a class="hero-cta" id="hero-cta" href="/sales/">
+        Open Dashboard
+        <span class="arrow">→</span>
+      </a>
+    </div>
+    <div class="hero-preview">
+      <div class="hero-preview-label">Net New ARR — last 30 days</div>
+      <div class="hero-preview-value">$4.82M</div>
+      <div class="hero-preview-delta">▲ 18.4% vs prior period</div>
+      <svg viewBox="0 0 400 130" preserveAspectRatio="none">
+        <defs>
+          <linearGradient id="g1" x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0%" stop-color="#7C5CFF" stop-opacity="0.45"/>
+            <stop offset="100%" stop-color="#7C5CFF" stop-opacity="0"/>
+          </linearGradient>
+        </defs>
+        <path d="M0,90 L20,82 L40,86 L60,72 L80,76 L100,60 L120,68 L140,52 L160,58 L180,42 L200,48 L220,32 L240,40 L260,28 L280,34 L300,22 L320,30 L340,18 L360,24 L380,12 L400,18 L400,130 L0,130 Z" fill="url(#g1)"/>
+        <path d="M0,90 L20,82 L40,86 L60,72 L80,76 L100,60 L120,68 L140,52 L160,58 L180,42 L200,48 L220,32 L240,40 L260,28 L280,34 L300,22 L320,30 L340,18 L360,24 L380,12 L400,18" fill="none" stroke="#7C5CFF" stroke-width="2"/>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SECTIONS ============ -->
+<section class="section" id="operational">
+  <div class="section-head">
+    <h2 class="section-title">Operational</h2>
+    <span class="section-count" data-count-for="operational"></span>
+  </div>
+  <div class="grid" data-grid="operational"></div>
+</section>
+
+<section class="section" id="intelligence">
+  <div class="section-head">
+    <h2 class="section-title">Intelligence</h2>
+    <span class="section-count" data-count-for="intelligence"></span>
+  </div>
+  <div class="grid" data-grid="intelligence"></div>
+</section>
+
+<section class="section" id="ai-cost">
+  <div class="section-head">
+    <h2 class="section-title">AI &amp; Cost</h2>
+    <span class="section-count" data-count-for="ai-cost"></span>
+  </div>
+  <div class="grid" data-grid="ai-cost"></div>
+</section>
+
+<section class="section" id="reference">
+  <div class="section-head">
+    <h2 class="section-title">Reference</h2>
+    <span class="section-count" data-count-for="reference"></span>
+  </div>
+  <div class="grid" data-grid="reference"></div>
+</section>
+
+<footer class="footer">
+  <div>Internal use only · GovSpend Dashboards</div>
+  <div>Need a new dashboard? Ping <a href="mailto:matt@govspend.com">Matt</a></div>
+</footer>
+
+<script>
+/* ==========================================================
+   DASHBOARD REGISTRY
+   Edit this single object to add/update/remove dashboards.
+   The page rebuilds itself from this data on load.
+   ========================================================== */
+
+const DASHBOARDS = [
+  // ---------- OPERATIONAL ----------
+  {
+    id: "sales",
+    title: "Sales Dashboard",
+    description: "Pipeline, win rates, and net new ARR across segments. The day-one read for execs and front-line sales leaders.",
+    section: "operational",
+    href: "/sales/",
+    owner: "RevOps",
+    cadence: "daily",
+    updated: "today",
+    featured: true,
+  },
+  {
+    id: "renewals",
+    title: "Renewals",
+    description: "Renewal pipeline, churn risk, and at-risk accounts. Refreshed via the python → zip → Claude pipeline.",
+    section: "operational",
+    href: "/renewals/",
+    owner: "Evan",
+    cadence: "daily",
+    updated: "today",
+  },
+  {
+    id: "marketing",
+    title: "Marketing",
+    description: "Campaign performance, MQL/SQL flow, attribution, and demand-gen pacing against quota.",
+    section: "operational",
+    href: "/marketing/",
+    owner: "Marketing Ops",
+    cadence: "weekly",
+    updated: "2 days ago",
+  },
+  {
+    id: "customer-success",
+    title: "Customer Success",
+    description: "Account health, NPS, expansion signals, and CS team coverage across the book of business.",
+    section: "operational",
+    href: "/customer-success/",
+    owner: "CS Leadership",
+    cadence: "weekly",
+    updated: "yesterday",
+  },
+
+  // ---------- INTELLIGENCE ----------
+  {
+    id: "competitive",
+    title: "Competitive Analysis",
+    description: "Win/loss against top competitors, displacement opportunities, and battlecard-ready intel.",
+    section: "intelligence",
+    href: "/competitive/",
+    owner: "Product Marketing",
+    cadence: "weekly",
+    updated: "3 days ago",
+  },
+  {
+    id: "agencies-po",
+    title: "Agencies with PO Data",
+    description: "Government agencies with active purchase orders — coverage, spend volume, and procurement signals.",
+    section: "intelligence",
+    href: "/agencies-po/",
+    owner: "Data Team",
+    cadence: "weekly",
+    updated: "yesterday",
+  },
+
+  // ---------- AI & COST ----------
+  {
+    id: "ai-spend",
+    title: "AI Spend",
+    description: "Total AI infrastructure spend across vendors and projects. Where the money is going and where it shouldn't be.",
+    section: "ai-cost",
+    href: "/ai-spend/",
+    owner: "Finance + Eng",
+    cadence: "daily",
+    updated: "today",
+  },
+  {
+    id: "token-usage",
+    title: "Token Usage",
+    description: "Token consumption across AI products and agents. Per-feature, per-user, per-model breakdowns.",
+    section: "ai-cost",
+    href: "/token-usage/",
+    owner: "Engineering",
+    cadence: "realtime",
+    updated: "1 hour ago",
+  },
+
+  // ---------- REFERENCE ----------
+  {
+    id: "news-feed",
+    title: "News Feed",
+    description: "Curated news across customers, prospects, and the gov-tech market. The morning read.",
+    section: "reference",
+    href: "/news-feed/",
+    owner: "Strategy",
+    cadence: "daily",
+    updated: "today",
+  },
+  {
+    id: "tech-completion",
+    title: "Tech Completion",
+    description: "Implementation and rollout status across the engineering portfolio. What's shipped, what's in flight, what's blocked.",
+    section: "reference",
+    href: "/tech-completion/",
+    owner: "Engineering",
+    cadence: "weekly",
+    updated: "2 days ago",
+  },
+];
+
+/* ==========================================================
+   RENDER
+   ========================================================== */
+
+const cadenceLabel = {
+  daily: "Daily",
+  weekly: "Weekly",
+  ondemand: "On demand",
+  realtime: "Real-time",
+};
+
+function cardHTML(d) {
+  return `
+    <a class="card" href="${d.href}">
+      <div class="card-head">
+        <div class="card-title">${d.title}</div>
+        <span class="card-cadence cadence-${d.cadence}">${cadenceLabel[d.cadence] || d.cadence}</span>
+      </div>
+      <p class="card-desc">${d.description}</p>
+      <div class="card-meta">
+        <span class="card-meta-item">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6.5"/><path d="M8 4v4l2.5 2"/></svg>
+          ${d.updated}
+        </span>
+        <span class="card-meta-item">${d.owner}</span>
+      </div>
+    </a>
+  `;
+}
+
+// Render featured hero
+const featured = DASHBOARDS.find(d => d.featured) || DASHBOARDS[0];
+document.getElementById('hero-title').textContent = featured.title;
+document.getElementById('hero-desc').textContent = featured.description;
+document.getElementById('hero-updated').textContent = "Updated " + featured.updated;
+document.getElementById('hero-owner').textContent = featured.owner;
+document.getElementById('hero-cadence').textContent = (cadenceLabel[featured.cadence] || featured.cadence) + " refresh";
+document.getElementById('hero-cta').href = featured.href;
+
+// Render sections
+const sections = ["operational", "intelligence", "ai-cost", "reference"];
+sections.forEach(section => {
+  const items = DASHBOARDS.filter(d => d.section === section);
+  const grid = document.querySelector(`[data-grid="${section}"]`);
+  const count = document.querySelector(`[data-count-for="${section}"]`);
+  if (grid) grid.innerHTML = items.map(cardHTML).join("");
+  if (count) count.textContent = items.length + (items.length === 1 ? " dashboard" : " dashboards");
+});
+
+// Live "synced" indicator — purely cosmetic
+const syncEl = document.getElementById('last-sync');
+let mins = 0;
+setInterval(() => {
+  mins++;
+  if (mins === 1) syncEl.textContent = "Synced 1 min ago";
+  else syncEl.textContent = `Synced ${mins} min ago`;
+  if (mins > 5) { mins = 0; syncEl.textContent = "Synced just now"; }
+}, 60000);
+</script>
+
+</body>
+</html>
