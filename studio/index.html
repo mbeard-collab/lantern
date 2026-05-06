@@ -1,0 +1,1331 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Studio — Dashboards</title>
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+  :root {
+    --bg: #0B0F17;
+    --bg-elev: #121826;
+    --bg-elev-2: #1A2235;
+    --bg-card-hover: #1E2840;
+    --line: #232C42;
+    --line-strong: #2E3A55;
+    --text: #E6EAF2;
+    --text-strong: #FFFFFF;
+    --muted: #8A93A6;
+    --muted-2: #6B7488;
+    --accent: #4DA3FF;
+    --accent-2: #7C5CFF;
+    --green: #39D98A;
+    --amber: #F5B556;
+    --red: #FF6B6B;
+    --gradient: linear-gradient(135deg, #4DA3FF 0%, #7C5CFF 100%);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: -apple-system, "SF Pro Text", "Inter", Segoe UI, system-ui, sans-serif; -webkit-font-smoothing: antialiased; height: 100%; }
+  a { color: inherit; text-decoration: none; }
+  button { font: inherit; color: inherit; cursor: pointer; }
+
+  /* Top nav (mirrors landing page) */
+  .nav { position: sticky; top: 0; z-index: 50; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); background: rgba(11,15,23,0.85); border-bottom: 1px solid var(--line); }
+  .nav-inner { max-width: 1480px; margin: 0 auto; padding: 14px 32px; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+  .logo { display: flex; align-items: center; gap: 12px; font-weight: 600; font-size: 15px; color: var(--text-strong); }
+  .logo .mark { width: 24px; height: 24px; border-radius: 7px; background: var(--gradient); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: #0B0F17; }
+  .logo .crumb { color: var(--muted); font-weight: 500; }
+  .nav-right { display: flex; align-items: center; gap: 14px; }
+
+  /* Buttons */
+  .btn { display: inline-flex; align-items: center; gap: 8px; padding: 9px 16px; border: 1px solid var(--line); background: var(--bg-elev); color: var(--text); border-radius: 9px; font-size: 13px; font-weight: 500; transition: all 0.15s ease; }
+  .btn:hover:not(:disabled) { background: var(--bg-elev-2); border-color: var(--line-strong); }
+  .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+  .btn-primary { background: var(--text-strong); color: var(--bg); border-color: transparent; font-weight: 600; }
+  .btn-primary:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(255,255,255,0.12); background: #fff; }
+  .btn-ghost { background: transparent; border-color: transparent; color: var(--muted); }
+  .btn-ghost:hover:not(:disabled) { color: var(--text); background: var(--bg-elev); }
+
+  /* App shell */
+  .app { max-width: 1480px; margin: 0 auto; padding: 32px; }
+
+  /* Mode 1 — setup */
+  .setup { max-width: 720px; margin: 32px auto 0; }
+  .setup h1 { font-size: 28px; font-weight: 600; letter-spacing: -0.02em; margin: 0 0 8px; color: var(--text-strong); }
+  .setup .lead { color: var(--muted); margin: 0 0 28px; font-size: 14px; line-height: 1.55; }
+  .field { margin-bottom: 20px; }
+  .field label { display: block; font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 500; }
+
+  .drop { border: 1.5px dashed var(--line-strong); border-radius: 14px; padding: 36px 24px; text-align: center; background: var(--bg-elev); transition: all 0.18s ease; cursor: pointer; }
+  .drop:hover, .drop.drag { border-color: var(--accent); background: var(--bg-elev-2); }
+  .drop .big { font-size: 15px; color: var(--text); margin-bottom: 4px; }
+  .drop .small { font-size: 12px; color: var(--muted); }
+  .drop input { display: none; }
+
+  .file-list { display: flex; flex-direction: column; gap: 10px; margin-top: 14px; }
+  .file-card { background: var(--bg-elev); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+  .file-meta { flex: 1; min-width: 0; }
+  .file-name { font-size: 14px; font-weight: 500; color: var(--text-strong); margin-bottom: 6px; word-break: break-all; }
+  .file-stats { font-size: 12px; color: var(--muted); margin-bottom: 8px; font-variant-numeric: tabular-nums; }
+  .file-cols { font-size: 11px; color: var(--muted-2); display: flex; flex-wrap: wrap; gap: 4px; }
+  .file-cols .col { background: var(--bg-elev-2); padding: 2px 8px; border-radius: 999px; }
+  .file-cols .col .t { color: var(--accent); margin-left: 4px; }
+  .file-x { background: transparent; border: 0; color: var(--muted); font-size: 16px; padding: 0 4px; }
+  .file-x:hover { color: var(--red); }
+
+  select, input[type="text"], textarea {
+    width: 100%; background: var(--bg-elev); border: 1px solid var(--line); color: var(--text);
+    border-radius: 10px; padding: 11px 14px; font: inherit; font-size: 14px;
+    transition: border-color 0.15s ease;
+  }
+  select:focus, input[type="text"]:focus, textarea:focus { outline: none; border-color: var(--accent); }
+  textarea { resize: vertical; min-height: 60px; font-family: inherit; }
+  .new-slug { margin-top: 10px; }
+
+  .start-row { display: flex; justify-content: flex-end; margin-top: 24px; }
+
+  /* Mode 2 — chat + preview */
+  .workshop { display: grid; grid-template-columns: minmax(360px, 1fr) 2fr; gap: 16px; height: calc(100vh - 130px); }
+  .panel { background: var(--bg-elev); border: 1px solid var(--line); border-radius: 14px; display: flex; flex-direction: column; overflow: hidden; }
+  .panel-head { padding: 14px 18px; border-bottom: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; }
+  .panel-head h2 { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin: 0; }
+  .panel-head .meta { font-size: 11px; color: var(--muted-2); }
+
+  .messages { flex: 1; overflow-y: auto; padding: 18px; display: flex; flex-direction: column; gap: 14px; }
+  .msg { display: flex; gap: 10px; align-items: flex-start; }
+  .msg .who { font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); padding: 4px 8px; background: var(--bg-elev-2); border-radius: 6px; flex-shrink: 0; min-width: 60px; text-align: center; }
+  .msg.user .who { color: var(--accent); background: rgba(77,163,255,0.1); }
+  .msg.assistant .who { color: var(--accent-2); background: rgba(124,92,255,0.1); }
+  .msg .body { font-size: 14px; line-height: 1.55; white-space: pre-wrap; word-wrap: break-word; flex: 1; min-width: 0; }
+  .msg.assistant .body { color: var(--text); }
+  .thinking { display: inline-flex; gap: 4px; align-items: center; }
+  .thinking span { width: 6px; height: 6px; border-radius: 50%; background: var(--muted); animation: bounce 1.2s infinite ease-in-out; }
+  .thinking span:nth-child(2) { animation-delay: 0.15s; }
+  .thinking span:nth-child(3) { animation-delay: 0.3s; }
+  @keyframes bounce { 0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; } 40% { transform: scale(1); opacity: 1; } }
+
+  .composer { padding: 14px 16px; border-top: 1px solid var(--line); display: flex; gap: 8px; align-items: flex-end; background: var(--bg-elev); }
+  .composer textarea { flex: 1; min-height: 40px; max-height: 200px; padding: 10px 12px; font-size: 14px; }
+
+  .preview { flex: 1; overflow: hidden; background: #fff; }
+  .preview iframe { width: 100%; height: 100%; border: 0; display: block; }
+  .preview-empty { flex: 1; display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 13px; padding: 40px; text-align: center; background: var(--bg-elev-2); }
+
+  /* Modal + success */
+  .modal-bg { position: fixed; inset: 0; background: rgba(11,15,23,0.85); backdrop-filter: blur(6px); display: flex; align-items: center; justify-content: center; z-index: 100; }
+  .modal { background: var(--bg-elev); border: 1px solid var(--line); border-radius: 16px; padding: 28px; max-width: 480px; width: 92%; }
+  .modal h3 { font-size: 18px; font-weight: 600; color: var(--text-strong); margin: 0 0 8px; }
+  .modal p { font-size: 14px; color: var(--muted); line-height: 1.55; margin: 0 0 18px; }
+  .modal code { color: var(--accent); background: var(--bg-elev-2); padding: 2px 6px; border-radius: 4px; font-family: "SF Mono", Menlo, Consolas, monospace; font-size: 12px; }
+  .modal .row { display: flex; gap: 8px; justify-content: flex-end; margin-top: 18px; }
+  .err { color: var(--red); font-size: 13px; margin-top: 10px; }
+  .success-icon { width: 56px; height: 56px; border-radius: 50%; background: rgba(57,217,138,0.15); color: var(--green); display: flex; align-items: center; justify-content: center; font-size: 28px; margin: 0 auto 16px; }
+
+  /* Admin badge in nav */
+  .user-badge { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; background: var(--bg-elev); border: 1px solid var(--line); border-radius: 999px; font-size: 12px; color: var(--muted); }
+  .user-badge .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); box-shadow: 0 0 8px var(--green); }
+  .user-badge .signout { background: transparent; border: 0; color: var(--muted-2); padding: 0 0 0 4px; font-size: 14px; line-height: 1; cursor: pointer; }
+  .user-badge .signout:hover { color: var(--red); }
+
+  /* Danger variant */
+  .btn-danger { background: transparent; border-color: var(--red); color: var(--red); }
+  .btn-danger:hover:not(:disabled) { background: var(--red); color: var(--bg); border-color: var(--red); }
+
+  /* Wide modal for manage list */
+  .modal.wide { max-width: 640px; }
+
+  /* Mode tabs (Setup screen: Build with Claude vs Upload HTML) */
+  .mode-tabs { display: inline-flex; gap: 4px; padding: 4px; background: var(--bg-elev); border: 1px solid var(--line); border-radius: 10px; margin-bottom: 22px; }
+  .mode-tab { padding: 8px 16px; border-radius: 7px; border: 0; background: transparent; color: var(--muted); font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.15s ease; }
+  .mode-tab:hover { color: var(--text); }
+  .mode-tab.active { background: var(--bg-elev-2); color: var(--text-strong); }
+
+  /* Inline preview frame for upload mode */
+  .inline-preview { height: 480px; border: 1px solid var(--line); border-radius: 14px; overflow: hidden; background: #fff; margin-top: 8px; }
+  .inline-preview iframe { width: 100%; height: 100%; border: 0; display: block; }
+
+  /* Manage modal list */
+  .manage-list { max-height: 50vh; overflow-y: auto; margin: 14px 0 4px; display: flex; flex-direction: column; gap: 6px; padding-right: 4px; }
+  .manage-list:empty::after { content: "No dashboards registered."; color: var(--muted); font-size: 13px; padding: 14px; text-align: center; }
+  .manage-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 14px; background: var(--bg-elev-2); border: 1px solid var(--line); border-radius: 10px; }
+  .manage-row .info { flex: 1; min-width: 0; }
+  .manage-row .name { font-size: 14px; color: var(--text); font-weight: 500; }
+  .manage-row .meta { font-size: 11px; color: var(--muted-2); margin-top: 2px; }
+  .manage-row .actions { display: flex; gap: 6px; flex-shrink: 0; }
+  .manage-row .actions a, .manage-row .actions button { padding: 6px 12px; font-size: 12px; border-radius: 7px; }
+
+  /* Hidden helper */
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a class="logo" href="/">
+      <span class="mark">G</span>
+      <span>Dashboards <span class="crumb">/ Studio</span></span>
+    </a>
+    <div class="nav-right">
+      <button id="manage-btn" class="btn btn-ghost">Manage</button>
+      <span id="user-badge" class="user-badge" hidden>
+        <span class="dot"></span>
+        <span id="user-email"></span>
+        <button class="signout" id="signout-btn" title="Sign out">×</button>
+      </span>
+      <button id="signin-btn" class="btn">Sign in</button>
+      <button id="ship-btn" class="btn btn-primary" disabled>Ship to site →</button>
+    </div>
+  </div>
+</nav>
+
+<div class="app">
+
+<!-- ============ MODE 1: SETUP ============ -->
+<section id="setup" class="setup">
+  <h1>Build a dashboard</h1>
+
+  <div class="mode-tabs" role="tablist">
+    <button class="mode-tab active" data-mode="chat" role="tab">Build with Claude</button>
+    <button class="mode-tab" data-mode="upload" role="tab">Upload HTML</button>
+  </div>
+
+  <p id="lead-chat" class="lead">Upload your data, pick a target, and Claude will build a styled dashboard you can iterate on and ship.</p>
+  <p id="lead-upload" class="lead" hidden>Already have a finished HTML file? Drop it here to update an existing dashboard or create a new one — no chat, no LLM call.</p>
+
+  <!-- Chat-mode files field -->
+  <div id="files-chat" class="field">
+    <label>1. Data files</label>
+    <label class="drop" id="drop">
+      <div class="big">Drop CSV, XLSX, or JSON here</div>
+      <div class="small">or click to choose. Multiple files allowed.</div>
+      <input type="file" id="file-input" multiple accept=".csv,.xlsx,.xls,.json,text/csv,application/json,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" />
+    </label>
+    <div id="file-list" class="file-list"></div>
+  </div>
+
+  <!-- Upload-mode HTML file field -->
+  <div id="files-upload" class="field" hidden>
+    <label>1. HTML file</label>
+    <label class="drop" id="html-drop">
+      <div class="big">Drop a .html file here</div>
+      <div class="small">or click to choose. One file, must be a complete HTML document.</div>
+      <input type="file" id="html-input" accept=".html,text/html" />
+    </label>
+    <div id="html-summary" class="file-list"></div>
+  </div>
+
+  <div class="field">
+    <label>2. Target dashboard</label>
+    <select id="target-select">
+      <option value="" disabled selected>Loading dashboards…</option>
+    </select>
+    <div id="new-slug-wrap" class="new-slug" hidden>
+      <input type="text" id="new-slug" placeholder="new-dashboard-slug (kebab-case)" />
+    </div>
+  </div>
+
+  <!-- Upload-mode inline preview -->
+  <div id="upload-preview-section" class="field" hidden>
+    <label>Preview</label>
+    <div class="inline-preview">
+      <iframe id="upload-preview-frame" sandbox="allow-scripts"></iframe>
+    </div>
+  </div>
+
+  <div class="start-row">
+    <button id="start-btn" class="btn btn-primary" disabled>Start →</button>
+    <button id="upload-ship-btn" class="btn btn-primary" hidden disabled>Ship to site →</button>
+  </div>
+</section>
+
+<!-- ============ MODE 2: WORKSHOP ============ -->
+<section id="workshop" class="workshop" hidden>
+  <div class="panel">
+    <div class="panel-head">
+      <h2>Chat</h2>
+      <span class="meta" id="chat-meta"></span>
+    </div>
+    <div id="messages" class="messages"></div>
+    <div class="composer">
+      <textarea id="user-input" placeholder="Reply…" rows="2"></textarea>
+      <button id="send-btn" class="btn btn-primary">Send</button>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="panel-head">
+      <h2>Preview</h2>
+      <span class="meta" id="preview-meta">No draft yet</span>
+    </div>
+    <div id="preview-empty" class="preview-empty">The dashboard will render here once Claude generates it.</div>
+    <div id="preview-wrap" class="preview" hidden>
+      <iframe id="preview-frame" sandbox="allow-scripts"></iframe>
+    </div>
+  </div>
+</section>
+
+</div><!-- /app -->
+
+<!-- ============ SHIP MODAL ============ -->
+<div id="ship-modal" class="modal-bg" hidden>
+  <div class="modal">
+    <h3>Ship to site</h3>
+    <p>This will commit <code id="ship-path">slug/index.html</code> to <code id="ship-repo">main</code> and trigger a Netlify deploy. Continue?</p>
+    <div class="field" style="margin: 0;">
+      <label>Commit message</label>
+      <input type="text" id="commit-message" />
+    </div>
+    <div id="ship-error" class="err" hidden></div>
+    <div class="row">
+      <button id="ship-cancel" class="btn btn-ghost">Cancel</button>
+      <button id="ship-confirm" class="btn btn-primary">Ship</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ SUCCESS MODAL ============ -->
+<div id="success-modal" class="modal-bg" hidden>
+  <div class="modal" style="text-align: center;">
+    <div class="success-icon">✓</div>
+    <h3>Shipped</h3>
+    <p>Netlify is deploying now — should be live in about 30 seconds.</p>
+    <div class="row" style="justify-content: center; margin-top: 20px;">
+      <a id="success-link" class="btn" target="_blank" rel="noopener">Open dashboard</a>
+      <button id="success-new" class="btn btn-primary">Start new</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ LOGIN MODAL ============ -->
+<div id="login-modal" class="modal-bg" hidden>
+  <div class="modal">
+    <h3>Sign in</h3>
+    <p>Only admins can ship or delete dashboards. Your email and password are remembered on this device until you sign out.</p>
+    <div class="field">
+      <label>Email</label>
+      <input type="text" id="login-email" placeholder="you@govspend.com" autocomplete="email" />
+    </div>
+    <div class="field" style="margin-bottom: 0;">
+      <label>Admin password</label>
+      <input type="password" id="login-password" autocomplete="current-password" />
+    </div>
+    <div id="login-error" class="err" hidden></div>
+    <div class="row">
+      <button id="login-cancel" class="btn btn-ghost">Cancel</button>
+      <button id="login-confirm" class="btn btn-primary">Sign in</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MANAGE MODAL ============ -->
+<div id="manage-modal" class="modal-bg" hidden>
+  <div class="modal wide">
+    <h3>Manage dashboards</h3>
+    <p>Open or delete existing dashboards. Deleting removes the file from <code>main</code> and unregisters it from the landing page.</p>
+    <div id="manage-list" class="manage-list"></div>
+    <div id="manage-error" class="err" hidden></div>
+    <div class="row">
+      <button id="manage-close" class="btn btn-primary">Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ==========================================================
+   STATE
+   ========================================================== */
+const state = {
+  files: [],          // [{ name, columns, types, rowCount, preview, summary }]
+  targetSlug: null,   // string
+  targetMeta: null,   // existing dashboard metadata, if any
+  isNew: false,
+  registry: [],       // DASHBOARDS array from /index.html
+  rawIndexHtml: "",   // raw /index.html source
+  claudeMd: "",       // /CLAUDE.md content
+  template: "",       // /_template/dashboard.html content
+  messages: [],       // [{role, content}]
+  currentHtml: null,  // latest generated dashboard HTML
+  streaming: false,
+  admin: null,        // { email, password } once signed in (mirrors localStorage)
+  uploadMode: 'chat', // 'chat' (default) | 'upload'
+  uploadedHtml: null, // for upload mode
+  uploadedFileName: null,
+};
+
+const ADMIN_STORAGE_KEY = 'studio.admin';
+
+/* ==========================================================
+   FILE UPLOAD + PARSING
+   ========================================================== */
+const drop = document.getElementById('drop');
+const fileInput = document.getElementById('file-input');
+const fileListEl = document.getElementById('file-list');
+
+['dragenter', 'dragover'].forEach(e => drop.addEventListener(e, ev => { ev.preventDefault(); drop.classList.add('drag'); }));
+['dragleave', 'drop'].forEach(e => drop.addEventListener(e, ev => { ev.preventDefault(); drop.classList.remove('drag'); }));
+drop.addEventListener('drop', ev => { ev.preventDefault(); handleFiles(ev.dataTransfer.files); });
+fileInput.addEventListener('change', ev => handleFiles(ev.target.files));
+
+async function handleFiles(fileList) {
+  for (const f of fileList) {
+    try {
+      const parsed = await parseFile(f);
+      state.files.push(parsed);
+    } catch (err) {
+      alert(`Couldn't parse ${f.name}: ${err.message}`);
+    }
+  }
+  renderFiles();
+  updateStartButton();
+}
+
+async function parseFile(file) {
+  const ext = file.name.split('.').pop().toLowerCase();
+  if (ext === 'csv') return parseCsv(file);
+  if (ext === 'xlsx' || ext === 'xls') return parseXlsx(file);
+  if (ext === 'json') return parseJson(file);
+  throw new Error(`Unsupported file type: .${ext}`);
+}
+
+function parseCsv(file) {
+  return new Promise((resolve, reject) => {
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: true,
+      preview: 10000, // cap for large files
+      complete: (res) => {
+        const rows = res.data;
+        const columns = res.meta.fields || [];
+        resolve(buildSummary(file.name, columns, rows));
+      },
+      error: reject,
+    });
+  });
+}
+
+async function parseXlsx(file) {
+  const buf = await file.arrayBuffer();
+  const wb = XLSX.read(buf, { type: 'array' });
+  const sheetName = wb.SheetNames[0];
+  const ws = wb.Sheets[sheetName];
+  const rows = XLSX.utils.sheet_to_json(ws, { defval: null });
+  const columns = rows.length ? Object.keys(rows[0]) : [];
+  return buildSummary(file.name, columns, rows);
+}
+
+async function parseJson(file) {
+  const text = await file.text();
+  const data = JSON.parse(text);
+  if (!Array.isArray(data)) throw new Error('JSON must be an array of objects');
+  const columns = data.length ? Object.keys(data[0]) : [];
+  return buildSummary(file.name, columns, data);
+}
+
+function buildSummary(name, columns, rows) {
+  const types = {};
+  for (const col of columns) {
+    types[col] = inferType(rows.slice(0, 50).map(r => r[col]));
+  }
+  const preview = rows.slice(0, 10);
+  return {
+    name,
+    columns,
+    types,
+    rowCount: rows.length,
+    preview,
+    summary: formatSummary(name, columns, types, rows.length, preview),
+  };
+}
+
+function inferType(values) {
+  const non = values.filter(v => v !== null && v !== undefined && v !== '');
+  if (non.length === 0) return 'empty';
+  const allNum = non.every(v => typeof v === 'number' || (typeof v === 'string' && /^-?\d+(\.\d+)?$/.test(v.trim())));
+  if (allNum) return 'number';
+  const dateRe = /^\d{4}-\d{2}-\d{2}/;
+  const allDate = non.every(v => typeof v === 'string' && dateRe.test(v));
+  if (allDate) return 'date';
+  const allBool = non.every(v => v === true || v === false || v === 'true' || v === 'false');
+  if (allBool) return 'boolean';
+  return 'string';
+}
+
+function formatSummary(name, columns, types, rowCount, preview) {
+  const colLines = columns.map(c => `  - ${c} (${types[c]})`).join('\n');
+  const headerRow = '| ' + columns.join(' | ') + ' |';
+  const sepRow = '| ' + columns.map(() => '---').join(' | ') + ' |';
+  const dataRows = preview.map(r => '| ' + columns.map(c => String(r[c] ?? '')).join(' | ') + ' |').join('\n');
+  return `File: ${name} (${rowCount.toLocaleString()} rows)\nColumns:\n${colLines}\n\nFirst ${preview.length} rows:\n${headerRow}\n${sepRow}\n${dataRows}`;
+}
+
+function renderFiles() {
+  fileListEl.innerHTML = state.files.map((f, i) => `
+    <div class="file-card">
+      <div class="file-meta">
+        <div class="file-name">${escapeHtml(f.name)}</div>
+        <div class="file-stats">${f.rowCount.toLocaleString()} rows · ${f.columns.length} columns</div>
+        <div class="file-cols">${f.columns.slice(0, 12).map(c => `<span class="col">${escapeHtml(c)}<span class="t">${f.types[c]}</span></span>`).join('')}${f.columns.length > 12 ? `<span class="col">+${f.columns.length - 12} more</span>` : ''}</div>
+      </div>
+      <button class="file-x" data-i="${i}" title="Remove">×</button>
+    </div>
+  `).join('');
+  fileListEl.querySelectorAll('.file-x').forEach(btn => {
+    btn.addEventListener('click', () => {
+      state.files.splice(parseInt(btn.dataset.i), 1);
+      renderFiles();
+      updateStartButton();
+    });
+  });
+}
+
+/* ==========================================================
+   TARGET DASHBOARD SELECTION
+   ========================================================== */
+const targetSelect = document.getElementById('target-select');
+const newSlugWrap = document.getElementById('new-slug-wrap');
+const newSlugInput = document.getElementById('new-slug');
+const startBtn = document.getElementById('start-btn');
+
+async function loadIndexAndConventions() {
+  try {
+    const [idx, claude, tpl] = await Promise.all([
+      fetch('/index.html').then(r => r.text()),
+      fetch('/CLAUDE.md').then(r => r.text()),
+      fetch('/_template/dashboard.html').then(r => r.text()),
+    ]);
+    state.rawIndexHtml = idx;
+    state.claudeMd = claude;
+    state.template = tpl;
+    state.registry = parseDashboardsArray(idx);
+    populateTargetSelect();
+  } catch (err) {
+    targetSelect.innerHTML = `<option value="">Failed to load registry: ${err.message}</option>`;
+  }
+}
+
+function parseDashboardsArray(html) {
+  // Match `const DASHBOARDS = [ ... ];`
+  const m = html.match(/const\s+DASHBOARDS\s*=\s*(\[[\s\S]*?\n\];)/);
+  if (!m) return [];
+  // Strip line comments inside the array, then evaluate as JSON-ish.
+  const arrSrc = m[1].replace(/\];$/, ']');
+  try {
+    // eslint-disable-next-line no-new-func
+    return new Function(`return ${arrSrc};`)();
+  } catch {
+    return [];
+  }
+}
+
+function populateTargetSelect() {
+  const opts = ['<option value="__new__">+ New dashboard</option>'];
+  for (const d of state.registry) {
+    opts.push(`<option value="${escapeHtml(d.id)}">${escapeHtml(d.title)} — /${escapeHtml(d.id)}/</option>`);
+  }
+  targetSelect.innerHTML = opts.join('');
+  targetSelect.value = '__new__';
+  newSlugWrap.hidden = false;
+}
+
+targetSelect.addEventListener('change', () => {
+  if (targetSelect.value === '__new__') {
+    newSlugWrap.hidden = false;
+  } else {
+    newSlugWrap.hidden = true;
+  }
+  refreshActionButtons();
+});
+newSlugInput.addEventListener('input', refreshActionButtons);
+
+function hasValidTarget() {
+  if (targetSelect.value === '__new__') {
+    return /^[a-z0-9][a-z0-9-]*$/.test(newSlugInput.value.trim());
+  }
+  return !!targetSelect.value;
+}
+
+function refreshActionButtons() {
+  // Chat-mode "Start" button
+  startBtn.disabled = !(state.files.length > 0 && hasValidTarget());
+  // Upload-mode "Ship" button
+  uploadShipBtn.disabled = !(state.uploadedHtml && hasValidTarget());
+}
+
+// Backward-compat: anything that called updateStartButton just calls refresh now.
+function updateStartButton() { refreshActionButtons(); }
+
+/* ==========================================================
+   START → MODE 2
+   ========================================================== */
+startBtn.addEventListener('click', () => {
+  if (targetSelect.value === '__new__') {
+    state.targetSlug = newSlugInput.value.trim();
+    state.isNew = true;
+    state.targetMeta = null;
+  } else {
+    state.targetSlug = targetSelect.value;
+    state.isNew = false;
+    state.targetMeta = state.registry.find(d => d.id === state.targetSlug) || null;
+  }
+
+  document.getElementById('setup').hidden = true;
+  document.getElementById('workshop').hidden = false;
+  document.getElementById('chat-meta').textContent = (state.isNew ? 'New: ' : 'Editing: ') + '/' + state.targetSlug + '/';
+  sendInitialMessage();
+});
+
+/* ==========================================================
+   CHAT + GENERATE
+   ========================================================== */
+const messagesEl = document.getElementById('messages');
+const userInput = document.getElementById('user-input');
+const sendBtn = document.getElementById('send-btn');
+const previewEmpty = document.getElementById('preview-empty');
+const previewWrap = document.getElementById('preview-wrap');
+const previewFrame = document.getElementById('preview-frame');
+const previewMeta = document.getElementById('preview-meta');
+const shipBtn = document.getElementById('ship-btn');
+
+userInput.addEventListener('keydown', (ev) => {
+  if (ev.key === 'Enter' && !ev.shiftKey) {
+    ev.preventDefault();
+    sendUserMessage();
+  }
+});
+sendBtn.addEventListener('click', sendUserMessage);
+
+function buildSystemPrompt() {
+  const targetCtx = state.isNew
+    ? `TARGET: A brand-new dashboard at /${state.targetSlug}/. You will need to ask the user for the title, owner, cadence, section (operational | intelligence | ai-cost | reference), and short description for the registry entry.`
+    : `TARGET: An existing dashboard at /${state.targetSlug}/. Existing metadata: ${JSON.stringify(state.targetMeta, null, 2)}`;
+
+  return [
+    `You are the LLM behind "the Studio" — a tool non-technical teammates use to design and ship internal dashboards for GovSpend. The user uploads data and chats with you to design a styled, single-file HTML dashboard.`,
+    ``,
+    `CONVENTIONS — These come straight from CLAUDE.md and are non-negotiable:`,
+    ``,
+    state.claudeMd,
+    ``,
+    `TEMPLATE — Always start from this skeleton. Replace placeholders, drop sections that don't fit the data, never invent new colors/fonts/chart libraries:`,
+    ``,
+    state.template,
+    ``,
+    `${targetCtx}`,
+    ``,
+    `OUTPUT FORMAT — every reply must use this exact format:`,
+    ``,
+    `<chat>Your prose to the user. Always include this. Friendly, concise, action-oriented.</chat>`,
+    `<html>`,
+    `<!doctype html>`,
+    `<html lang="en">`,
+    `... full updated dashboard HTML ...`,
+    `</html>`,
+    ``,
+    `Only include the <html>...</html> block when you have a complete dashboard draft to show. If you're asking clarifying questions, omit the <html> block entirely. The block, when present, must be a complete self-contained HTML document — never partial fragments.`,
+    ``,
+    `BEHAVIOR:`,
+    `1. Ask ONE question at a time, not a checklist. Keep <chat> tight — 1-3 sentences max per turn. The user is non-technical and skims. Mirror back what you understood from their last answer in one short clause, then ask the next thing.`,
+    `2. Question priority order — work through these one by one until you have what you need: (a) which columns drive the KPIs, (b) the headline story / what the dashboard should make obvious at a glance, (c) time grain (only if not obvious from the data), ${state.isNew ? '(d) title, (e) section (operational/intelligence/ai-cost/reference), (f) cadence, (g) owner, (h) one-line description for the registry' : '(d) what the user wants to change about the existing dashboard'}. Skip any that are obvious from the data or already answered.`,
+    `3. On the very first turn, do NOT generate HTML. Just acknowledge the data in one short sentence and ask question (a).`,
+    `4. Once you have enough, generate the dashboard. Match the design system exactly. Use real numbers from the user's data — never invent values. Output the FULL HTML inside <html>...</html>, never partial diffs.`,
+    `5. On revision turns, output the FULL revised HTML again. Keep <chat> short ("Updated. Anything else?" is often enough).`,
+    `6. If the data is missing what's needed, say so in <chat> in one sentence and stop — don't make up data.`,
+  ].join('\n');
+}
+
+function sendInitialMessage() {
+  const fileSummaries = state.files.map(f => f.summary).join('\n\n---\n\n');
+  const initialUserMsg = `I've uploaded the following data:\n\n${fileSummaries}\n\nTarget: ${state.isNew ? 'NEW dashboard' : 'EXISTING dashboard'} at /${state.targetSlug}/${state.targetMeta ? `\nExisting title: "${state.targetMeta.title}"\nExisting description: "${state.targetMeta.description}"` : ''}\n\nPlease ask me clarifying questions before generating any HTML.`;
+  state.messages.push({ role: 'user', content: initialUserMsg });
+  renderMessage('user', initialUserMsg);
+  streamAssistantReply();
+}
+
+function sendUserMessage() {
+  if (state.streaming) return;
+  const text = userInput.value.trim();
+  if (!text) return;
+  userInput.value = '';
+  state.messages.push({ role: 'user', content: text });
+  renderMessage('user', text);
+  streamAssistantReply();
+}
+
+async function streamAssistantReply() {
+  state.streaming = true;
+  sendBtn.disabled = true;
+  shipBtn.disabled = true;
+
+  // Insert a placeholder assistant message
+  const msgEl = renderMessage('assistant', '');
+  const bodyEl = msgEl.querySelector('.body');
+  bodyEl.innerHTML = '<span class="thinking"><span></span><span></span><span></span></span>';
+
+  let fullText = '';
+  let chatText = '';
+  let htmlText = '';
+  let renderedHtmlYet = false;
+
+  try {
+    const res = await fetch('/api/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messages: state.messages, system: buildSystemPrompt() }),
+    });
+    if (!res.ok) {
+      const errBody = await res.text();
+      throw new Error(`Server: ${res.status} ${errBody.slice(0, 200)}`);
+    }
+    if (!res.body) throw new Error('No response body');
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      fullText += decoder.decode(value, { stream: true });
+
+      // Extract <chat> content (may still be open)
+      const chatM = fullText.match(/<chat>([\s\S]*?)(<\/chat>|$)/);
+      if (chatM) {
+        chatText = chatM[1];
+        bodyEl.textContent = chatText;
+      } else {
+        // No <chat> tag yet — show stream raw so user sees progress
+        bodyEl.textContent = fullText.replace(/<\/?(chat|html)>/g, '');
+      }
+
+      // Extract <html> content
+      const htmlM = fullText.match(/<html>([\s\S]*?)<\/html>/);
+      if (htmlM && !renderedHtmlYet) {
+        htmlText = '<html>' + htmlM[1] + '</html>';
+        // Strip leading "<html>" if user prepended <!doctype>
+        const fullDoc = fullText.match(/(<!doctype[\s\S]*?<\/html>)/i);
+        const docToUse = fullDoc ? fullDoc[1] : htmlText;
+        renderPreview(docToUse);
+        renderedHtmlYet = true;
+      }
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    // Final extraction
+    if (chatText) {
+      bodyEl.textContent = chatText;
+    } else if (!fullText.includes('<chat>')) {
+      bodyEl.textContent = fullText;
+    }
+
+    // Final HTML extraction (in case it was at the end)
+    const finalHtml = fullText.match(/(<!doctype[\s\S]*?<\/html>)/i);
+    if (finalHtml) {
+      renderPreview(finalHtml[1]);
+    }
+
+    state.messages.push({ role: 'assistant', content: fullText });
+  } catch (err) {
+    bodyEl.textContent = `Error: ${err.message}`;
+    bodyEl.style.color = 'var(--red)';
+  } finally {
+    state.streaming = false;
+    sendBtn.disabled = false;
+    shipBtn.disabled = !state.currentHtml;
+    userInput.focus();
+  }
+}
+
+function renderMessage(role, content) {
+  const el = document.createElement('div');
+  el.className = 'msg ' + role;
+  el.innerHTML = `<span class="who">${role === 'user' ? 'you' : 'claude'}</span><div class="body"></div>`;
+  el.querySelector('.body').textContent = content;
+  messagesEl.appendChild(el);
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+  return el;
+}
+
+function renderPreview(htmlDoc) {
+  state.currentHtml = htmlDoc;
+  previewEmpty.hidden = true;
+  previewWrap.hidden = false;
+  previewFrame.srcdoc = htmlDoc;
+  previewMeta.textContent = `${(htmlDoc.length / 1024).toFixed(1)} KB`;
+  shipBtn.disabled = state.streaming;
+}
+
+/* ==========================================================
+   ADMIN AUTH
+   ========================================================== */
+const userBadge = document.getElementById('user-badge');
+const userEmailEl = document.getElementById('user-email');
+const signinBtn = document.getElementById('signin-btn');
+const signoutBtn = document.getElementById('signout-btn');
+const loginModal = document.getElementById('login-modal');
+const loginEmail = document.getElementById('login-email');
+const loginPassword = document.getElementById('login-password');
+const loginConfirm = document.getElementById('login-confirm');
+const loginCancel = document.getElementById('login-cancel');
+const loginError = document.getElementById('login-error');
+
+function loadAdmin() {
+  try {
+    const raw = localStorage.getItem(ADMIN_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed?.email || !parsed?.password) return null;
+    return parsed;
+  } catch { return null; }
+}
+function saveAdmin(admin) {
+  state.admin = admin;
+  localStorage.setItem(ADMIN_STORAGE_KEY, JSON.stringify(admin));
+  updateNavAuthState();
+}
+function clearAdmin() {
+  state.admin = null;
+  localStorage.removeItem(ADMIN_STORAGE_KEY);
+  updateNavAuthState();
+}
+function updateNavAuthState() {
+  if (state.admin) {
+    userBadge.hidden = false;
+    userEmailEl.textContent = state.admin.email;
+    signinBtn.hidden = true;
+  } else {
+    userBadge.hidden = true;
+    signinBtn.hidden = false;
+  }
+}
+
+// Returns admin creds or throws if user cancels (only in 'soft' mode).
+async function ensureAdmin() {
+  if (state.admin) return state.admin;
+  return await openLoginModal('soft');
+}
+
+let loginResolver = null;
+function openLoginModal(mode = 'soft') {
+  return new Promise((resolve, reject) => {
+    loginResolver = { resolve, reject };
+    loginEmail.value = state.admin?.email || '';
+    loginPassword.value = '';
+    loginError.hidden = true;
+    loginCancel.hidden = (mode === 'hard');
+    loginModal.hidden = false;
+    setTimeout(() => loginEmail.focus(), 30);
+  });
+}
+
+function showApp() {
+  document.querySelector('.app').hidden = false;
+  manageBtn.hidden = false;
+}
+function hideApp() {
+  document.querySelector('.app').hidden = true;
+  manageBtn.hidden = true;
+}
+function closeLoginModal(reason) {
+  loginModal.hidden = true;
+  if (loginResolver) {
+    if (reason === 'cancel') loginResolver.reject(new Error('Cancelled'));
+    loginResolver = null;
+  }
+}
+
+async function submitLogin() {
+  const email = loginEmail.value.trim().toLowerCase();
+  const password = loginPassword.value;
+  loginError.hidden = true;
+  if (!email || !password) {
+    loginError.textContent = 'Email and password are required.';
+    loginError.hidden = false;
+    return;
+  }
+  loginConfirm.disabled = true;
+  loginConfirm.textContent = 'Checking…';
+  try {
+    const res = await fetch('/api/commit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'auth-check', auth: { email, password } }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      loginError.textContent = data.error || `Sign-in failed (${res.status}).`;
+      loginError.hidden = false;
+      return;
+    }
+    saveAdmin({ email, password });
+    if (loginResolver) {
+      loginResolver.resolve(state.admin);
+      loginResolver = null;
+    }
+    loginModal.hidden = true;
+  } catch (err) {
+    loginError.textContent = err.message;
+    loginError.hidden = false;
+  } finally {
+    loginConfirm.disabled = false;
+    loginConfirm.textContent = 'Sign in';
+  }
+}
+
+signinBtn.addEventListener('click', () => openLoginModal().catch(() => {}));
+signoutBtn.addEventListener('click', () => {
+  clearAdmin();
+});
+loginConfirm.addEventListener('click', submitLogin);
+loginCancel.addEventListener('click', () => closeLoginModal('cancel'));
+loginPassword.addEventListener('keydown', (ev) => { if (ev.key === 'Enter') submitLogin(); });
+
+/* ==========================================================
+   MANAGE
+   ========================================================== */
+const manageModal = document.getElementById('manage-modal');
+const manageList = document.getElementById('manage-list');
+const manageClose = document.getElementById('manage-close');
+const manageError = document.getElementById('manage-error');
+const manageBtn = document.getElementById('manage-btn');
+
+manageBtn.addEventListener('click', openManage);
+manageClose.addEventListener('click', () => { manageModal.hidden = true; });
+
+async function openManage() {
+  manageError.hidden = true;
+  // Refetch in case the registry changed since last load.
+  try {
+    const idx = await fetch('/index.html').then(r => r.text());
+    state.rawIndexHtml = idx;
+    state.registry = parseDashboardsArray(idx);
+  } catch {
+    // fall back to whatever's loaded
+  }
+  renderManageList();
+  manageModal.hidden = false;
+}
+
+function renderManageList() {
+  manageList.innerHTML = state.registry.map(d => `
+    <div class="manage-row" data-slug="${escapeHtml(d.id)}">
+      <div class="info">
+        <div class="name">${escapeHtml(d.title)}</div>
+        <div class="meta">/${escapeHtml(d.id)}/ · ${escapeHtml(d.section)} · ${escapeHtml(d.cadence)} · ${escapeHtml(d.owner)}</div>
+      </div>
+      <div class="actions">
+        <a class="btn" href="${escapeHtml(d.href)}" target="_blank" rel="noopener">Open</a>
+        <button class="btn btn-danger" data-slug="${escapeHtml(d.id)}" data-title="${escapeHtml(d.title)}">Delete</button>
+      </div>
+    </div>
+  `).join('');
+  manageList.querySelectorAll('button.btn-danger').forEach(btn => {
+    btn.addEventListener('click', () => deleteDashboard(btn.dataset.slug, btn.dataset.title));
+  });
+}
+
+async function deleteDashboard(slug, title) {
+  if (!confirm(`Delete "${title}"?\n\nThis removes /${slug}/index.html from the repo, unregisters it from the landing page, and triggers a Netlify deploy. Cannot be undone via this UI.`)) return;
+  manageError.hidden = true;
+
+  let admin;
+  try {
+    admin = await ensureAdmin();
+  } catch {
+    return; // user cancelled login
+  }
+
+  const updatedIndexHtml = removeRegistryEntry(state.rawIndexHtml, slug);
+  const row = manageList.querySelector(`.manage-row[data-slug="${slug}"]`);
+  const delBtn = row?.querySelector('button.btn-danger');
+  if (delBtn) { delBtn.disabled = true; delBtn.textContent = 'Deleting…'; }
+
+  try {
+    const res = await fetch('/api/commit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'delete', slug, updatedIndexHtml, auth: admin }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (res.status === 401) {
+      clearAdmin();
+      manageError.textContent = 'Session expired — sign in again to delete.';
+      manageError.hidden = false;
+      if (delBtn) { delBtn.disabled = false; delBtn.textContent = 'Delete'; }
+      return;
+    }
+    if (!res.ok) throw new Error(data.error || `Delete failed (${res.status})`);
+
+    // Update local state and re-render
+    state.rawIndexHtml = updatedIndexHtml;
+    state.registry = state.registry.filter(d => d.id !== slug);
+    renderManageList();
+    populateTargetSelect();
+  } catch (err) {
+    manageError.textContent = err.message;
+    manageError.hidden = false;
+    if (delBtn) { delBtn.disabled = false; delBtn.textContent = 'Delete'; }
+  }
+}
+
+function removeRegistryEntry(indexHtml, slug) {
+  // Find the entry: a `{ ... id: "<slug>", ... }` block within DASHBOARDS array.
+  // We look for `id: "slug"` then expand to the surrounding `{` and trailing `},`.
+  const idPattern = new RegExp(`id:\\s*"${slug.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&')}"`);
+  const idxOfId = indexHtml.search(idPattern);
+  if (idxOfId === -1) return indexHtml;
+
+  // Walk backward to find the opening `{` of this object.
+  let openIdx = indexHtml.lastIndexOf('{', idxOfId);
+  if (openIdx === -1) return indexHtml;
+
+  // Walk forward to find the matching `}` (track brace depth, ignore strings).
+  let depth = 0, i = openIdx, inString = false, stringChar = '';
+  for (; i < indexHtml.length; i++) {
+    const ch = indexHtml[i];
+    if (inString) {
+      if (ch === '\\') { i++; continue; }
+      if (ch === stringChar) inString = false;
+      continue;
+    }
+    if (ch === '"' || ch === "'") { inString = true; stringChar = ch; continue; }
+    if (ch === '{') depth++;
+    else if (ch === '}') {
+      depth--;
+      if (depth === 0) { i++; break; }
+    }
+  }
+  let closeEnd = i; // index after `}`
+
+  // Eat a trailing `,` if present.
+  if (indexHtml[closeEnd] === ',') closeEnd++;
+
+  // Eat preceding whitespace (newline + indent) for tidy result.
+  let trimStart = openIdx;
+  while (trimStart > 0 && /[ \t]/.test(indexHtml[trimStart - 1])) trimStart--;
+  if (indexHtml[trimStart - 1] === '\n') trimStart--;
+
+  return indexHtml.slice(0, trimStart) + indexHtml.slice(closeEnd);
+}
+
+/* ==========================================================
+   SHIP
+   ========================================================== */
+const shipModal = document.getElementById('ship-modal');
+const successModal = document.getElementById('success-modal');
+
+function openShipModal() {
+  if (!state.currentHtml) return;
+  document.getElementById('ship-path').textContent = `${state.targetSlug}/index.html`;
+  document.getElementById('commit-message').value = state.isNew
+    ? `Add ${state.targetSlug} dashboard via Studio`
+    : `Update ${state.targetSlug} dashboard via Studio`;
+  document.getElementById('ship-error').hidden = true;
+  shipModal.hidden = false;
+}
+
+shipBtn.addEventListener('click', openShipModal);
+
+/* ---- Upload-HTML mode ---- */
+const uploadShipBtn = document.getElementById('upload-ship-btn');
+const htmlDrop = document.getElementById('html-drop');
+const htmlInput = document.getElementById('html-input');
+const htmlSummary = document.getElementById('html-summary');
+const uploadPreviewSection = document.getElementById('upload-preview-section');
+const uploadPreviewFrame = document.getElementById('upload-preview-frame');
+const filesChat = document.getElementById('files-chat');
+const filesUpload = document.getElementById('files-upload');
+const leadChat = document.getElementById('lead-chat');
+const leadUpload = document.getElementById('lead-upload');
+
+document.querySelectorAll('.mode-tab').forEach(tab => {
+  tab.addEventListener('click', () => switchSetupMode(tab.dataset.mode));
+});
+
+function switchSetupMode(mode) {
+  state.uploadMode = mode;
+  document.querySelectorAll('.mode-tab').forEach(t => t.classList.toggle('active', t.dataset.mode === mode));
+  filesChat.hidden = mode !== 'chat';
+  filesUpload.hidden = mode !== 'upload';
+  leadChat.hidden = mode !== 'chat';
+  leadUpload.hidden = mode !== 'upload';
+  startBtn.hidden = mode !== 'chat';
+  uploadShipBtn.hidden = mode !== 'upload';
+  uploadPreviewSection.hidden = mode !== 'upload' || !state.uploadedHtml;
+  refreshActionButtons();
+}
+
+['dragenter', 'dragover'].forEach(e => htmlDrop.addEventListener(e, ev => { ev.preventDefault(); htmlDrop.classList.add('drag'); }));
+['dragleave', 'drop'].forEach(e => htmlDrop.addEventListener(e, ev => { ev.preventDefault(); htmlDrop.classList.remove('drag'); }));
+htmlDrop.addEventListener('drop', ev => {
+  ev.preventDefault();
+  if (ev.dataTransfer.files[0]) handleHtmlFile(ev.dataTransfer.files[0]);
+});
+htmlInput.addEventListener('change', ev => {
+  if (ev.target.files[0]) handleHtmlFile(ev.target.files[0]);
+});
+
+async function handleHtmlFile(file) {
+  if (!/\.html?$/i.test(file.name)) {
+    alert(`Not an HTML file: ${file.name}`);
+    return;
+  }
+  const text = await file.text();
+  if (!text.includes('<html') || !text.includes('</html>')) {
+    alert('That file is not a complete HTML document — must contain <html>...</html>.');
+    return;
+  }
+  state.uploadedHtml = text;
+  state.uploadedFileName = file.name;
+  htmlSummary.innerHTML = `
+    <div class="file-card">
+      <div class="file-meta">
+        <div class="file-name">${escapeHtml(file.name)}</div>
+        <div class="file-stats">${(text.length / 1024).toFixed(1)} KB · valid HTML document</div>
+      </div>
+      <button class="file-x" id="html-clear" title="Remove">×</button>
+    </div>
+  `;
+  document.getElementById('html-clear').addEventListener('click', clearHtmlFile);
+  uploadPreviewFrame.srcdoc = text;
+  uploadPreviewSection.hidden = false;
+  refreshActionButtons();
+}
+
+function clearHtmlFile() {
+  state.uploadedHtml = null;
+  state.uploadedFileName = null;
+  htmlSummary.innerHTML = '';
+  htmlInput.value = '';
+  uploadPreviewSection.hidden = true;
+  uploadPreviewFrame.srcdoc = '';
+  refreshActionButtons();
+}
+
+uploadShipBtn.addEventListener('click', () => {
+  if (!state.uploadedHtml || !hasValidTarget()) return;
+  if (targetSelect.value === '__new__') {
+    state.targetSlug = newSlugInput.value.trim();
+    state.isNew = true;
+    state.targetMeta = null;
+  } else {
+    state.targetSlug = targetSelect.value;
+    state.isNew = false;
+    state.targetMeta = state.registry.find(d => d.id === state.targetSlug) || null;
+  }
+  state.currentHtml = state.uploadedHtml;
+  openShipModal();
+});
+
+document.getElementById('ship-cancel').addEventListener('click', () => {
+  shipModal.hidden = true;
+});
+
+document.getElementById('ship-confirm').addEventListener('click', shipNow);
+
+async function shipNow() {
+  const btn = document.getElementById('ship-confirm');
+  const errEl = document.getElementById('ship-error');
+  const commitMessage = document.getElementById('commit-message').value.trim() || `Update ${state.targetSlug} via Studio`;
+  errEl.hidden = true;
+
+  // Require admin login first.
+  let admin;
+  try {
+    admin = await ensureAdmin();
+  } catch {
+    errEl.textContent = 'Sign in is required to ship.';
+    errEl.hidden = false;
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Shipping…';
+
+  try {
+    let payload = {
+      action: 'ship',
+      slug: state.targetSlug,
+      html: state.currentHtml,
+      commitMessage,
+      isNew: state.isNew,
+      auth: admin,
+    };
+
+    if (state.isNew) {
+      const entry = await collectRegistryEntry();
+      const updated = insertRegistryEntry(state.rawIndexHtml, entry);
+      payload.updatedIndexHtml = updated;
+      payload.registryEntry = entry;
+    }
+
+    const res = await fetch('/api/commit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (res.status === 401) {
+      clearAdmin();
+      errEl.textContent = 'Session expired — sign in again.';
+      errEl.hidden = false;
+      return;
+    }
+    if (!res.ok) throw new Error(data.error || `Commit failed: ${res.status}`);
+
+    shipModal.hidden = true;
+    document.getElementById('success-link').href = data.deployUrl;
+    successModal.hidden = false;
+  } catch (err) {
+    errEl.textContent = err.message;
+    errEl.hidden = false;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Ship';
+  }
+}
+
+async function collectRegistryEntry() {
+  // For new dashboards, ask Claude what it had in mind: parse from the chat.
+  // Best-effort: prompt the user briefly via window.prompt for any missing fields.
+  const ask = (label, fallback) => {
+    const v = window.prompt(label, fallback || '');
+    if (v === null) throw new Error('Cancelled');
+    return v.trim();
+  };
+  const lastChat = [...state.messages].reverse().find(m => m.role === 'assistant')?.content || '';
+  const titleGuess = (lastChat.match(/title[:\-]?\s*"([^"]+)"/i) || [])[1] || titleCase(state.targetSlug);
+  const title = ask('Dashboard title', titleGuess);
+  const description = ask('Description (≤160 chars)', '');
+  const sections = ['operational', 'intelligence', 'ai-cost', 'reference'];
+  let section = '';
+  while (!sections.includes(section)) {
+    section = ask(`Section: ${sections.join(' | ')}`, 'operational');
+  }
+  const cadences = ['daily', 'weekly', 'ondemand', 'realtime'];
+  let cadence = '';
+  while (!cadences.includes(cadence)) {
+    cadence = ask(`Cadence: ${cadences.join(' | ')}`, 'weekly');
+  }
+  const owner = ask('Owner', 'Matt Beard');
+  return {
+    id: state.targetSlug,
+    title,
+    description,
+    section,
+    href: `/${state.targetSlug}/`,
+    owner,
+    cadence,
+    updated: 'today',
+  };
+}
+
+function titleCase(s) {
+  return s.split('-').map(w => w[0].toUpperCase() + w.slice(1)).join(' ');
+}
+
+function insertRegistryEntry(indexHtml, entry) {
+  const sectionMap = {
+    operational: 'OPERATIONAL',
+    intelligence: 'INTELLIGENCE',
+    'ai-cost': 'AI & COST',
+    reference: 'REFERENCE',
+  };
+  const label = sectionMap[entry.section];
+  if (!label) throw new Error(`Unknown section: ${entry.section}`);
+  const myMarker = `// ---------- ${label} ----------`;
+  const myIdx = indexHtml.indexOf(myMarker);
+  if (myIdx === -1) throw new Error(`Section marker missing: ${myMarker}`);
+
+  // Find boundary: next section marker, or `];` ending the array.
+  const others = Object.values(sectionMap).filter(s => s !== label).map(s => `// ---------- ${s} ----------`);
+  let endIdx = indexHtml.length;
+  for (const om of others) {
+    const i = indexHtml.indexOf(om, myIdx + myMarker.length);
+    if (i !== -1 && i < endIdx) endIdx = i;
+  }
+  const arrEnd = indexHtml.indexOf('];', myIdx + myMarker.length);
+  if (arrEnd !== -1 && arrEnd < endIdx) endIdx = arrEnd;
+
+  // Insert after the last `},` within this section, or right after the marker if section is empty.
+  const slice = indexHtml.slice(myIdx, endIdx);
+  const lastClose = slice.lastIndexOf('},');
+  const insertAt = lastClose === -1 ? myIdx + myMarker.length : myIdx + lastClose + 2;
+
+  const block = `\n  {\n` +
+    `    id: ${JSON.stringify(entry.id)},\n` +
+    `    title: ${JSON.stringify(entry.title)},\n` +
+    `    description: ${JSON.stringify(entry.description)},\n` +
+    `    section: ${JSON.stringify(entry.section)},\n` +
+    `    href: ${JSON.stringify(entry.href)},\n` +
+    `    owner: ${JSON.stringify(entry.owner)},\n` +
+    `    cadence: ${JSON.stringify(entry.cadence)},\n` +
+    `    updated: ${JSON.stringify(entry.updated)},\n` +
+    `  },`;
+
+  return indexHtml.slice(0, insertAt) + block + indexHtml.slice(insertAt);
+}
+
+document.getElementById('success-new').addEventListener('click', () => {
+  // Reset state for a fresh session
+  state.files = [];
+  state.targetSlug = null;
+  state.targetMeta = null;
+  state.isNew = false;
+  state.messages = [];
+  state.currentHtml = null;
+  state.uploadedHtml = null;
+  state.uploadedFileName = null;
+  fileListEl.innerHTML = '';
+  messagesEl.innerHTML = '';
+  htmlSummary.innerHTML = '';
+  htmlInput.value = '';
+  uploadPreviewSection.hidden = true;
+  uploadPreviewFrame.srcdoc = '';
+  document.getElementById('workshop').hidden = true;
+  document.getElementById('setup').hidden = false;
+  successModal.hidden = true;
+  previewEmpty.hidden = false;
+  previewWrap.hidden = true;
+  previewMeta.textContent = 'No draft yet';
+  shipBtn.disabled = true;
+  newSlugInput.value = '';
+  targetSelect.value = '__new__';
+  newSlugWrap.hidden = false;
+  switchSetupMode('chat');
+  loadIndexAndConventions(); // re-fetch in case registry changed
+});
+
+/* ==========================================================
+   UTIL
+   ========================================================== */
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+/* ==========================================================
+   INIT
+   ========================================================== */
+state.admin = loadAdmin();
+updateNavAuthState();
+if (state.admin) {
+  showApp();
+  loadIndexAndConventions();
+} else {
+  hideApp();
+  openLoginModal('hard').then(() => {
+    showApp();
+    loadIndexAndConventions();
+  }).catch(() => { /* ignore — hard mode has no cancel */ });
+}
+
+// On sign-out, drop back to the hard-gate login screen.
+signoutBtn.addEventListener('click', () => {
+  // (clearAdmin is already called by the existing signoutBtn listener; this runs after.)
+  hideApp();
+  openLoginModal('hard').then(() => {
+    showApp();
+    loadIndexAndConventions();
+  }).catch(() => {});
+});
+</script>
+
+</body>
+</html>
