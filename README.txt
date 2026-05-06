@@ -1,5 +1,7 @@
 DASHBOARDS SITE — quick reference
 
+NOTE: This site now auto-deploys from github.com/mbeard-collab/lantern on each push to main.
+
 This folder is the entire website. Drag the folder onto Netlify to deploy.
 
 STRUCTURE
