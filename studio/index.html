@@ -616,13 +616,17 @@ function buildSystemPrompt() {
     `OUTPUT FORMAT — every reply must use this exact format:`,
     ``,
     `<chat>Your prose to the user. Always include this. Friendly, concise, action-oriented.</chat>`,
-    `<html>`,
+    ``,
+    `After the </chat> closing tag, when (and only when) you have a complete dashboard to show, output the FULL HTML document directly — do NOT wrap it in any additional tags. Start with <!doctype html> and end with </html>. Example shape:`,
+    ``,
+    `<chat>Updated.</chat>`,
     `<!doctype html>`,
     `<html lang="en">`,
-    `... full updated dashboard HTML ...`,
+    `<head>...</head>`,
+    `<body>...</body>`,
     `</html>`,
     ``,
-    `Only include the <html>...</html> block when you have a complete dashboard draft to show. If you're asking clarifying questions, omit the <html> block entirely. The block, when present, must be a complete self-contained HTML document — never partial fragments.`,
+    `If you're asking clarifying questions or just acknowledging input, omit the HTML entirely — only the <chat>...</chat> block. The HTML, when present, must be a complete self-contained HTML document — never partial fragments, never nested inside another tag.`,
     ``,
     `BEHAVIOR:`,
     `1. Ask ONE question at a time, not a checklist. Keep <chat> tight — 1-3 sentences max per turn. The user is non-technical and skims. Mirror back what you understood from their last answer in one short clause, then ask the next thing.`,
@@ -664,8 +668,7 @@ async function streamAssistantReply() {
 
   let fullText = '';
   let chatText = '';
-  let htmlText = '';
-  let renderedHtmlYet = false;
+  let lastRenderedDoc = null;
 
   try {
     const res = await fetch('/api/generate', {
@@ -685,40 +688,33 @@ async function streamAssistantReply() {
       if (done) break;
       fullText += decoder.decode(value, { stream: true });
 
-      // Extract <chat> content (may still be open)
+      // <chat> block extraction — partial OK.
       const chatM = fullText.match(/<chat>([\s\S]*?)(<\/chat>|$)/);
       if (chatM) {
         chatText = chatM[1];
         bodyEl.textContent = chatText;
       } else {
-        // No <chat> tag yet — show stream raw so user sees progress
-        bodyEl.textContent = fullText.replace(/<\/?(chat|html)>/g, '');
+        bodyEl.textContent = fullText.replace(/<\/?(chat|html)[^>]*>/gi, '');
       }
 
-      // Extract <html> content
-      const htmlM = fullText.match(/<html>([\s\S]*?)<\/html>/);
-      if (htmlM && !renderedHtmlYet) {
-        htmlText = '<html>' + htmlM[1] + '</html>';
-        // Strip leading "<html>" if user prepended <!doctype>
-        const fullDoc = fullText.match(/(<!doctype[\s\S]*?<\/html>)/i);
-        const docToUse = fullDoc ? fullDoc[1] : htmlText;
-        renderPreview(docToUse);
-        renderedHtmlYet = true;
+      // HTML doc extraction — only render once we see a complete doc.
+      const doc = extractHtmlDoc(fullText);
+      if (doc && doc !== lastRenderedDoc) {
+        renderPreview(doc);
+        lastRenderedDoc = doc;
       }
       messagesEl.scrollTop = messagesEl.scrollHeight;
     }
 
-    // Final extraction
+    // Final pass: re-extract chat + html on the complete text.
     if (chatText) {
       bodyEl.textContent = chatText;
     } else if (!fullText.includes('<chat>')) {
-      bodyEl.textContent = fullText;
+      bodyEl.textContent = fullText.replace(/<\/?(chat|html)[^>]*>/gi, '');
     }
-
-    // Final HTML extraction (in case it was at the end)
-    const finalHtml = fullText.match(/(<!doctype[\s\S]*?<\/html>)/i);
-    if (finalHtml) {
-      renderPreview(finalHtml[1]);
+    const finalDoc = extractHtmlDoc(fullText);
+    if (finalDoc && finalDoc !== lastRenderedDoc) {
+      renderPreview(finalDoc);
     }
 
     state.messages.push({ role: 'assistant', content: fullText });
@@ -1298,6 +1294,28 @@ document.getElementById('success-new').addEventListener('click', () => {
    ========================================================== */
 function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+// Pull a complete HTML doc out of streaming text.
+// Robust against nested wrappers, <html lang="en">, and literal "</html>" in JS strings/comments.
+// Returns the doc string when both a start (<!doctype or <html) and a closing </html> are present, else null.
+function extractHtmlDoc(text) {
+  // Start: prefer <!doctype, fall back to first <html (with optional attributes).
+  const doctypeMatch = text.match(/<!doctype[^>]*>/i);
+  let startIdx = doctypeMatch ? doctypeMatch.index : -1;
+  if (startIdx < 0) {
+    const htmlOpen = text.match(/<html(?:\s[^>]*)?>/i);
+    if (!htmlOpen) return null;
+    startIdx = htmlOpen.index;
+  }
+  // End: use the LAST </html> in the text — survives literal "</html>" strings inside scripts.
+  const lower = text.toLowerCase();
+  const lastClose = lower.lastIndexOf('</html>');
+  if (lastClose < 0 || lastClose < startIdx) return null;
+  let doc = text.slice(startIdx, lastClose + '</html>'.length);
+  // Ensure it starts with a doctype.
+  if (!/^\s*<!doctype/i.test(doc)) doc = '<!doctype html>\n' + doc;
+  return doc;
 }
 
 /* ==========================================================
