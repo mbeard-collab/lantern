@@ -111,6 +111,10 @@
   .preview { flex: 1; overflow: hidden; background: #fff; }
   .preview iframe { width: 100%; height: 100%; border: 0; display: block; }
   .preview-empty { flex: 1; display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 13px; padding: 40px; text-align: center; background: var(--bg-elev-2); }
+  .preview-empty .building { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+  .preview-empty .building .label { font-size: 14px; color: var(--text); font-weight: 500; letter-spacing: -0.01em; }
+  .preview-empty .building .progress { font-size: 11px; color: var(--muted-2); font-variant-numeric: tabular-nums; }
+  .preview-empty .building .thinking { transform: scale(1.4); }
 
   /* Modal + success */
   .modal-bg { position: fixed; inset: 0; background: rgba(11,15,23,0.85); backdrop-filter: blur(6px); display: flex; align-items: center; justify-content: center; z-index: 100; }
@@ -697,11 +701,14 @@ async function streamAssistantReply() {
         bodyEl.textContent = fullText.replace(/<\/?(chat|html)[^>]*>/gi, '');
       }
 
-      // HTML doc extraction — only render once we see a complete doc.
+      // HTML doc extraction — render once we see a complete doc.
+      // While the doc is in-flight (start seen but not yet closed), show a building indicator.
       const doc = extractHtmlDoc(fullText);
       if (doc && doc !== lastRenderedDoc) {
         renderPreview(doc);
         lastRenderedDoc = doc;
+      } else if (!doc && /<!doctype|<html(?:\s|>)/i.test(fullText)) {
+        showPreviewBuilding(fullText.length);
       }
       messagesEl.scrollTop = messagesEl.scrollHeight;
     }
@@ -725,6 +732,15 @@ async function streamAssistantReply() {
     state.streaming = false;
     sendBtn.disabled = false;
     shipBtn.disabled = !state.currentHtml;
+    // If we showed a Building indicator but never got a complete doc, reset.
+    const htmlStarted = /<!doctype|<html(?:\s|>)/i.test(fullText);
+    const finished = !!extractHtmlDoc(fullText);
+    if (previewWrap.hidden && htmlStarted && !finished) {
+      previewEmpty.innerHTML = `<div class="building"><span class="label" style="color: var(--red);">Generation stopped before finishing.</span><span class="progress">Ask Claude to continue, or try a simpler ask.</span></div>`;
+    } else if (!previewWrap.hidden && state.currentHtml) {
+      // Stream done, doc is rendered: restore plain size badge.
+      previewMeta.textContent = `${(state.currentHtml.length / 1024).toFixed(1)} KB`;
+    }
     userInput.focus();
   }
 }
@@ -746,6 +762,29 @@ function renderPreview(htmlDoc) {
   previewFrame.srcdoc = htmlDoc;
   previewMeta.textContent = `${(htmlDoc.length / 1024).toFixed(1)} KB`;
   shipBtn.disabled = state.streaming;
+}
+
+function showPreviewBuilding(bytes) {
+  // Only relevant when no iframe is yet rendered. If we already have a draft,
+  // leave it visible so revisions don't blank the screen.
+  if (!previewWrap.hidden) {
+    previewMeta.textContent = `Updating… ${(bytes / 1024).toFixed(1)} KB`;
+    return;
+  }
+  previewEmpty.hidden = false;
+  previewEmpty.innerHTML = `
+    <div class="building">
+      <span class="thinking"><span></span><span></span><span></span></span>
+      <span class="label">Building dashboard…</span>
+      <span class="progress">${(bytes / 1024).toFixed(1)} KB streamed</span>
+    </div>
+  `;
+}
+
+function resetPreviewEmpty(message) {
+  if (!previewWrap.hidden) {
+    previewEmpty.textContent = message || 'The dashboard will render here once Claude generates it.';
+  }
 }
 
 /* ==========================================================
