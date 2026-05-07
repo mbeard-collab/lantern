@@ -357,8 +357,8 @@ body.light .toggle-thumb { transform: translateX(12px); }
             <span>Claude.ai usage</span><span class="source-status" id="anth-status">No file</span>
           </div>
           <div class="drop-zone" id="anthDrop" style="padding:10px;">
-            <input type="file" accept=".csv" id="anthFile" onchange="handleAnthCSV(this.files[0])"/>
-            <p><strong>Drop CSV</strong> · console.anthropic.com → Settings → Usage</p>
+            <input type="file" accept=".csv,.json" id="anthFile" onchange="handleAnthFile(this.files[0])"/>
+            <p><strong>Drop CSV or JSON</strong> · CSV: console.anthropic.com → Settings → Usage<br/>JSON: claude.ai → Settings → Export Data (conversations.json + users.json)</p>
           </div>
         </div>
         <div style="background:var(--bg3);border:1px solid var(--line2);border-radius:7px;padding:10px 12px;">
@@ -366,7 +366,7 @@ body.light .toggle-thumb { transform: translateX(12px); }
             <span>&#x26A1; Admin API &mdash; live pull</span><span class="source-status" id="api-status">Not connected</span>
           </div>
           <div style="display:flex;gap:7px;align-items:center;margin-bottom:7px;flex-wrap:wrap;">
-            <input type="password" id="anthAdminKey" placeholder="sk-ant-admin..." autocomplete="off" style="flex:1;min-width:0;font-family:var(--mono);font-size:11px;"/>
+            <input type="password" id="anthAdminKey" placeholder="Optional if ANTHROPIC_ADMIN_KEY env var set" autocomplete="off" style="flex:1;min-width:0;font-family:var(--sans);font-size:11px;"/>
             <select id="apiRange" style="font-size:11px;padding:6px 8px;">
               <option value="30">30 days</option>
               <option value="60">60 days</option>
@@ -379,7 +379,7 @@ body.light .toggle-thumb { transform: translateX(12px); }
             <div class="fp-row"><span class="fp-label">claude code</span><div class="fp-track"><div class="fp-bar" id="afp2" style="background:var(--anth)"></div></div><span class="fp-state" id="afs2">&#x2014;</span></div>
             <div class="fp-row"><span class="fp-label">cost report</span><div class="fp-track"><div class="fp-bar" id="afp3" style="background:var(--anth)"></div></div><span class="fp-state" id="afs3">&#x2014;</span></div>
           </div>
-          <p style="font-size:10px;color:var(--text3);line-height:1.6;margin-top:6px;">Admin key from <span style="font-family:var(--mono)">console.anthropic.com &rarr; Settings &rarr; Admin Keys</span></p>
+          <p style="font-size:10px;color:var(--text3);line-height:1.6;margin-top:6px;"><strong style="color:var(--oai)">Key field is optional</strong> when <span style="font-family:var(--mono)">ANTHROPIC_ADMIN_KEY</span> is set as a Netlify env var &mdash; data pulls automatically on page load. Only enter a key here to override.</p>
         </div>
         <div>
           <div style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;display:flex;align-items:center;justify-content:space-between;">
@@ -486,7 +486,7 @@ body.light .toggle-thumb { transform: translateX(12px); }
           <thead><tr><th>User</th><th>Platforms</th><th>Top Anth model</th><th>Top OAI model</th><th>Anth tokens</th><th>OAI tokens</th><th>Anth cost</th><th>OAI cost</th><th>Total</th><th>Share</th></tr></thead>
           <tbody id="u-body"></tbody>
         </table></div>
-        <div class="note">Cost estimates use published Anthropic and OpenAI pricing. Actual invoiced amounts may differ.</div>
+        <div class="note">Cost estimates use published Anthropic and OpenAI pricing. Actual invoiced amounts may differ. Rows from JSON export show message counts (input=human msgs, output=assistant msgs) with $0 cost — token data is not included in Claude's data export.</div>
       </div>
     </div>
 
@@ -662,6 +662,137 @@ function anthCost(model, i, o, cr, cc) {
   var k = Object.keys(ANTH_PRICES).find(function(k){ return (model||'').toLowerCase().indexOf(k) >= 0; });
   var p = k ? ANTH_PRICES[k] : {i:3, o:15, cr:0.3, cc:3.75};
   return ((i||0)*p.i + (o||0)*p.o + (cr||0)*p.cr + (cc||0)*p.cc) / 1e6;
+}
+
+
+// ─── Anthropic file router (CSV or JSON) ─────────────────────────
+function handleAnthFile(file) {
+  if (!file) return;
+  if (file.name.endsWith('.json')) {
+    handleAnthJSON(file);
+  } else {
+    handleAnthCSV(file);
+  }
+}
+
+// ─── Anthropic JSON export parser ─────────────────────────────────
+// Handles Claude data export files: conversations.json + users.json
+// users.json: [{uuid, full_name, email_address}]
+// conversations.json: [{uuid, created_at, account:{uuid}, chat_messages:[{sender,created_at,...}]}]
+//
+// Since token counts are not in the export, we derive:
+//   - conversations per user per day
+//   - messages per user per day (human + assistant)
+//   - active days
+// These feed into the dashboard as engagement metrics.
+// Cost is set to 0 (no token data available from JSON export).
+
+var ANTH_JSON_USERS = {};  // uuid → email, persists across uploads
+
+function handleAnthJSON(file) {
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      var data = JSON.parse(e.target.result);
+      if (!Array.isArray(data) || !data.length) throw new Error('Expected a JSON array.');
+
+      var firstItem = data[0];
+
+      // ── Detect file type by shape ──
+      if ('email_address' in firstItem && 'uuid' in firstItem) {
+        // users.json — build lookup table, don't load as data yet
+        var count = 0;
+        data.forEach(function(u) {
+          if (u.uuid && u.email_address) {
+            ANTH_JSON_USERS[u.uuid] = u.email_address;
+            count++;
+          }
+        });
+        document.getElementById('anth-status').textContent = count + ' users indexed — now upload conversations.json';
+        document.getElementById('anth-status').className = 'source-status loading';
+        showErr('');
+        return;
+      }
+
+      if ('chat_messages' in firstItem && 'account' in firstItem) {
+        // conversations.json — parse into per-user-per-day rows
+        var parsed = parseAnthConversations(data);
+        if (!parsed.length) throw new Error('No conversations with messages found.');
+
+        // Merge into D.anth (don't replace CSV data if already loaded)
+        // Tag source so views can distinguish
+        D.anth = D.anth.filter(function(r){ return r.source !== 'json'; });
+        D.anth = D.anth.concat(parsed);
+
+        var userCount = new Set(parsed.map(function(r){ return r.user; })).size;
+        document.getElementById('anth-status').textContent = parsed.length + ' rows · ' + userCount + ' users (JSON)';
+        document.getElementById('anth-status').className = 'source-status loaded';
+        document.getElementById('dot-anth').className = 'conn-dot csv';
+        document.getElementById('lbl-anth').textContent = 'Anthropic chat — JSON (' + parsed.length + ' rows)';
+        rebuild();
+        return;
+      }
+
+      throw new Error('Unrecognized JSON format. Expected users.json or conversations.json from claude.ai data export.');
+
+    } catch(e) {
+      document.getElementById('anth-status').textContent = 'Error: ' + e.message;
+      document.getElementById('anth-status').className = 'source-status err';
+      showErr('JSON parse error: ' + e.message);
+    }
+  };
+  reader.readAsText(file);
+}
+
+function parseAnthConversations(convos) {
+  // Group messages by user + date, summing message counts
+  var dayMap = {};
+
+  convos.forEach(function(convo) {
+    var acctUuid = convo.account && convo.account.uuid || '';
+    var email = ANTH_JSON_USERS[acctUuid] || acctUuid || '(unknown)';
+    var msgs = convo.chat_messages || [];
+    if (!msgs.length) return;
+
+    msgs.forEach(function(msg) {
+      var date = (msg.created_at || convo.created_at || '').substring(0, 10);
+      if (!date) return;
+      var key = email + '|' + date;
+      if (!dayMap[key]) {
+        dayMap[key] = {
+          user: email,
+          date: date,
+          humanMsgs: 0,
+          assistantMsgs: 0,
+          convos: new Set()
+        };
+      }
+      if (msg.sender === 'human') dayMap[key].humanMsgs++;
+      else if (msg.sender === 'assistant') dayMap[key].assistantMsgs++;
+      dayMap[key].convos.add(convo.uuid);
+    });
+  });
+
+  // Convert to normalized rows compatible with the dashboard
+  // inp = human messages (proxy for input), out = assistant messages (proxy for output)
+  // cost = 0 (not available in JSON export)
+  return Object.values(dayMap).map(function(d) {
+    return {
+      user:     d.user,
+      model:    'claude.ai (chat)',
+      date:     d.date,
+      inp:      d.humanMsgs,    // repurposed: human message count
+      out:      d.assistantMsgs, // repurposed: assistant message count
+      cr:       0,
+      cc:       0,
+      cost:     0,               // no token data in JSON export
+      reqs:     d.convos.size,   // conversations as proxy for requests
+      provider: 'anthropic',
+      source:   'json',
+      convos:   d.convos.size
+    };
+  });
 }
 
 // ─── Anthropic CSV parsing ────────────────────────────────────────
@@ -862,16 +993,29 @@ async function pullOpenAI() {
   document.getElementById('fetchProg').style.display = 'block';
   showErr('');
 
-  // OpenAI limits bucket_width=1d to 31 days per request
-  // Split the requested range into 31-day chunks
+  // OpenAI limits bucket_duration=1d to 31 days per request
+  // Build chunks working BACKWARDS from now, each max 31 days
+  // chunk.start < chunk.end, both as Unix timestamps (seconds)
   var CHUNK = 31;
   var chunks = [];
-  for (var offset = 0; offset < days; offset += CHUNK) {
-    var chunkDays = Math.min(CHUNK, days - offset);
-    var chunkEnd   = new Date(now - offset * 86400000);
-    var chunkStart = new Date(now - (offset + chunkDays) * 86400000);
-    chunks.push({ start: Math.floor(chunkStart.getTime()/1000), end: Math.floor(chunkEnd.getTime()/1000) });
+  // Cap end at start of YESTERDAY midnight UTC — OpenAI only returns fully completed days
+  // Today is not yet complete so end_time=today causes a 400
+  var yesterdayMidnightMs = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - 1)).getTime();
+  var rangeEndMs   = yesterdayMidnightMs;
+  var rangeStartMs = yesterdayMidnightMs - (days * 86400000);
+  var cursor = rangeEndMs;
+  while (cursor > rangeStartMs) {
+    var chunkStartMs = Math.max(cursor - CHUNK * 86400000, rangeStartMs);
+    chunks.push({
+      start: Math.floor(chunkStartMs / 1000),
+      end:   Math.floor(cursor / 1000)
+    });
+    cursor = chunkStartMs;
   }
+  // Verify: log chunks so we can confirm direction
+  chunks.forEach(function(ch, i) {
+    console.log('[OAI] chunk ' + i + ': ' + new Date(ch.start*1000).toISOString().substring(0,10) + ' → ' + new Date(ch.end*1000).toISOString().substring(0,10) + ' (' + Math.round((ch.end-ch.start)/86400) + 'd)');
+  });
 
   try {
     var allUsageRows = [];
@@ -886,37 +1030,40 @@ async function pullOpenAI() {
     } catch(e) { /* optional */ }
     setFP(3, 'ok', 100);
 
-    // Fetch completions usage in 31-day chunks
-    setFP(1, 'loading', 10);
+    // Fetch completions usage in 31-day chunks (API max = 31 days per request)
+    var fpEl = document.getElementById('fetchProg');
+    if (fpEl) fpEl.style.display = 'block';
+
     for (var ci = 0; ci < chunks.length; ci++) {
       var ch = chunks[ci];
-      var pct = Math.round(10 + (ci / chunks.length) * 80);
-      setFP(1, 'loading', pct);
-      var rows = await oaiPages(key,
-        'https://api.openai.com/v1/organization/usage/completions?start_time=' + ch.start +
-        '&end_time=' + ch.end +
-        '&bucket_duration=1d&group_by[]=user_id&group_by[]=model&limit=100'
-      );
+      // Use start_time + limit (number of buckets) — NOT end_time
+      // end_time causes the API to calculate (end-start)/bucket_width and reject if >31
+      var chunkDays = Math.round((ch.end - ch.start) / 86400);
+      var chunkUrl = 'https://api.openai.com/v1/organization/usage/completions' +
+        '?start_time=' + ch.start +
+        '&bucket_duration=1d' +
+        '&group_by[]=user_id' +
+        '&group_by[]=model' +
+        '&limit=' + chunkDays;
+      console.log('[OAI chunk ' + ci + '] URL:', chunkUrl);
+      var rows = await oaiPagesFetch(key, chunkUrl);
+      console.log('[OAI chunk ' + ci + '] rows:', rows.length);
       allUsageRows = allUsageRows.concat(rows);
     }
-    setFP(1, 'ok', 100);
 
     // Fetch costs in 31-day chunks
-    setFP(2, 'loading', 10);
     for (var ci2 = 0; ci2 < chunks.length; ci2++) {
       var ch2 = chunks[ci2];
-      var pct2 = Math.round(10 + (ci2 / chunks.length) * 80);
-      setFP(2, 'loading', pct2);
       try {
-        var crows = await oaiPages(key,
-          'https://api.openai.com/v1/organization/costs?start_time=' + ch2.start +
-          '&end_time=' + ch2.end +
-          '&bucket_duration=1d&group_by[]=line_item&limit=100'
-        );
+        var costDays = Math.round((ch2.end - ch2.start) / 86400);
+        var costUrl = 'https://api.openai.com/v1/organization/costs' +
+          '?start_time=' + ch2.start +
+          '&bucket_width=1d' +
+          '&limit=' + costDays;
+        var crows = await oaiPagesFetch(key, costUrl);
         allCostRows = allCostRows.concat(crows);
       } catch(e) { /* costs optional */ }
     }
-    setFP(2, 'ok', 100);
 
     // Normalise rows
     var parsed = [];
@@ -961,13 +1108,34 @@ async function pullOpenAI() {
 
 async function oaiFetch(key, url) {
   var r = await fetch(url, {headers:{'Authorization':'Bearer '+key,'Content-Type':'application/json'}});
-  if (!r.ok) { var e = await r.json().catch(function(){return{};}); throw new Error((e.error&&e.error.message)||'HTTP '+r.status); }
+  if (!r.ok) {
+    var e = await r.json().catch(function(){return{};});
+    var msg = (e.error && (e.error.message || JSON.stringify(e.error))) || JSON.stringify(e) || ('HTTP ' + r.status);
+    console.error('[OAI error] URL:', url);
+    console.error('[OAI error] Response:', JSON.stringify(e));
+    throw new Error(msg);
+  }
   return r.json();
 }
 async function oaiPages(key, base) {
   var all = [], after = null, att = 0;
   do {
     var url = after ? base + '&after=' + after : base;
+    var d = await oaiFetch(key, url);
+    var rows = d.data || d.results || [];
+    all = all.concat(rows);
+    after = d.has_more ? (d.next_page || null) : null;
+    att++;
+  } while (after && att < 20);
+  return all;
+}
+
+// oaiPagesFetch: pagination for chunked URLs (uses cursor without corrupting params)
+async function oaiPagesFetch(key, baseUrl) {
+  var all = [], after = null, att = 0;
+  do {
+    var sep = baseUrl.indexOf('?') >= 0 ? '&' : '?';
+    var url = after ? baseUrl + sep + 'after=' + encodeURIComponent(after) : baseUrl;
     var d = await oaiFetch(key, url);
     var rows = d.data || d.results || [];
     all = all.concat(rows);
@@ -987,7 +1155,7 @@ async function oaiPages(key, base) {
     e.preventDefault(); el.classList.remove('drag');
     var file = e.dataTransfer.files[0];
     if (!file) return;
-    if (id === 'anthDrop') handleAnthCSV(file);
+    if (id === 'anthDrop') handleAnthFile(file);
     else if (id === 'coworkDrop') handleCoworkCSV(file);
     else handleOAICSV(file);
   });
@@ -1337,14 +1505,17 @@ function setAFP(id, st, pct) {
   if (l) { l.textContent = st; l.className = 'fp-state '+(st==='ok'?'ok':st==='error'?'err':'loading'); }
 }
 
+// Route all Anthropic Admin API calls through the Netlify proxy
+// so the Admin key never touches the browser and CORS is handled server-side
+var PROXY_BASE = '/.netlify/functions/anthropic-proxy';
+
 async function anthApiFetch(key, url) {
-  var r = await fetch(url, {
-    headers: {
-      'x-api-key': key,
-      'anthropic-version': '2023-06-01',
-      'anthropic-dangerous-direct-browser-access': 'true'
-    }
-  });
+  // Pass the full Anthropic URL as a single base64-encoded param
+  // This avoids double-encoding of special chars like group_by[]
+  var proxyUrl = PROXY_BASE + '?url=' + encodeURIComponent(url);
+  var headers = { 'Content-Type': 'application/json' };
+  if (key) headers['x-admin-key'] = key;
+  var r = await fetch(proxyUrl, { headers: headers });
   if (!r.ok) {
     var e = await r.json().catch(function(){ return {}; });
     throw new Error((e.error && e.error.message) || 'HTTP ' + r.status);
@@ -1376,12 +1547,12 @@ function inferAnthProduct(row) {
 
 async function pullAnthAPI() {
   var key = document.getElementById('anthAdminKey').value.trim();
-  if (!key) { showErr('Paste your Anthropic Admin API key (sk-ant-admin...)'); return; }
-  if (key.indexOf('sk-ant-api') === 0) {
-    showErr('Wrong key type: standard API key (sk-ant-api...) entered. Need Admin Key (sk-ant-admin...) from console.anthropic.com \u2192 Settings \u2192 Admin Keys');
+  // Key is optional when ANTHROPIC_ADMIN_KEY env var is set in Netlify
+  if (key && key.indexOf('sk-ant-api') === 0) {
+    showErr('Wrong key type: standard API key entered. Need Admin Key (sk-ant-admin...) from console.anthropic.com → Settings → Admin Keys');
     return;
   }
-  if (key.indexOf('sk-ant-admin') !== 0) {
+  if (key && key.indexOf('sk-ant-admin') !== 0) {
     showErr('Key not recognized. Admin keys start with sk-ant-admin...');
     return;
   }
@@ -1424,9 +1595,7 @@ async function pullAnthAPI() {
       setAFP(1, 'error', 100);
       var errMsg = e.message || String(e);
       if (errMsg.indexOf('Failed to fetch') >= 0 || errMsg.indexOf('CORS') >= 0 || errMsg.indexOf('ERR_FAILED') >= 0) {
-        showErr('CORS blocked: The browser cannot call api.anthropic.com from a file:// URL. ' +
-          'Serve this file over HTTP instead: open Terminal in your Downloads folder and run: ' +
-          'python3 -m http.server 8765 — then open http://localhost:8765/' + window.location.pathname.split('/').pop());
+        showErr('Network error reaching the proxy. If deployed to Netlify, make sure anthropic-proxy.js is in netlify/functions/ and ANTHROPIC_ADMIN_KEY is set in your Netlify environment variables. Error: ' + errMsg);
         btn.disabled = false; btn.textContent = 'Pull live';
         return;
       }
@@ -1635,6 +1804,22 @@ function exportCSV() {
   var a = document.createElement('a'); a.href=url; a.download='govspend_ai_spend.csv'; a.click();
   URL.revokeObjectURL(url);
 }
+
+
+// ─── Auto-pull Anthropic data on load (uses Netlify env var) ─────
+window.addEventListener('load', function() {
+  // Only auto-pull if we're on a real HTTP server (not file://)
+  // and the proxy is available (i.e. deployed to Netlify)
+  if (window.location.protocol === 'file:') return;
+  // Small delay to let the page render first
+  setTimeout(function() {
+    var btn = document.getElementById('anthPullBtn');
+    if (btn) {
+      console.log('[Dashboard] Auto-pulling Anthropic data via proxy...');
+      pullAnthAPI();
+    }
+  }, 800);
+});
 
 // ─── Detect file:// origin and warn ──────────────────────────────
 (function() {
