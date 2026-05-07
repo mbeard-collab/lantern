@@ -862,29 +862,16 @@ async function pullOpenAI() {
   document.getElementById('fetchProg').style.display = 'block';
   showErr('');
 
-  // OpenAI limits bucket_duration=1d to 31 days per request
-  // Build chunks working BACKWARDS from now, each max 31 days
-  // chunk.start < chunk.end, both as Unix timestamps (seconds)
+  // OpenAI limits bucket_width=1d to 31 days per request
+  // Split the requested range into 31-day chunks
   var CHUNK = 31;
   var chunks = [];
-  // Cap end at start of YESTERDAY midnight UTC — OpenAI only returns fully completed days
-  // Today is not yet complete so end_time=today causes a 400
-  var yesterdayMidnightMs = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - 1)).getTime();
-  var rangeEndMs   = yesterdayMidnightMs;
-  var rangeStartMs = yesterdayMidnightMs - (days * 86400000);
-  var cursor = rangeEndMs;
-  while (cursor > rangeStartMs) {
-    var chunkStartMs = Math.max(cursor - CHUNK * 86400000, rangeStartMs);
-    chunks.push({
-      start: Math.floor(chunkStartMs / 1000),
-      end:   Math.floor(cursor / 1000)
-    });
-    cursor = chunkStartMs;
+  for (var offset = 0; offset < days; offset += CHUNK) {
+    var chunkDays = Math.min(CHUNK, days - offset);
+    var chunkEnd   = new Date(now - offset * 86400000);
+    var chunkStart = new Date(now - (offset + chunkDays) * 86400000);
+    chunks.push({ start: Math.floor(chunkStart.getTime()/1000), end: Math.floor(chunkEnd.getTime()/1000) });
   }
-  // Verify: log chunks so we can confirm direction
-  chunks.forEach(function(ch, i) {
-    console.log('[OAI] chunk ' + i + ': ' + new Date(ch.start*1000).toISOString().substring(0,10) + ' → ' + new Date(ch.end*1000).toISOString().substring(0,10) + ' (' + Math.round((ch.end-ch.start)/86400) + 'd)');
-  });
 
   try {
     var allUsageRows = [];
@@ -899,39 +886,37 @@ async function pullOpenAI() {
     } catch(e) { /* optional */ }
     setFP(3, 'ok', 100);
 
-    // Fetch completions usage in 31-day chunks (API max = 31 days per request)
-    var fpEl = document.getElementById('fetchProg');
-    if (fpEl) fpEl.style.display = 'block';
-
+    // Fetch completions usage in 31-day chunks
+    setFP(1, 'loading', 10);
     for (var ci = 0; ci < chunks.length; ci++) {
       var ch = chunks[ci];
-      var chunkUrl = 'https://api.openai.com/v1/organization/usage/completions' +
-        '?start_time=' + ch.start +
-        '&end_time='   + ch.end +
-        '&bucket_duration=1d' +
-        '&group_by[]=user_id' +
-        '&group_by[]=model' +
-        '&limit=100';
-      console.log('[OAI chunk ' + ci + '] URL:', chunkUrl);
-      var rows = await oaiPagesFetch(key, chunkUrl);
-      console.log('[OAI chunk ' + ci + '] rows:', rows.length);
+      var pct = Math.round(10 + (ci / chunks.length) * 80);
+      setFP(1, 'loading', pct);
+      var rows = await oaiPages(key,
+        'https://api.openai.com/v1/organization/usage/completions?start_time=' + ch.start +
+        '&end_time=' + ch.end +
+        '&bucket_duration=1d&group_by[]=user_id&group_by[]=model&limit=100'
+      );
       allUsageRows = allUsageRows.concat(rows);
     }
+    setFP(1, 'ok', 100);
 
     // Fetch costs in 31-day chunks
+    setFP(2, 'loading', 10);
     for (var ci2 = 0; ci2 < chunks.length; ci2++) {
       var ch2 = chunks[ci2];
+      var pct2 = Math.round(10 + (ci2 / chunks.length) * 80);
+      setFP(2, 'loading', pct2);
       try {
-        var costUrl = 'https://api.openai.com/v1/organization/costs' +
-          '?start_time=' + ch2.start +
-          '&end_time='   + ch2.end +
-          '&bucket_duration=1d' +
-          '&group_by[]=line_item' +
-          '&limit=100';
-        var crows = await oaiPagesFetch(key, costUrl);
+        var crows = await oaiPages(key,
+          'https://api.openai.com/v1/organization/costs?start_time=' + ch2.start +
+          '&end_time=' + ch2.end +
+          '&bucket_duration=1d&group_by[]=line_item&limit=100'
+        );
         allCostRows = allCostRows.concat(crows);
       } catch(e) { /* costs optional */ }
     }
+    setFP(2, 'ok', 100);
 
     // Normalise rows
     var parsed = [];
@@ -983,21 +968,6 @@ async function oaiPages(key, base) {
   var all = [], after = null, att = 0;
   do {
     var url = after ? base + '&after=' + after : base;
-    var d = await oaiFetch(key, url);
-    var rows = d.data || d.results || [];
-    all = all.concat(rows);
-    after = d.has_more ? (d.next_page || null) : null;
-    att++;
-  } while (after && att < 20);
-  return all;
-}
-
-// oaiPagesFetch: pagination for chunked URLs (uses cursor without corrupting params)
-async function oaiPagesFetch(key, baseUrl) {
-  var all = [], after = null, att = 0;
-  do {
-    var sep = baseUrl.indexOf('?') >= 0 ? '&' : '?';
-    var url = after ? baseUrl + sep + 'after=' + encodeURIComponent(after) : baseUrl;
     var d = await oaiFetch(key, url);
     var rows = d.data || d.results || [];
     all = all.concat(rows);
