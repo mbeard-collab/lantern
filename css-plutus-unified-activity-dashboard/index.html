@@ -880,8 +880,8 @@ function valueForBucket(rep, bucket, metric, liveByBucket) {
 
 function granularityFootnote(gran) {
   if (gran.mode === "monthly") return "Monthly aggregates from Salesforce.";
-  if (gran.mode === "weekly")  return "Weekly buckets — month totals distributed across calendar weeks. Click \u201cRefresh from Salesforce\u201d for true per-week counts.";
-  return "Daily buckets — month totals distributed across days. Click \u201cRefresh from Salesforce\u201d for true per-day counts.";
+  if (gran.mode === "weekly")  return "Weekly buckets pulled live from Salesforce.";
+  return "Daily buckets pulled live from Salesforce.";
 }
 
 /* ============================================================
@@ -1773,71 +1773,129 @@ function renderICDetail(name) {
 
   // ===== Period-aware trend & vs-team-avg charts =====
   destroy("icTrend"); destroy("icAvg");
-  drawIcCharts(rep, m, null);
+  const granNow = granularityForPeriod(state.period);
+  // For monthly mode we already have accurate data in-memory.
+  // For weekly/daily we need real per-bucket counts from Salesforce — auto-fetch.
+  if (granNow.mode === "monthly") {
+    drawIcCharts(rep, m, null);
+  } else {
+    drawIcChartsLoading(rep);
+    autoLoadLiveAndDraw(rep, m);
+  }
 
-  // Wire live SF refresh button
+  // Wire manual refresh button (also useful to re-pull if user wants fresh data)
   const liveBtn = $("#ic-live-refresh");
   if (liveBtn) {
-    liveBtn.addEventListener("click", async () => {
-      liveBtn.disabled = true;
-      const origText = liveBtn.textContent;
-      liveBtn.textContent = "⟳ Pulling…";
-      try {
-        const live = await fetchLiveGranular(rep, state.period);
-        drawIcCharts(rep, m, live);
-        liveBtn.textContent = "✓ Live data";
-        const foot = $("#ic-trend-foot");
-        if (foot) foot.textContent = `Live counts pulled from Salesforce at ${new Date().toLocaleTimeString()}.`;
-      } catch (e) {
-        console.error(e);
-        liveBtn.textContent = "⚠ Refresh failed";
-        const foot = $("#ic-trend-foot");
-        if (foot) foot.innerHTML = `<span style="color:var(--bad);">Live refresh failed: ${e.message}. Showing approximation.</span>`;
-      } finally {
-        setTimeout(() => { liveBtn.disabled = false; liveBtn.textContent = origText; }, 4000);
-      }
-    });
+    liveBtn.addEventListener("click", () => autoLoadLiveAndDraw(rep, m, /*force=*/true));
   }
 }
 
-/* Draw both IC charts (trend + vs-team-avg), optionally with live per-bucket data */
-function drawIcCharts(rep, m, liveByBucket) {
+/* Draw a placeholder "loading" line chart while live data is being fetched */
+function drawIcChartsLoading(rep) {
   const gran = granularityForPeriod(state.period);
   const labels = gran.buckets.map(b => b.label);
-  // For weekly/daily there can be many ticks — rotate and reduce font for readability.
+  const empty = gran.buckets.map(() => null);
+  destroy("icTrend"); destroy("icAvg");
+  const tickOpts = gran.mode === "daily"
+    ? { autoSkip: true, maxRotation: 60, minRotation: 45, font: { size: 10 } }
+    : gran.mode === "weekly"
+    ? { autoSkip: false, maxRotation: 45, minRotation: 30, font: { size: 11 } }
+    : { autoSkip: false, font: { size: 11 } };
+  charts.icTrend = new Chart($("#ic-trend"), {
+    type:"line",
+    data:{ labels, datasets:[
+      { label:"Calls",    borderColor:"#0b5cff", backgroundColor:"#0b5cff20", tension:0.3, data: empty },
+      { label:"Meetings", borderColor:"#1f9d55", borderDash:[4,4], tension:0.3, data: empty },
+      { label:"Emails",   borderColor:"#c97a00", borderDash:[2,2], tension:0.3, data: empty }
+    ]},
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{position:"bottom"}},
+      scales:{ x:{ ticks: tickOpts }, y:{ beginAtZero:true } } }
+  });
+  charts.icAvg = new Chart($("#ic-vsavg"), {
+    type:"line",
+    data:{ labels, datasets:[
+      { label: rep.name + " total", borderColor: rep.team==="CSS"?"#0b5cff":"#6f42c1",
+        backgroundColor: (rep.team==="CSS"?"#0b5cff":"#6f42c1")+"20", tension:0.3, data: empty },
+      { label: teamLabel(rep.team) + " peer avg", borderColor:"#8896ab", borderDash:[5,4], tension:0.3,
+        backgroundColor:"#aab9d633", data: empty }
+    ]},
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{position:"bottom"}},
+      scales:{ x:{ ticks: tickOpts }, y:{ beginAtZero:true } } }
+  });
+  const foot = $("#ic-trend-foot");
+  if (foot) foot.innerHTML = `<span style="color:var(--brand);">⟳ Pulling live ${gran.mode} counts from Salesforce…</span>`;
+}
+
+async function autoLoadLiveAndDraw(rep, m, force=false) {
+  const liveBtn = $("#ic-live-refresh");
+  if (liveBtn) { liveBtn.disabled = true; liveBtn.textContent = "⟳ Pulling…"; }
+  try {
+    const live = await fetchLiveGranular(rep, state.period);
+    // Also pull peer averages so the vs-team-avg chart isn't an approximation either
+    let peerLive = null;
+    try { peerLive = await fetchLivePeerAvg(rep, state.period); } catch(_) {}
+    drawIcCharts(rep, m, live, peerLive);
+    const foot = $("#ic-trend-foot");
+    if (foot) foot.innerHTML = `<span style="color:var(--good);">✓ Live counts from Salesforce · pulled ${new Date().toLocaleTimeString()}</span>`;
+    if (liveBtn) liveBtn.textContent = "✓ Live data";
+  } catch (e) {
+    console.error(e);
+    const foot = $("#ic-trend-foot");
+    if (foot) foot.innerHTML = `<span style="color:var(--bad);">Couldn't load live data: ${e.message}. ${(!window.cowork || typeof window.cowork.callMcpTool !== "function") ? "Open this file as a Cowork artifact for live refresh." : ""}</span>`;
+    if (liveBtn) liveBtn.textContent = "⚠ Failed";
+    // Render an empty (zero) chart so it doesn't look misleading
+    drawIcCharts(rep, m, {}, {});
+  } finally {
+    if (liveBtn) setTimeout(() => { liveBtn.disabled = false; liveBtn.textContent = "⟳ Refresh from Salesforce"; }, 4000);
+  }
+}
+
+/* Draw both IC charts as LINE charts with real per-bucket data.
+   - Monthly mode: uses in-memory monthly aggregates (always accurate)
+   - Weekly/daily: requires liveByBucket from Salesforce (else zeros, NEVER even-distribution)
+*/
+function drawIcCharts(rep, m, liveByBucket, peerLiveByBucket) {
+  const gran = granularityForPeriod(state.period);
+  const labels = gran.buckets.map(b => b.label);
   const tickOpts = gran.mode === "daily"
     ? { autoSkip: true, maxRotation: 60, minRotation: 45, font: { size: 10 } }
     : gran.mode === "weekly"
     ? { autoSkip: false, maxRotation: 45, minRotation: 30, font: { size: 11 } }
     : { autoSkip: false, font: { size: 11 } };
 
-  const callsData    = gran.buckets.map(b => valueForBucket(rep, b, "calls",    liveByBucket));
-  const meetingsData = gran.buckets.map(b => valueForBucket(rep, b, "meetings", liveByBucket));
-  const emailsData   = gran.buckets.map(b => valueForBucket(rep, b, "emails",   liveByBucket));
+  // Value getter — for monthly mode, uses rep.monthly[m][metric] directly.
+  // For sub-monthly modes, requires liveByBucket (no even-distribution fallback).
+  function bucketVal(target, bucket, metric, liveMap) {
+    if (gran.mode === "monthly") {
+      const md = target.monthly[bucket.monthKey] || {};
+      return md[metric] || 0;
+    }
+    if (liveMap && liveMap[bucket.key]) {
+      return liveMap[bucket.key][metric] || 0;
+    }
+    return 0;
+  }
 
-  // Choose chart type by mode: line for monthly/weekly trend, bar for daily for clarity
-  const trendType = gran.mode === "daily" ? "bar" : "line";
+  const callsData    = gran.buckets.map(b => bucketVal(rep, b, "calls",    liveByBucket));
+  const meetingsData = gran.buckets.map(b => bucketVal(rep, b, "meetings", liveByBucket));
+  const emailsData   = gran.buckets.map(b => bucketVal(rep, b, "emails",   liveByBucket));
 
   destroy("icTrend");
   charts.icTrend = new Chart($("#ic-trend"), {
-    type: trendType,
+    type: "line",
     data:{
       labels,
-      datasets: trendType === "line" ? [
-        { label:"Calls",    borderColor:"#0b5cff", backgroundColor:"#0b5cff20", tension:0.3, data: callsData },
-        { label:"Meetings", borderColor:"#1f9d55", borderDash:[4,4],            tension:0.3, data: meetingsData },
-        { label:"Emails",   borderColor:"#c97a00", borderDash:[2,2],            tension:0.3, data: emailsData }
-      ] : [
-        { label:"Calls",    backgroundColor:"#0b5cff", data: callsData },
-        { label:"Meetings", backgroundColor:"#1f9d55", data: meetingsData },
-        { label:"Emails",   backgroundColor:"#c97a00", data: emailsData }
+      datasets: [
+        { label:"Calls",    borderColor:"#0b5cff", backgroundColor:"#0b5cff20", tension:0.3, data: callsData,    pointRadius: gran.mode==="daily"?2:3 },
+        { label:"Meetings", borderColor:"#1f9d55", borderDash:[4,4],            tension:0.3, data: meetingsData, pointRadius: gran.mode==="daily"?2:3 },
+        { label:"Emails",   borderColor:"#c97a00", borderDash:[2,2],            tension:0.3, data: emailsData,   pointRadius: gran.mode==="daily"?2:3 }
       ]
     },
     options:{ responsive:true, maintainAspectRatio:false,
       plugins:{ legend:{ position:"bottom" } },
       scales:{ x:{ ticks: tickOpts }, y:{ beginAtZero: true } },
       onClick:(evt, els) => {
-        // For monthly mode, drill to that month. For weekly/daily, no-op (user already filtered).
+        // Monthly mode: clicking a point drills into that month
         if (gran.mode !== "monthly") return;
         if (!els.length) return;
         const idx = els[0].index;
@@ -1853,33 +1911,39 @@ function drawIcCharts(rep, m, liveByBucket) {
 
   // ===== vs Team Avg — same buckets, rep total activity vs peer avg =====
   const peers = REPS.filter(r => r.team===rep.team && r.name !== rep.name);
-  const repTotalsByBucket = gran.buckets.map(b => {
-    return valueForBucket(rep, b, "calls", liveByBucket)
-         + valueForBucket(rep, b, "meetings", liveByBucket)
-         + valueForBucket(rep, b, "emails", liveByBucket);
-  });
+  const repTotalsByBucket = gran.buckets.map(b =>
+    bucketVal(rep, b, "calls", liveByBucket)
+    + bucketVal(rep, b, "meetings", liveByBucket)
+    + bucketVal(rep, b, "emails", liveByBucket)
+  );
+  // Peer avg: in monthly mode, compute from in-memory data for the peer set.
+  // In sub-monthly modes, use peerLiveByBucket if provided, else zeros (no fake distribution).
   const avgTotalsByBucket = gran.buckets.map(b => {
     if (!peers.length) return 0;
-    const s = peers.reduce((a, p) =>
-      a + valueForBucket(p, b, "calls",    null)
-        + valueForBucket(p, b, "meetings", null)
-        + valueForBucket(p, b, "emails",   null), 0);
-    return Math.round(s / peers.length);
+    if (gran.mode === "monthly") {
+      const s = peers.reduce((a, p) => {
+        const md = p.monthly[b.monthKey] || {};
+        return a + (md.calls||0) + (md.meetings||0) + (md.emails||0);
+      }, 0);
+      return Math.round(s / peers.length);
+    }
+    if (peerLiveByBucket && peerLiveByBucket[b.key]) {
+      return peerLiveByBucket[b.key].avg || 0;
+    }
+    return 0;
   });
 
   destroy("icAvg");
   charts.icAvg = new Chart($("#ic-vsavg"), {
-    type: gran.mode === "daily" ? "bar" : "line",
+    type: "line",
     data:{
       labels,
-      datasets: gran.mode === "daily" ? [
-        { label: rep.name + " total", backgroundColor: rep.team==="CSS"?"#0b5cff":"#6f42c1", data: repTotalsByBucket },
-        { label: teamLabel(rep.team) + " peer avg", backgroundColor: "#aab9d6", data: avgTotalsByBucket }
-      ] : [
+      datasets: [
         { label: rep.name + " total", borderColor: rep.team==="CSS"?"#0b5cff":"#6f42c1",
-          backgroundColor: (rep.team==="CSS"?"#0b5cff":"#6f42c1")+"20", tension:0.3, data: repTotalsByBucket },
+          backgroundColor: (rep.team==="CSS"?"#0b5cff":"#6f42c1")+"20", tension:0.3, data: repTotalsByBucket,
+          pointRadius: gran.mode==="daily"?2:3 },
         { label: teamLabel(rep.team) + " peer avg", borderColor:"#8896ab", borderDash:[5,4], tension:0.3,
-          backgroundColor:"#aab9d633", data: avgTotalsByBucket }
+          backgroundColor:"#aab9d633", data: avgTotalsByBucket, pointRadius: gran.mode==="daily"?2:3 }
       ]
     },
     options:{ responsive:true, maintainAspectRatio:false,
@@ -1888,6 +1952,79 @@ function drawIcCharts(rep, m, liveByBucket) {
       scales:{ x:{ ticks: tickOpts }, y:{ beginAtZero: true } }
     }
   });
+}
+
+/* Pull peer-average per-bucket counts from Salesforce. One query per metric
+   covering the whole peer team (excluding the focus rep), then divide by peer count. */
+async function fetchLivePeerAvg(rep, period) {
+  if (!window.cowork || typeof window.cowork.callMcpTool !== "function") {
+    throw new Error("Live peer avg requires Cowork artifact context.");
+  }
+  const peers = REPS.filter(r => r.team===rep.team && r.name !== rep.name);
+  if (!peers.length) return {};
+  const peerIds = peers.map(p => USER_IDS[p.name]).filter(Boolean);
+  if (!peerIds.length) return {};
+
+  const gran = granularityForPeriod(period);
+  if (!gran.buckets.length) return {};
+  const months = [...new Set(gran.buckets.map(b => b.monthKey))].sort();
+  const first = months[0], last = months[months.length - 1];
+  const startISO = `${first}-01T00:00:00Z`;
+  const lastDay = daysInMonthKey(last);
+  const [ly, lm] = last.split("-").map(Number);
+  const endDate = new Date(Date.UTC(ly, lm - 1, lastDay));
+  endDate.setUTCDate(endDate.getUTCDate() + 1);
+  const endISO = endDate.toISOString().slice(0, 19) + "Z";
+  const idList = peerIds.map(id=>`'${id}'`).join(",");
+
+  const callsQ    = `SELECT DAY_ONLY(CreatedDate) d, COUNT(Id) c FROM Task WHERE OwnerId IN (${idList}) AND CreatedDate >= ${startISO} AND CreatedDate < ${endISO} AND (Type IN ('Koncert','Call') OR TaskSubtype = 'Call') GROUP BY DAY_ONLY(CreatedDate)`;
+  const meetingsQ = `SELECT DAY_ONLY(StartDateTime) d, COUNT(Id) c FROM Event WHERE OwnerId IN (${idList}) AND StartDateTime >= ${startISO} AND StartDateTime < ${endISO} AND Id IN (SELECT EventId FROM EventRelation WHERE AccountId != null) GROUP BY DAY_ONLY(StartDateTime)`;
+  const emailsQ   = `SELECT DAY_ONLY(MessageDate) d, COUNT(Id) c FROM EmailMessage WHERE CreatedById IN (${idList}) AND Incoming = false AND MessageDate >= ${startISO} AND MessageDate < ${endISO} GROUP BY DAY_ONLY(MessageDate)`;
+
+  const SF = "mcp__3f337ca8-36f2-4fa4-8b84-b880f9f14158__soqlQuery";
+  async function runQ(q) {
+    const res = await window.cowork.callMcpTool(SF, { q });
+    if (res?.isError) throw new Error("SOQL: " + (res.content?.[0]?.text || "unknown"));
+    let payload = res?.structuredContent;
+    if (!payload && res?.content?.[0]?.text) {
+      try { payload = JSON.parse(res.content[0].text); } catch (e) { payload = null; }
+    }
+    return (payload && payload.records) || [];
+  }
+  const [cR, mR, eR] = await Promise.all([runQ(callsQ), runQ(meetingsQ), runQ(emailsQ)]);
+
+  const dayTotal = {};
+  function add(records) {
+    records.forEach(r => {
+      if (!r.d) return;
+      dayTotal[r.d] = (dayTotal[r.d] || 0) + (r.c || 0);
+    });
+  }
+  add(cR); add(mR); add(eR);
+
+  const peerCount = peers.length;
+  const byBucket = {};
+  gran.buckets.forEach(b => { byBucket[b.key] = { total:0 }; });
+  Object.keys(dayTotal).forEach(dStr => {
+    const dt = new Date(dStr + "T00:00:00Z");
+    const monthKey = `${dt.getUTCFullYear()}-${(dt.getUTCMonth()+1).toString().padStart(2,"0")}`;
+    const dayOfMonth = dt.getUTCDate();
+    let bucket;
+    if (gran.mode === "daily") {
+      bucket = gran.buckets.find(b => b.monthKey === monthKey && b.key.endsWith("-" + dayOfMonth.toString().padStart(2,"0")));
+    } else if (gran.mode === "weekly") {
+      const wIdx = Math.floor((dayOfMonth - 1) / 7) + 1;
+      bucket = gran.buckets.find(b => b.monthKey === monthKey && b.key.endsWith("-W" + wIdx));
+    } else {
+      bucket = gran.buckets.find(b => b.monthKey === monthKey);
+    }
+    if (!bucket) return;
+    byBucket[bucket.key].total += dayTotal[dStr];
+  });
+  // Convert peer total -> peer average per bucket
+  const out = {};
+  Object.keys(byBucket).forEach(k => { out[k] = { avg: Math.round(byBucket[k].total / peerCount) }; });
+  return out;
 }
 
 /* Live Salesforce per-bucket fetch — replaces the even-distribution
