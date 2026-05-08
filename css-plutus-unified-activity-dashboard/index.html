@@ -449,7 +449,7 @@ const REFRESHED = "May 7, 2026";
 const SF_BASE = "https://govspend.lightning.force.com";
 
 const TEAMS = {
-  CSS: ["Jeannie DeFore","Alli Miller","Rebecca Hampson","Kyla Grover","Mariam Almutawa","Jonathan Ponoc","KC Pagulayan"],
+  CSS: ["Jeannie DeFore","Alli Miller","Rebecca Hampson","Kyla Grover","Mariam Almutawa","Jonathan Ponoc","KC Pagulayan","Mariana Becker","Priscilla Ford"],
   PLUTUS: ["Zarq Taimur","Malik Haider Ali","Zuha Nadeem","Mouaz Naeem"]
 };
 
@@ -462,6 +462,8 @@ const USER_IDS = {
   "Mariam Almutawa":"0055e000006YPH9AAO",
   "Jonathan Ponoc":"0055e000006YP7xAAG",
   "KC Pagulayan":"0056Q000008YzAgQAK",
+  "Mariana Becker":"0055e000006YOywAAG",
+  "Priscilla Ford":"0055e0000079eKUAAY",
   "Zarq Taimur":"005VP00000Jtp0XYAR",
   "Malik Haider Ali":"005VP00000JtqJBYAZ",
   "Zuha Nadeem":"005VP00000H9uAsYAJ",
@@ -562,6 +564,30 @@ const REPS = [
     "2026-04":{calls:0,meetings:0,emails:60,tasks:288,cases_open:1,cases_closed:182},
     "2026-05":{calls:0,meetings:0,emails:13,tasks:110,cases_open:0,cases_closed:35}
   }, total_open:192, total_closed:1358 },
+
+  { name:"Mariana Becker", team:"CSS", monthly:{
+    "2025-09":{koncert:70,zoom:37,calls:107,meetings:57,emails:0,tasks:120,cases_open:0,cases_closed:24},
+    "2025-10":{koncert:44,zoom:22,calls:66,meetings:80,emails:0,tasks:71,cases_open:0,cases_closed:13},
+    "2025-11":{koncert:85,zoom:34,calls:119,meetings:62,emails:0,tasks:125,cases_open:0,cases_closed:19},
+    "2025-12":{koncert:13,zoom:23,calls:36,meetings:38,emails:0,tasks:49,cases_open:0,cases_closed:9},
+    "2026-01":{koncert:2,zoom:17,calls:19,meetings:57,emails:0,tasks:123,cases_open:0,cases_closed:4},
+    "2026-02":{koncert:0,zoom:6,calls:6,meetings:40,emails:0,tasks:36,cases_open:0,cases_closed:3},
+    "2026-03":{koncert:0,zoom:21,calls:21,meetings:60,emails:1,tasks:235,cases_open:1,cases_closed:5},
+    "2026-04":{koncert:9,zoom:31,calls:40,meetings:74,emails:0,tasks:120,cases_open:0,cases_closed:4},
+    "2026-05":{koncert:0,zoom:2,calls:2,meetings:6,emails:0,tasks:142,cases_open:0,cases_closed:1}
+  }, total_open:353, total_closed:683 },
+
+  { name:"Priscilla Ford", team:"CSS", monthly:{
+    "2025-09":{koncert:41,zoom:11,calls:52,meetings:66,emails:0,tasks:52,cases_open:0,cases_closed:3},
+    "2025-10":{koncert:0,zoom:7,calls:7,meetings:103,emails:0,tasks:8,cases_open:0,cases_closed:5},
+    "2025-11":{koncert:2,zoom:9,calls:11,meetings:110,emails:0,tasks:11,cases_open:0,cases_closed:6},
+    "2025-12":{koncert:0,zoom:5,calls:5,meetings:73,emails:0,tasks:5,cases_open:1,cases_closed:15},
+    "2026-01":{koncert:0,zoom:18,calls:18,meetings:118,emails:0,tasks:72,cases_open:0,cases_closed:14},
+    "2026-02":{koncert:0,zoom:13,calls:13,meetings:123,emails:0,tasks:46,cases_open:1,cases_closed:4},
+    "2026-03":{koncert:0,zoom:9,calls:9,meetings:125,emails:0,tasks:128,cases_open:0,cases_closed:2},
+    "2026-04":{koncert:0,zoom:23,calls:23,meetings:125,emails:0,tasks:79,cases_open:1,cases_closed:1},
+    "2026-05":{koncert:0,zoom:6,calls:6,meetings:32,emails:0,tasks:96,cases_open:0,cases_closed:0}
+  }, total_open:267, total_closed:231 },
 
   // ============ PLUTUS ============
   { name:"Zarq Taimur", team:"PLUTUS", monthly:{
@@ -772,6 +798,90 @@ function periodLabel(p) {
   if (PERIOD_DEFS[p]) return PERIOD_DEFS[p].label;
   if (MONTH_LABELS[p]) return MONTH_LABELS[p];
   return p;
+}
+
+/* ============================================================
+   PERIOD-AWARE GRANULARITY (IC tab)
+   - ALL months   -> monthly buckets (9 points)
+   - Quarter      -> weekly buckets across the months in the quarter
+   - Single month -> daily buckets within that month
+   Sub-monthly buckets evenly distribute the month's total across the bucket
+   range; live Salesforce refresh can replace these approximations with
+   true per-day counts (button on the IC tab).
+   ============================================================ */
+function daysInMonthKey(monthKey) {
+  const [y, m] = monthKey.split("-").map(Number);
+  return new Date(Date.UTC(y, m, 0)).getUTCDate();
+}
+
+function makeMonthlyBuckets(months) {
+  return months.map(m => ({
+    key: m, label: MONTH_LABELS[m], monthKey: m, fraction: 1
+  }));
+}
+
+function makeWeeklyBuckets(months) {
+  const buckets = [];
+  months.forEach(monthKey => {
+    const dim = daysInMonthKey(monthKey);
+    let wIdx = 1;
+    for (let day = 1; day <= dim; day += 7) {
+      const last = Math.min(day + 6, dim);
+      const dayCount = last - day + 1;
+      buckets.push({
+        key: `${monthKey}-W${wIdx}`,
+        label: `${MONTH_LABELS[monthKey]} W${wIdx}`,
+        monthKey,
+        fraction: dayCount / dim
+      });
+      wIdx++;
+    }
+  });
+  return buckets;
+}
+
+function makeDailyBuckets(monthKey) {
+  const dim = daysInMonthKey(monthKey);
+  const [, m] = monthKey.split("-").map(Number);
+  const buckets = [];
+  for (let d = 1; d <= dim; d++) {
+    buckets.push({
+      key: `${monthKey}-${d.toString().padStart(2,"0")}`,
+      label: `${m}/${d}`,
+      monthKey,
+      fraction: 1 / dim
+    });
+  }
+  return buckets;
+}
+
+function granularityForPeriod(period) {
+  if (period === "ALL") {
+    return { mode: "monthly", buckets: makeMonthlyBuckets(MONTHS) };
+  }
+  if (PERIOD_DEFS[period]) {
+    return { mode: "weekly", buckets: makeWeeklyBuckets(PERIOD_DEFS[period].months) };
+  }
+  if (MONTHS.includes(period)) {
+    return { mode: "daily", buckets: makeDailyBuckets(period) };
+  }
+  return { mode: "monthly", buckets: makeMonthlyBuckets(MONTHS) };
+}
+
+// Get a metric value for a single bucket (uses live data if available,
+// else approximates by evenly distributing the month's total).
+function valueForBucket(rep, bucket, metric, liveByBucket) {
+  if (liveByBucket && liveByBucket[bucket.key] && liveByBucket[bucket.key][metric] !== undefined) {
+    return liveByBucket[bucket.key][metric];
+  }
+  const monthly = rep.monthly[bucket.monthKey] || {};
+  return Math.round((monthly[metric] || 0) * bucket.fraction);
+}
+
+function granularityFootnote(gran) {
+  if (gran.mode === "monthly") return "Monthly aggregates from Salesforce.";
+  if (gran.mode === "weekly")  return "Weekly buckets — month totals distributed across calendar weeks. Click \u201cRefresh from Salesforce\u201d for true per-week counts.";
+  return "Daily buckets — month totals distributed across days. Click \u201cRefresh from Salesforce\u201d for true per-day counts.";
 }
 
 /* ============================================================
@@ -1628,13 +1738,16 @@ function renderICDetail(name) {
 
     <div class="grid grid-2" style="margin-top:18px;">
       <div class="card">
-        <h3>Monthly Trend — ${rep.name.split(" ")[0]}</h3>
+        <h3>Activity Trend — ${rep.name.split(" ")[0]} <span class="pill" id="ic-trend-pill">${periodLabel(state.period)}</span>
+          <button class="btn ghost" id="ic-live-refresh" style="padding:4px 10px;font-size:11px;">⟳ Refresh from Salesforce</button>
+        </h3>
         <div class="chart-wrap"><canvas id="ic-trend"></canvas></div>
+        <div class="footnote" id="ic-trend-foot">${granularityFootnote(granularityForPeriod(state.period))}</div>
       </div>
       <div class="card">
-        <h3>vs Team Average <span class="pill">${teamLabel(rep.team)}</span></h3>
+        <h3>vs Team Average <span class="pill">${teamLabel(rep.team)} · ${periodLabel(state.period)}</span></h3>
         <div class="chart-wrap"><canvas id="ic-vsavg"></canvas></div>
-        <div class="footnote">Per-period totals; team avg excludes ${rep.name}.</div>
+        <div class="footnote" id="ic-vsavg-foot">${rep.name} vs ${teamLabel(rep.team)} peer avg, bucketed to match the trend chart. Team avg excludes ${rep.name}.</div>
       </div>
     </div>
 
@@ -1658,54 +1771,207 @@ function renderICDetail(name) {
     s.addEventListener("click", () => drillModal(s.dataset.metric, rep.name, state.period));
   });
 
-  // monthly trend
+  // ===== Period-aware trend & vs-team-avg charts =====
   destroy("icTrend"); destroy("icAvg");
+  drawIcCharts(rep, m, null);
+
+  // Wire live SF refresh button
+  const liveBtn = $("#ic-live-refresh");
+  if (liveBtn) {
+    liveBtn.addEventListener("click", async () => {
+      liveBtn.disabled = true;
+      const origText = liveBtn.textContent;
+      liveBtn.textContent = "⟳ Pulling…";
+      try {
+        const live = await fetchLiveGranular(rep, state.period);
+        drawIcCharts(rep, m, live);
+        liveBtn.textContent = "✓ Live data";
+        const foot = $("#ic-trend-foot");
+        if (foot) foot.textContent = `Live counts pulled from Salesforce at ${new Date().toLocaleTimeString()}.`;
+      } catch (e) {
+        console.error(e);
+        liveBtn.textContent = "⚠ Refresh failed";
+        const foot = $("#ic-trend-foot");
+        if (foot) foot.innerHTML = `<span style="color:var(--bad);">Live refresh failed: ${e.message}. Showing approximation.</span>`;
+      } finally {
+        setTimeout(() => { liveBtn.disabled = false; liveBtn.textContent = origText; }, 4000);
+      }
+    });
+  }
+}
+
+/* Draw both IC charts (trend + vs-team-avg), optionally with live per-bucket data */
+function drawIcCharts(rep, m, liveByBucket) {
+  const gran = granularityForPeriod(state.period);
+  const labels = gran.buckets.map(b => b.label);
+  // For weekly/daily there can be many ticks — rotate and reduce font for readability.
+  const tickOpts = gran.mode === "daily"
+    ? { autoSkip: true, maxRotation: 60, minRotation: 45, font: { size: 10 } }
+    : gran.mode === "weekly"
+    ? { autoSkip: false, maxRotation: 45, minRotation: 30, font: { size: 11 } }
+    : { autoSkip: false, font: { size: 11 } };
+
+  const callsData    = gran.buckets.map(b => valueForBucket(rep, b, "calls",    liveByBucket));
+  const meetingsData = gran.buckets.map(b => valueForBucket(rep, b, "meetings", liveByBucket));
+  const emailsData   = gran.buckets.map(b => valueForBucket(rep, b, "emails",   liveByBucket));
+
+  // Choose chart type by mode: line for monthly/weekly trend, bar for daily for clarity
+  const trendType = gran.mode === "daily" ? "bar" : "line";
+
+  destroy("icTrend");
   charts.icTrend = new Chart($("#ic-trend"), {
-    type:"line",
+    type: trendType,
     data:{
-      labels: MONTHS.map(mo=>MONTH_LABELS[mo]),
-      datasets:[
-        { label:"Calls", borderColor:"#0b5cff", backgroundColor:"#0b5cff20", tension:0.3,
-          data: MONTHS.map(mo=>rep.monthly[mo]?.calls||0) },
-        { label:"Meetings", borderColor:"#1f9d55", borderDash:[4,4], tension:0.3,
-          data: MONTHS.map(mo=>rep.monthly[mo]?.meetings||0) },
-        { label:"Emails", borderColor:"#c97a00", borderDash:[2,2], tension:0.3,
-          data: MONTHS.map(mo=>rep.monthly[mo]?.emails||0) }
+      labels,
+      datasets: trendType === "line" ? [
+        { label:"Calls",    borderColor:"#0b5cff", backgroundColor:"#0b5cff20", tension:0.3, data: callsData },
+        { label:"Meetings", borderColor:"#1f9d55", borderDash:[4,4],            tension:0.3, data: meetingsData },
+        { label:"Emails",   borderColor:"#c97a00", borderDash:[2,2],            tension:0.3, data: emailsData }
+      ] : [
+        { label:"Calls",    backgroundColor:"#0b5cff", data: callsData },
+        { label:"Meetings", backgroundColor:"#1f9d55", data: meetingsData },
+        { label:"Emails",   backgroundColor:"#c97a00", data: emailsData }
       ]
     },
-    options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{position:"bottom"}},
+    options:{ responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{ position:"bottom" } },
+      scales:{ x:{ ticks: tickOpts }, y:{ beginAtZero: true } },
       onClick:(evt, els) => {
+        // For monthly mode, drill to that month. For weekly/daily, no-op (user already filtered).
+        if (gran.mode !== "monthly") return;
         if (!els.length) return;
         const idx = els[0].index;
-        state.period = MONTHS[idx];
-        $("#f-period").value = MONTHS[idx];
+        const monthKey = gran.buckets[idx]?.monthKey;
+        if (!monthKey) return;
+        state.period = monthKey;
+        $("#f-period").value = monthKey;
         renderAll();
         renderICDetail(rep.name);
       }
     }
   });
 
-  // vs team avg — BAR CHART (not radar)
+  // ===== vs Team Avg — same buckets, rep total activity vs peer avg =====
   const peers = REPS.filter(r => r.team===rep.team && r.name !== rep.name);
-  const avg = (key) => peers.length ? peers.reduce((a,r)=>a+repMetrics(r)[key],0)/peers.length : 0;
-  const labels = ["Calls","Meetings","Emails","Tasks","Cases"];
-  const repVals = [m.calls, m.meetings, m.emails, m.tasks, m.cases_open + m.cases_closed];
-  const avgVals = [avg("calls"), avg("meetings"), avg("emails"), avg("tasks"),
-                   peers.length ? peers.reduce((a,r)=>{const x=repMetrics(r); return a+x.cases_open+x.cases_closed;},0)/peers.length : 0];
+  const repTotalsByBucket = gran.buckets.map(b => {
+    return valueForBucket(rep, b, "calls", liveByBucket)
+         + valueForBucket(rep, b, "meetings", liveByBucket)
+         + valueForBucket(rep, b, "emails", liveByBucket);
+  });
+  const avgTotalsByBucket = gran.buckets.map(b => {
+    if (!peers.length) return 0;
+    const s = peers.reduce((a, p) =>
+      a + valueForBucket(p, b, "calls",    null)
+        + valueForBucket(p, b, "meetings", null)
+        + valueForBucket(p, b, "emails",   null), 0);
+    return Math.round(s / peers.length);
+  });
+
+  destroy("icAvg");
   charts.icAvg = new Chart($("#ic-vsavg"), {
-    type:"bar",
+    type: gran.mode === "daily" ? "bar" : "line",
     data:{
       labels,
-      datasets:[
-        { label: rep.name, backgroundColor: rep.team==="CSS"?"#0b5cff":"#6f42c1", data: repVals },
-        { label: teamLabel(rep.team)+" peer avg", backgroundColor:"#aab9d6", data: avgVals.map(v=>Math.round(v)) }
+      datasets: gran.mode === "daily" ? [
+        { label: rep.name + " total", backgroundColor: rep.team==="CSS"?"#0b5cff":"#6f42c1", data: repTotalsByBucket },
+        { label: teamLabel(rep.team) + " peer avg", backgroundColor: "#aab9d6", data: avgTotalsByBucket }
+      ] : [
+        { label: rep.name + " total", borderColor: rep.team==="CSS"?"#0b5cff":"#6f42c1",
+          backgroundColor: (rep.team==="CSS"?"#0b5cff":"#6f42c1")+"20", tension:0.3, data: repTotalsByBucket },
+        { label: teamLabel(rep.team) + " peer avg", borderColor:"#8896ab", borderDash:[5,4], tension:0.3,
+          backgroundColor:"#aab9d633", data: avgTotalsByBucket }
       ]
     },
     options:{ responsive:true, maintainAspectRatio:false,
-      plugins:{ legend:{position:"bottom"} },
-      scales:{ y:{ beginAtZero:true } }
+      plugins:{ legend:{ position:"bottom" },
+        tooltip:{ callbacks:{ label:(ctx)=>`${ctx.dataset.label}: ${fmt(ctx.parsed.y)} (calls + meetings + emails)` } } },
+      scales:{ x:{ ticks: tickOpts }, y:{ beginAtZero: true } }
     }
   });
+}
+
+/* Live Salesforce per-bucket fetch — replaces the even-distribution
+   approximation with real day-by-day or week-by-week counts.
+   Returns { [bucket.key]: { calls, meetings, emails } } */
+async function fetchLiveGranular(rep, period) {
+  if (!window.cowork || typeof window.cowork.callMcpTool !== "function") {
+    throw new Error("Live refresh requires this dashboard to run as a Cowork artifact.");
+  }
+  const ownerId = USER_IDS[rep.name];
+  if (!ownerId) throw new Error("No Salesforce User Id mapped for " + rep.name);
+
+  const gran = granularityForPeriod(period);
+  if (!gran.buckets.length) throw new Error("No buckets for period.");
+
+  // Compute SOQL date range from buckets' months
+  const months = [...new Set(gran.buckets.map(b => b.monthKey))].sort();
+  const first = months[0];
+  const last = months[months.length - 1];
+  const [fy, fm] = first.split("-").map(Number);
+  const startISO = `${first}-01T00:00:00Z`;
+  const lastDay = daysInMonthKey(last);
+  const [ly, lm] = last.split("-").map(Number);
+  const endDate = new Date(Date.UTC(ly, lm - 1, lastDay));
+  endDate.setUTCDate(endDate.getUTCDate() + 1);
+  const endISO = endDate.toISOString().slice(0, 19) + "Z";
+
+  // Three queries: tasks/calls grouped by day, events by day, emails by day
+  const callsQ    = `SELECT DAY_ONLY(CreatedDate) d, COUNT(Id) c FROM Task WHERE OwnerId = '${ownerId}' AND CreatedDate >= ${startISO} AND CreatedDate < ${endISO} AND (Type IN ('Koncert','Call') OR TaskSubtype = 'Call') GROUP BY DAY_ONLY(CreatedDate)`;
+  const meetingsQ = `SELECT DAY_ONLY(StartDateTime) d, COUNT(Id) c FROM Event WHERE OwnerId = '${ownerId}' AND StartDateTime >= ${startISO} AND StartDateTime < ${endISO} AND Id IN (SELECT EventId FROM EventRelation WHERE AccountId != null) GROUP BY DAY_ONLY(StartDateTime)`;
+  const emailsQ   = `SELECT DAY_ONLY(MessageDate) d, COUNT(Id) c FROM EmailMessage WHERE CreatedById = '${ownerId}' AND Incoming = false AND MessageDate >= ${startISO} AND MessageDate < ${endISO} GROUP BY DAY_ONLY(MessageDate)`;
+
+  const SF = "mcp__3f337ca8-36f2-4fa4-8b84-b880f9f14158__soqlQuery";
+  async function runQ(q) {
+    const res = await window.cowork.callMcpTool(SF, { q });
+    if (res?.isError) throw new Error("SOQL: " + (res.content?.[0]?.text || "unknown"));
+    let payload = res?.structuredContent;
+    if (!payload && res?.content?.[0]?.text) {
+      try { payload = JSON.parse(res.content[0].text); } catch (e) { payload = null; }
+    }
+    return (payload && payload.records) || [];
+  }
+
+  const [callsR, meetingsR, emailsR] = await Promise.all([runQ(callsQ), runQ(meetingsQ), runQ(emailsQ)]);
+
+  // Build day -> counts map
+  const dayMap = {};
+  function add(records, key) {
+    records.forEach(r => {
+      const d = r.d;
+      if (!d) return;
+      if (!dayMap[d]) dayMap[d] = { calls:0, meetings:0, emails:0 };
+      dayMap[d][key] = r.c || 0;
+    });
+  }
+  add(callsR, "calls");
+  add(meetingsR, "meetings");
+  add(emailsR, "emails");
+
+  // Aggregate by bucket
+  const byBucket = {};
+  gran.buckets.forEach(b => {
+    byBucket[b.key] = { calls:0, meetings:0, emails:0 };
+  });
+  Object.keys(dayMap).forEach(dStr => {
+    const dt = new Date(dStr + "T00:00:00Z");
+    const monthKey = `${dt.getUTCFullYear()}-${(dt.getUTCMonth()+1).toString().padStart(2,"0")}`;
+    const dayOfMonth = dt.getUTCDate();
+    let bucket;
+    if (gran.mode === "monthly") {
+      bucket = gran.buckets.find(b => b.monthKey === monthKey);
+    } else if (gran.mode === "daily") {
+      bucket = gran.buckets.find(b => b.monthKey === monthKey && b.key.endsWith("-" + dayOfMonth.toString().padStart(2,"0")));
+    } else {
+      // weekly
+      const wIdx = Math.floor((dayOfMonth - 1) / 7) + 1;
+      bucket = gran.buckets.find(b => b.monthKey === monthKey && b.key.endsWith("-W" + wIdx));
+    }
+    if (!bucket) return;
+    byBucket[bucket.key].calls    += dayMap[dStr].calls    || 0;
+    byBucket[bucket.key].meetings += dayMap[dStr].meetings || 0;
+    byBucket[bucket.key].emails   += dayMap[dStr].emails   || 0;
+  });
+  return byBucket;
 }
 
 /* ============================================================
