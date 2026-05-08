@@ -238,6 +238,7 @@
     </div>
   </div>
 
+  <div id="action-hint" class="lead" style="margin-top: 0; margin-bottom: 12px; font-size: 12px; color: var(--muted-2); text-align: right;" hidden></div>
   <div class="start-row">
     <button id="start-btn" class="btn btn-primary" disabled>Start →</button>
     <button id="upload-ship-btn" class="btn btn-primary" hidden disabled>Ship to site →</button>
@@ -554,6 +555,27 @@ function refreshActionButtons() {
   startBtn.disabled = !(state.files.length > 0 && hasValidTarget());
   // Upload-mode "Ship" button
   uploadShipBtn.disabled = !(state.uploadedHtml && hasValidTarget());
+
+  // Hint text explaining why the primary button is disabled.
+  const hintEl = document.getElementById('action-hint');
+  let hint = '';
+  if (state.uploadMode === 'chat' && startBtn.disabled) {
+    if (!state.files.length) hint = 'Upload at least one data file to continue.';
+    else if (!hasValidTarget()) hint = targetSelect.value === '__new__'
+      ? 'Type a slug for the new dashboard (lowercase letters, digits, hyphens).'
+      : 'Pick a target dashboard.';
+  } else if (state.uploadMode === 'upload' && uploadShipBtn.disabled) {
+    if (!state.uploadedHtml) hint = 'Drop a complete HTML file (must contain <html>…</html>).';
+    else if (!hasValidTarget()) hint = targetSelect.value === '__new__'
+      ? 'Type a slug for the new dashboard (lowercase letters, digits, hyphens).'
+      : 'Pick a target dashboard.';
+  }
+  if (hint) {
+    hintEl.textContent = hint;
+    hintEl.hidden = false;
+  } else {
+    hintEl.hidden = true;
+  }
 }
 
 // Backward-compat: anything that called updateStartButton just calls refresh now.
