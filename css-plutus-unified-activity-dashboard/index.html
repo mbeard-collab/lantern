@@ -1,0 +1,2553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>CSS + Plutus Unified Dashboard v2</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.js" integrity="sha384-iU8HYtnGQ8Cy4zl7gbNMOhsDTTKX02BTXptVP/vqAWIaTfM7isw76iyZCsjL2eVi" crossorigin="anonymous"></script>
+<style>
+  :root {
+    color-scheme: light;
+    --bg: #f4f6fb;
+    --card: #ffffff;
+    --ink: #11233a;
+    --ink-soft: #4a5b73;
+    --muted: #8896ab;
+    --line: #e5eaf2;
+    --brand: #0b5cff;
+    --brand-soft: #e6efff;
+    --good: #1f9d55;
+    --good-soft: #e0f7eb;
+    --warn: #c97a00;
+    --warn-soft: #fdefd9;
+    --bad: #c0392b;
+    --bad-soft: #fbe5e1;
+    --plutus: #6f42c1;
+    --plutus-soft: #efe7fb;
+    --css: #0b5cff;
+    --css-soft: #e6efff;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--ink); font-size: 14px; }
+  header.topbar { background: linear-gradient(90deg, #0b1f3d 0%, #0b5cff 100%); color: white; padding: 18px 28px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px; }
+  header.topbar h1 { margin: 0; font-size: 20px; font-weight: 600; letter-spacing: -0.2px; }
+  header.topbar .sub { color: rgba(255,255,255,0.78); font-size: 12px; margin-top: 3px; }
+  .filters { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .filters select, .filters input { background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.25); color: white; padding: 7px 10px; border-radius: 7px; font-size: 13px; outline: none; min-width: 130px; }
+  .filters select option { color: var(--ink); }
+  .filters select optgroup { color: var(--muted); }
+  .filters label { color: rgba(255,255,255,0.7); font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; margin-right: 4px; }
+  .filters .reset { background: white; color: var(--brand); border: none; padding: 7px 14px; border-radius: 7px; cursor: pointer; font-weight: 600; font-size: 12px; }
+
+  nav.tabs { display: flex; background: white; border-bottom: 1px solid var(--line); padding: 0 28px; gap: 4px; overflow-x: auto; }
+  nav.tabs button { background: none; border: none; padding: 16px 22px; cursor: pointer; font-size: 14px; font-weight: 500; color: var(--ink-soft); border-bottom: 3px solid transparent; transition: all .15s; white-space: nowrap; }
+  nav.tabs button:hover { color: var(--brand); }
+  nav.tabs button.active { color: var(--brand); border-bottom-color: var(--brand); }
+
+  .container { padding: 22px 28px 60px; }
+
+  .grid { display: grid; gap: 16px; }
+  .grid-4 { grid-template-columns: repeat(4, 1fr); }
+  .grid-3 { grid-template-columns: repeat(3, 1fr); }
+  .grid-2 { grid-template-columns: repeat(2, 1fr); }
+  @media (max-width: 1100px) { .grid-4 { grid-template-columns: repeat(2,1fr); } .grid-3 { grid-template-columns: 1fr; } .grid-2 { grid-template-columns: 1fr; } }
+
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 18px; box-shadow: 0 1px 2px rgba(17,35,58,0.04); }
+  .card h3 { margin: 0 0 12px; font-size: 13px; font-weight: 600; color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.4px; display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .kpi { cursor: pointer; transition: all .15s; }
+  .kpi:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(17,35,58,0.08); }
+  .kpi .value { font-size: 30px; font-weight: 700; margin-top: 4px; letter-spacing: -0.5px; }
+  .kpi .delta { font-size: 12px; margin-top: 6px; font-weight: 500; }
+  .delta.up { color: var(--good); }
+  .delta.down { color: var(--bad); }
+  .delta.flat { color: var(--muted); }
+
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; letter-spacing: 0.3px; }
+  .badge.good { background: var(--good-soft); color: var(--good); }
+  .badge.warn { background: var(--warn-soft); color: var(--warn); }
+  .badge.bad { background: var(--bad-soft); color: var(--bad); }
+  .badge.css { background: var(--css-soft); color: var(--css); }
+  .badge.plutus { background: var(--plutus-soft); color: var(--plutus); }
+
+  .insight { border-left: 3px solid var(--brand); background: var(--brand-soft); padding: 12px 14px; border-radius: 0 8px 8px 0; margin: 0 0 10px; display: flex; gap: 10px; align-items: flex-start; }
+  .insight.warn { border-color: var(--warn); background: var(--warn-soft); }
+  .insight.bad { border-color: var(--bad); background: var(--bad-soft); }
+  .insight.good { border-color: var(--good); background: var(--good-soft); }
+  .insight .icon { flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%; background: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 13px; }
+  .insight .body { flex: 1; }
+  .insight .head { font-weight: 600; font-size: 13px; margin-bottom: 2px; }
+  .insight .text { font-size: 12.5px; color: var(--ink-soft); line-height: 1.45; }
+  .insight .nba { margin-top: 6px; font-size: 12px; background: rgba(255,255,255,0.6); padding: 6px 9px; border-radius: 5px; color: var(--ink); }
+  .insight .nba b { color: var(--brand); }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; padding: 10px 8px; color: var(--ink-soft); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.4px; border-bottom: 1px solid var(--line); cursor: pointer; user-select: none; white-space: nowrap; }
+  th:hover { color: var(--brand); }
+  th .sortarrow { font-size: 9px; color: var(--muted); }
+  td { padding: 10px 8px; border-bottom: 1px solid var(--line); }
+  td.num { text-align: right; }
+  th.num { text-align: right; }
+  td.clickable { color: var(--brand); cursor: pointer; font-weight: 600; }
+  td.clickable:hover { text-decoration: underline; }
+  tr:hover { background: #fafbfd; }
+  tr.selected { background: var(--brand-soft) !important; }
+
+  .chart-wrap { position: relative; height: 280px; cursor: pointer; }
+  .chart-wrap.tall { height: 360px; }
+  .chart-wrap .hint { position:absolute; top:6px; right:8px; font-size:10px; color:var(--muted); pointer-events:none; }
+
+  .footnote { font-size: 11px; color: var(--muted); margin-top: 6px; font-style: italic; }
+
+  .search { width: 100%; padding: 7px 10px; border: 1px solid var(--line); border-radius: 6px; font-size: 13px; margin-bottom: 8px; outline: none; }
+  .search:focus { border-color: var(--brand); }
+
+  .pill { display: inline-block; padding: 1px 7px; background: var(--brand-soft); color: var(--brand); border-radius: 999px; font-size: 11px; font-weight: 600; }
+
+  .drilldown { background: linear-gradient(180deg, #fafbfd 0%, white 100%); border: 1px solid var(--line); border-radius: 12px; padding: 18px; margin-top: 16px; }
+  .drilldown.empty { color: var(--muted); text-align: center; padding: 30px; font-size: 13px; }
+  .drilldown h2 { margin: 0 0 6px; font-size: 18px; }
+  .drilldown .meta { color: var(--ink-soft); font-size: 12.5px; margin-bottom: 14px; }
+  .ddrow { display: flex; gap: 14px; flex-wrap: wrap; }
+  .ddrow .stat { flex: 1; min-width: 130px; background: white; border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; }
+  .ddrow .stat .lbl { font-size: 11px; color: var(--muted); text-transform: uppercase; }
+  .ddrow .stat .val { font-size: 18px; font-weight: 700; margin-top: 2px; }
+  .ddrow .stat .sub { font-size: 11px; color: var(--ink-soft); margin-top: 2px; }
+
+  .empty-state { text-align: center; color: var(--muted); padding: 30px; font-size: 13px; }
+
+  .footer-note { margin-top: 28px; color: var(--muted); font-size: 11.5px; text-align: center; }
+  .tabpanel { display: none; }
+  .tabpanel.active { display: block; }
+
+  /* Modal */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(17,35,58,0.5); display: none;
+    align-items: center; justify-content: center; z-index: 1000; padding: 20px;
+  }
+  .modal-overlay.active { display: flex; }
+  .modal {
+    background: white; border-radius: 12px; max-width: 800px; width: 100%;
+    max-height: 85vh; overflow-y: auto; padding: 24px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  }
+  .modal-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; }
+  .modal h2 { margin: 0; font-size: 18px; }
+  .modal .close { background: none; border: none; cursor: pointer; font-size: 22px; color: var(--muted); padding: 0 4px; }
+  .modal .close:hover { color: var(--ink); }
+  .modal .meta { color: var(--ink-soft); font-size: 12.5px; margin-bottom: 14px; }
+  .modal table { font-size: 12.5px; }
+  .modal a { color: var(--brand); text-decoration: none; }
+  .modal a:hover { text-decoration: underline; }
+  .sf-link { display: inline-block; background: var(--brand); color: white !important; padding: 8px 14px; border-radius: 6px; font-weight: 600; font-size: 13px; margin-top: 12px; }
+
+  /* Upload zone */
+  .upload-zone {
+    border: 2px dashed var(--line); border-radius: 10px; padding: 30px;
+    text-align: center; transition: all .2s; cursor: pointer; background: #fafbfd;
+  }
+  .upload-zone:hover { border-color: var(--brand); background: var(--brand-soft); }
+  .upload-zone p { margin: 6px 0; }
+  .upload-zone input { display: none; }
+
+  .week-input {
+    padding: 7px 10px; border: 1px solid var(--line); border-radius: 6px;
+    font-size: 13px; margin: 0 6px;
+  }
+  .btn { background: var(--brand); color: white; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 13px; }
+  .btn:hover { background: #0a4ed1; }
+  .btn.ghost { background: white; color: var(--brand); border: 1px solid var(--brand); }
+  .btn.ghost:hover { background: var(--brand-soft); }
+  .btn.danger { background: var(--bad); }
+  .btn.danger:hover { background: #a8281c; }
+
+  .week-tabs { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin-bottom: 14px; }
+  .week-tabs button[data-week] { background: white; border: 1px solid var(--line); padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 500; color: var(--ink); }
+  .week-tabs button[data-week].active { background: var(--brand); color: white; border-color: var(--brand); }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div>
+    <h1>Customer Success — Activity Command Center <span style="opacity:.6;font-weight:400;font-size:13px;">v2</span></h1>
+    <div class="sub">CSS + Plutus combined view · Live from Salesforce · Refreshed <span id="refreshed"></span></div>
+  </div>
+  <div class="filters">
+    <label>Period</label>
+    <select id="f-period">
+      <optgroup label="Quarters">
+        <option value="CQ" selected>This Quarter (Apr-May 2026)</option>
+        <option value="LQ">Last Quarter (Jan-Mar 2026)</option>
+      </optgroup>
+      <optgroup label="Months">
+        <option value="2026-05">May 2026 (MTD)</option>
+        <option value="2026-04">Apr 2026</option>
+        <option value="2026-03">Mar 2026</option>
+        <option value="2026-02">Feb 2026</option>
+        <option value="2026-01">Jan 2026</option>
+        <option value="2025-12">Dec 2025</option>
+        <option value="2025-11">Nov 2025</option>
+        <option value="2025-10">Oct 2025</option>
+        <option value="2025-09">Sep 2025</option>
+      </optgroup>
+      <optgroup label="Other">
+        <option value="ALL">All Months (Sep'25-May'26)</option>
+      </optgroup>
+    </select>
+    <label>Team</label>
+    <select id="f-team">
+      <option value="ALL" selected>All Teams</option>
+      <option value="CSS">CSS (US)</option>
+      <option value="PLUTUS">Plutus (Offshore)</option>
+    </select>
+    <label>Rep</label>
+    <select id="f-rep">
+      <option value="ALL" selected>All Reps</option>
+    </select>
+    <button class="reset" id="reset">Reset</button>
+  </div>
+</header>
+
+<nav class="tabs">
+  <button class="tab active" data-tab="exec">Executive</button>
+  <button class="tab" data-tab="ic">Individual Rep</button>
+  <button class="tab" data-tab="compare">Team Compare</button>
+  <button class="tab" data-tab="tasks">Tasks</button>
+  <button class="tab" data-tab="cases">Cases</button>
+  <button class="tab" data-tab="data">Activity Detail</button>
+  <button class="tab" data-tab="woa">Week of Action</button>
+</nav>
+
+<div class="container">
+
+  <!-- EXECUTIVE -->
+  <section class="tabpanel active" id="tab-exec">
+    <div class="grid grid-4" id="kpi-row"></div>
+
+    <div class="grid grid-2" style="margin-top:16px;">
+      <div class="card">
+        <h3>Activity Mix by Team <span class="pill" id="exec-period-pill">CQ</span></h3>
+        <div class="chart-wrap"><canvas id="chart-mix"></canvas><div class="hint">Click a bar to drill in</div></div>
+        <div class="footnote">Emails = outbound only · Meetings = external attendees only · Calls = inbound + outbound</div>
+      </div>
+      <div class="card">
+        <h3>Monthly Trend (Sep'25–Apr'26)</h3>
+        <div class="chart-wrap"><canvas id="chart-monthly"></canvas><div class="hint">Click a point to drill in</div></div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:16px;">
+      <h3>Open vs Closed Tasks <span class="pill">all reps · since Sep'25</span></h3>
+      <div class="chart-wrap"><canvas id="chart-tasks-exec"></canvas><div class="hint">Click a bar to drill in</div></div>
+    </div>
+
+    <div class="card" style="margin-top:16px;">
+      <h3>Prescriptive Insights & Next Best Actions</h3>
+      <div id="insights-list"></div>
+    </div>
+
+    <div class="card" style="margin-top:16px;">
+      <h3>Rep Leaderboard <span class="pill" id="lb-period-pill">CQ</span></h3>
+      <input class="search" id="lb-search" placeholder="Search reps…" />
+      <table id="leaderboard">
+        <thead>
+          <tr>
+            <th data-sort="name">Rep</th>
+            <th data-sort="team">Team</th>
+            <th data-sort="calls" class="num">Calls</th>
+            <th data-sort="meetings" class="num">Meetings</th>
+            <th data-sort="emails" class="num">Emails</th>
+            <th data-sort="tasks" class="num">Tasks</th>
+            <th data-sort="cases" class="num">Cases</th>
+            <th data-sort="total" class="num">Total Activity</th>
+            <th data-sort="status">Status</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- INDIVIDUAL REP -->
+  <section class="tabpanel" id="tab-ic">
+    <div class="card">
+      <h3>Pick a Rep <span class="pill">Click any name in the leaderboard, or use the dropdown</span></h3>
+      <select id="ic-rep" style="padding:8px 12px;border:1px solid var(--line);border-radius:6px;font-size:14px;min-width:240px;"></select>
+    </div>
+    <div class="drilldown" id="ic-detail">
+      <div class="empty-state">Select a rep above to see their personalized view.</div>
+    </div>
+  </section>
+
+  <!-- TEAM COMPARE -->
+  <section class="tabpanel" id="tab-compare">
+    <div class="grid grid-2">
+      <div class="card">
+        <h3>Calls per Rep — Koncert vs Zoom <span class="pill" id="cmp-pill-1">CQ</span></h3>
+        <div class="chart-wrap tall"><canvas id="chart-calls-rep"></canvas><div class="hint">Click a bar to drill in</div></div>
+        <div class="footnote">Stacked: Koncert dialer (blue) + Zoom Phone integration (purple). Includes inbound and outbound.</div>
+      </div>
+      <div class="card">
+        <h3>External Meetings per Rep <span class="pill" id="cmp-pill-2">CQ</span></h3>
+        <div class="chart-wrap tall"><canvas id="chart-meetings-rep"></canvas><div class="hint">Click a bar to drill in</div></div>
+        <div class="footnote">Excludes meetings where all attendees are @govspend.com</div>
+      </div>
+    </div>
+    <div class="grid grid-2" style="margin-top:16px;">
+      <div class="card">
+        <h3>Outbound Emails per Rep <span class="pill" id="cmp-pill-3">CQ</span></h3>
+        <div class="chart-wrap tall"><canvas id="chart-emails-rep"></canvas><div class="hint">Click a bar to drill in</div></div>
+        <div class="footnote">EmailMessage records where Incoming = false</div>
+      </div>
+      <div class="card">
+        <h3>Productivity Index <span class="pill">composite vs target</span></h3>
+        <div class="chart-wrap tall"><canvas id="chart-prod"></canvas><div class="hint">Click a bar to drill in</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TASKS -->
+  <section class="tabpanel" id="tab-tasks">
+    <div class="grid grid-3" id="task-kpis"></div>
+
+    <div class="grid grid-2" style="margin-top:16px;">
+      <div class="card">
+        <h3>Open vs Closed by Rep <span class="pill">since Sep'25</span></h3>
+        <div class="chart-wrap tall"><canvas id="chart-tasks-rep"></canvas><div class="hint">Click a bar to drill in</div></div>
+      </div>
+      <div class="card">
+        <h3>Task Volume by Month</h3>
+        <div class="chart-wrap tall"><canvas id="chart-tasks-month"></canvas><div class="hint">Click a point to drill in</div></div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:16px;">
+      <h3>Tasks — Detail by Rep</h3>
+      <input class="search" id="tasks-search" placeholder="Filter reps…" />
+      <table id="tasks-table">
+        <thead>
+          <tr>
+            <th data-sort="name">Rep</th>
+            <th data-sort="team">Team</th>
+            <th data-sort="open" class="num">Open</th>
+            <th data-sort="closed" class="num">Closed</th>
+            <th data-sort="total" class="num">Total</th>
+            <th data-sort="rate" class="num">Close Rate</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- CASES -->
+  <section class="tabpanel" id="tab-cases">
+    <div class="grid grid-3">
+      <div class="card kpi" id="kpi-cases-open"><h3>Open Cases <span class="pill" id="cases-period-pill">CQ</span></h3><div class="value">—</div><div class="delta">—</div></div>
+      <div class="card kpi" id="kpi-cases-closed"><h3>Closed Cases <span class="pill">CQ</span></h3><div class="value">—</div><div class="delta">—</div></div>
+      <div class="card kpi" id="kpi-cases-rate"><h3>Close Rate</h3><div class="value">—</div><div class="delta">—</div></div>
+    </div>
+    <div class="grid grid-2" style="margin-top:16px;">
+      <div class="card">
+        <h3>Cases by Owner</h3>
+        <div class="chart-wrap tall"><canvas id="chart-cases"></canvas><div class="hint">Click a bar to drill in</div></div>
+      </div>
+      <div class="card">
+        <h3>Cases — Detail</h3>
+        <input class="search" id="cases-search" placeholder="Filter owners…" />
+        <table id="cases-table">
+          <thead>
+            <tr>
+              <th data-sort="name">Owner</th>
+              <th data-sort="team">Team</th>
+              <th data-sort="open" class="num">Open</th>
+              <th data-sort="closed" class="num">Closed</th>
+              <th data-sort="rate" class="num">Close Rate</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ACTIVITY DETAIL -->
+  <section class="tabpanel" id="tab-data">
+    <div class="card">
+      <h3>Full Activity Breakdown — every metric, every rep <span class="pill" id="dt-period-pill">CQ</span></h3>
+      <input class="search" id="dt-search" placeholder="Search reps…" />
+      <table id="data-table">
+        <thead>
+          <tr>
+            <th data-sort="name">Rep</th>
+            <th data-sort="team">Team</th>
+            <th data-sort="koncert" class="num">Koncert</th>
+            <th data-sort="zoom" class="num">Zoom Phone</th>
+            <th data-sort="calls" class="num">Total Calls</th>
+            <th data-sort="meetings" class="num">External Meetings</th>
+            <th data-sort="emails" class="num">Outbound Emails</th>
+            <th data-sort="tasks" class="num">Tasks (all)</th>
+            <th data-sort="open" class="num">Open Tasks</th>
+            <th data-sort="cases" class="num">Cases</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- WEEK OF ACTION -->
+  <section class="tabpanel" id="tab-woa">
+    <div class="card">
+      <h3>Week of Action — Target Account Tracker</h3>
+      <p style="font-size:13px;color:var(--ink-soft);margin:0 0 14px;">
+        Upload a CSV with columns: <b>Target Account</b>, <b>Account ID</b> (Salesforce 15- or 18-char Id), <b>Rep Responsible</b> (full name matching the roster), <b>Reason for Outreach</b>.
+        Then pick the week range and click <b>⟳ Refresh Activity</b> to pull live data from Salesforce. Each week is saved locally so you can review history.
+      </p>
+
+      <div class="upload-zone" id="upload-zone">
+        <input type="file" id="csv-file" accept=".csv" />
+        <p style="font-weight:600;font-size:14px;">📁 Click to choose CSV (or drag & drop)</p>
+        <p style="font-size:12px;color:var(--muted);">Required: Target Account, Account ID, Rep Responsible, Reason for Outreach</p>
+      </div>
+
+      <div style="margin-top:14px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <label style="font-size:12px;color:var(--ink-soft);">Week of:</label>
+        <input type="date" id="woa-start" class="week-input" />
+        <span style="color:var(--muted);">to</span>
+        <input type="date" id="woa-end" class="week-input" />
+        <button class="btn" id="woa-save">Save This Week</button>
+        <button class="btn ghost" id="woa-template">Download CSV Template</button>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:16px;" id="woa-history-card">
+      <h3>Saved Weeks <span class="pill" id="woa-count">0</span></h3>
+      <div class="week-tabs" id="week-tabs"></div>
+      <div id="woa-empty" class="empty-state">No weeks saved yet — upload a CSV above to get started.</div>
+      <div id="woa-content"></div>
+    </div>
+  </section>
+
+  <div class="footer-note">
+    Source dashboards: <b>CSS Dashboard</b> (01Z6Q000001CUX7UAO) + <b>Plutus Dashboard</b> (01ZVP000004jwvB2AQ).
+    All metrics computed live from <b>Task</b> (calls), <b>EmailMessage</b> (outbound emails only), <b>Event + EventRelation</b> (external meetings only), and <b>Case</b>.
+    Data range: Sep 1 2025 – May 7 2026. May 2026 is week-to-date. Click any chart segment, KPI card, or numeric cell to drill into the underlying records in Salesforce.
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal" id="modal-body"></div>
+</div>
+
+<script>
+/* ============================================================
+   v2 DATA — re-pulled from raw Salesforce objects on Apr 30 2026
+   ============================================================ */
+const REFRESHED = "May 7, 2026";
+const SF_BASE = "https://govspend.lightning.force.com";
+
+const TEAMS = {
+  CSS: ["Jeannie DeFore","Alli Miller","Rebecca Hampson","Kyla Grover","Mariam Almutawa","Jonathan Ponoc","KC Pagulayan"],
+  PLUTUS: ["Zarq Taimur","Malik Haider Ali","Zuha Nadeem","Mouaz Naeem"]
+};
+
+// User Id lookup for Salesforce deep-links
+const USER_IDS = {
+  "Jeannie DeFore":"0056Q00000AIlwcQAD",
+  "Alli Miller":"005VP000001YuQbYAK",
+  "Rebecca Hampson":"005VP000001YzrhYAC",
+  "Kyla Grover":"005VP00000BCBr1YAH",
+  "Mariam Almutawa":"0055e000006YPH9AAO",
+  "Jonathan Ponoc":"0055e000006YP7xAAG",
+  "KC Pagulayan":"0056Q000008YzAgQAK",
+  "Zarq Taimur":"005VP00000Jtp0XYAR",
+  "Malik Haider Ali":"005VP00000JtqJBYAZ",
+  "Zuha Nadeem":"005VP00000H9uAsYAJ",
+  "Mouaz Naeem":"005VP00000H9udtYAB"
+};
+
+const MONTHS = ["2025-09","2025-10","2025-11","2025-12","2026-01","2026-02","2026-03","2026-04","2026-05"];
+const MONTH_LABELS = {"2025-09":"Sep'25","2025-10":"Oct'25","2025-11":"Nov'25","2025-12":"Dec'25","2026-01":"Jan'26","2026-02":"Feb'26","2026-03":"Mar'26","2026-04":"Apr'26","2026-05":"May'26"};
+
+/*  Per-rep activity data, monthly.
+    calls    = Task where Type IN ('Koncert','Call') OR TaskSubtype='Call'
+    meetings = Event where AT LEAST ONE EventRelation has AccountId != null  (external attendees)
+    emails   = EmailMessage where Incoming = false (outbound)
+    tasks    = total Task count (all types) created that month
+*/
+const REPS = [
+  // ============ CSS ============
+  { name:"Jeannie DeFore", team:"CSS", monthly:{
+    "2025-09":{koncert:294,zoom:164,calls:458,meetings:72,emails:0,tasks:462,cases_open:1,cases_closed:4},
+    "2025-10":{koncert:153,zoom:231,calls:386,meetings:109,emails:2,tasks:387,cases_open:0,cases_closed:9},
+    "2025-11":{koncert:29,zoom:166,calls:196,meetings:87,emails:2,tasks:200,cases_open:0,cases_closed:3},
+    "2025-12":{koncert:22,zoom:148,calls:170,meetings:70,emails:1,tasks:175,cases_open:0,cases_closed:9},
+    "2026-01":{koncert:14,zoom:108,calls:122,meetings:94,emails:1,tasks:377,cases_open:1,cases_closed:5},
+    "2026-02":{koncert:0,zoom:143,calls:143,meetings:108,emails:7,tasks:377,cases_open:0,cases_closed:10},
+    "2026-03":{koncert:0,zoom:92,calls:95,meetings:117,emails:2,tasks:619,cases_open:0,cases_closed:4},
+    "2026-04":{koncert:0,zoom:45,calls:45,meetings:105,emails:3,tasks:461,cases_open:3,cases_closed:3},
+    "2026-05":{koncert:25,zoom:4,calls:29,meetings:20,emails:2,tasks:387,cases_open:0,cases_closed:0}
+  }, total_open:1229, total_closed:2211 },
+
+  { name:"Alli Miller", team:"CSS", monthly:{
+    "2025-09":{koncert:101,zoom:79,calls:180,meetings:62,emails:0,tasks:185,cases_open:0,cases_closed:20},
+    "2025-10":{koncert:68,zoom:77,calls:145,meetings:64,emails:0,tasks:161,cases_open:0,cases_closed:9},
+    "2025-11":{koncert:4,zoom:47,calls:51,meetings:81,emails:0,tasks:56,cases_open:0,cases_closed:24},
+    "2025-12":{koncert:4,zoom:41,calls:45,meetings:65,emails:0,tasks:47,cases_open:0,cases_closed:17},
+    "2026-01":{koncert:0,zoom:66,calls:66,meetings:75,emails:0,tasks:223,cases_open:0,cases_closed:12},
+    "2026-02":{koncert:0,zoom:96,calls:96,meetings:67,emails:0,tasks:378,cases_open:0,cases_closed:10},
+    "2026-03":{koncert:0,zoom:79,calls:79,meetings:78,emails:0,tasks:472,cases_open:2,cases_closed:1},
+    "2026-04":{koncert:23,zoom:127,calls:150,meetings:64,emails:0,tasks:412,cases_open:2,cases_closed:0},
+    "2026-05":{koncert:0,zoom:20,calls:20,meetings:19,emails:0,tasks:334,cases_open:0,cases_closed:0}
+  }, total_open:836, total_closed:1432 },
+
+  { name:"Rebecca Hampson", team:"CSS", monthly:{
+    "2025-09":{koncert:450,zoom:176,calls:626,meetings:81,emails:0,tasks:631,cases_open:0,cases_closed:3},
+    "2025-10":{koncert:373,zoom:141,calls:514,meetings:75,emails:0,tasks:524,cases_open:0,cases_closed:7},
+    "2025-11":{koncert:297,zoom:85,calls:382,meetings:53,emails:0,tasks:384,cases_open:0,cases_closed:5},
+    "2025-12":{koncert:249,zoom:65,calls:314,meetings:55,emails:0,tasks:316,cases_open:0,cases_closed:2},
+    "2026-01":{koncert:146,zoom:122,calls:268,meetings:76,emails:1,tasks:555,cases_open:1,cases_closed:6},
+    "2026-02":{koncert:241,zoom:115,calls:356,meetings:79,emails:0,tasks:518,cases_open:0,cases_closed:4},
+    "2026-03":{koncert:134,zoom:83,calls:217,meetings:72,emails:0,tasks:653,cases_open:0,cases_closed:3},
+    "2026-04":{koncert:136,zoom:131,calls:267,meetings:89,emails:0,tasks:638,cases_open:0,cases_closed:1},
+    "2026-05":{koncert:23,zoom:24,calls:47,meetings:15,emails:0,tasks:399,cases_open:1,cases_closed:0}
+  }, total_open:199, total_closed:4419 },
+
+  { name:"Kyla Grover", team:"CSS", monthly:{
+    "2025-09":{koncert:263,zoom:17,calls:280,meetings:42,emails:0,tasks:281,cases_open:0,cases_closed:33},
+    "2025-10":{koncert:90,zoom:17,calls:107,meetings:63,emails:0,tasks:109,cases_open:2,cases_closed:15},
+    "2025-11":{koncert:0,zoom:16,calls:16,meetings:28,emails:0,tasks:16,cases_open:2,cases_closed:13},
+    "2025-12":{koncert:18,zoom:6,calls:24,meetings:43,emails:0,tasks:24,cases_open:1,cases_closed:4},
+    "2026-01":{koncert:0,zoom:3,calls:4,meetings:51,emails:1,tasks:517,cases_open:1,cases_closed:6},
+    "2026-02":{koncert:0,zoom:14,calls:15,meetings:84,emails:0,tasks:288,cases_open:8,cases_closed:7},
+    "2026-03":{koncert:0,zoom:82,calls:86,meetings:74,emails:0,tasks:663,cases_open:4,cases_closed:2},
+    "2026-04":{koncert:0,zoom:65,calls:65,meetings:48,emails:0,tasks:568,cases_open:1,cases_closed:0},
+    "2026-05":{koncert:0,zoom:6,calls:6,meetings:19,emails:0,tasks:231,cases_open:0,cases_closed:1}
+  }, total_open:760, total_closed:1937 },
+
+  { name:"Mariam Almutawa", team:"CSS", monthly:{
+    "2025-09":{calls:0,meetings:0,emails:40,tasks:35,cases_open:0,cases_closed:30},
+    "2025-10":{calls:0,meetings:0,emails:18,tasks:17,cases_open:2,cases_closed:46},
+    "2025-11":{calls:0,meetings:0,emails:17,tasks:17,cases_open:0,cases_closed:25},
+    "2025-12":{calls:0,meetings:0,emails:22,tasks:21,cases_open:1,cases_closed:119},
+    "2026-01":{calls:0,meetings:0,emails:33,tasks:81,cases_open:0,cases_closed:318},
+    "2026-02":{calls:0,meetings:0,emails:29,tasks:126,cases_open:4,cases_closed:232},
+    "2026-03":{calls:0,meetings:0,emails:38,tasks:301,cases_open:2,cases_closed:360},
+    "2026-04":{calls:0,meetings:0,emails:40,tasks:121,cases_open:6,cases_closed:278},
+    "2026-05":{calls:0,meetings:0,emails:10,tasks:12,cases_open:4,cases_closed:75}
+  }, total_open:54, total_closed:677 },
+
+  { name:"Jonathan Ponoc", team:"CSS", monthly:{
+    "2025-09":{calls:0,meetings:0,emails:42,tasks:41,cases_open:0,cases_closed:46},
+    "2025-10":{calls:0,meetings:0,emails:34,tasks:34,cases_open:0,cases_closed:36},
+    "2025-11":{calls:0,meetings:0,emails:43,tasks:43,cases_open:0,cases_closed:43},
+    "2025-12":{calls:0,meetings:0,emails:42,tasks:42,cases_open:0,cases_closed:45},
+    "2026-01":{calls:0,meetings:0,emails:43,tasks:43,cases_open:0,cases_closed:44},
+    "2026-02":{calls:0,meetings:0,emails:36,tasks:36,cases_open:0,cases_closed:42},
+    "2026-03":{calls:0,meetings:0,emails:40,tasks:39,cases_open:0,cases_closed:51},
+    "2026-04":{calls:0,meetings:0,emails:55,tasks:54,cases_open:0,cases_closed:68},
+    "2026-05":{calls:0,meetings:0,emails:18,tasks:19,cases_open:5,cases_closed:17}
+  }, total_open:0, total_closed:351 },
+
+  { name:"KC Pagulayan", team:"CSS", monthly:{
+    "2025-09":{calls:0,meetings:0,emails:41,tasks:41,cases_open:0,cases_closed:95},
+    "2025-10":{calls:0,meetings:0,emails:52,tasks:52,cases_open:0,cases_closed:191},
+    "2025-11":{calls:0,meetings:0,emails:46,tasks:44,cases_open:0,cases_closed:102},
+    "2025-12":{calls:0,meetings:0,emails:39,tasks:39,cases_open:0,cases_closed:87},
+    "2026-01":{calls:0,meetings:0,emails:55,tasks:307,cases_open:0,cases_closed:117},
+    "2026-02":{calls:0,meetings:0,emails:39,tasks:195,cases_open:0,cases_closed:106},
+    "2026-03":{calls:0,meetings:0,emails:53,tasks:473,cases_open:0,cases_closed:322},
+    "2026-04":{calls:0,meetings:0,emails:60,tasks:288,cases_open:1,cases_closed:182},
+    "2026-05":{calls:0,meetings:0,emails:13,tasks:110,cases_open:0,cases_closed:35}
+  }, total_open:192, total_closed:1358 },
+
+  // ============ PLUTUS ============
+  { name:"Zarq Taimur", team:"PLUTUS", monthly:{
+    "2025-09":{koncert:0,zoom:0,calls:0,meetings:0,emails:0,tasks:0,cases_open:0,cases_closed:0},
+    "2025-10":{koncert:0,zoom:0,calls:0,meetings:0,emails:0,tasks:0,cases_open:0,cases_closed:0},
+    "2025-11":{koncert:0,zoom:0,calls:0,meetings:0,emails:0,tasks:0,cases_open:0,cases_closed:0},
+    "2025-12":{koncert:0,zoom:0,calls:0,meetings:0,emails:0,tasks:0,cases_open:0,cases_closed:0},
+    "2026-01":{koncert:120,zoom:3,calls:123,meetings:0,emails:0,tasks:167,cases_open:0,cases_closed:10},
+    "2026-02":{koncert:722,zoom:49,calls:772,meetings:2,emails:0,tasks:787,cases_open:0,cases_closed:8},
+    "2026-03":{koncert:665,zoom:24,calls:689,meetings:8,emails:1,tasks:779,cases_open:1,cases_closed:2},
+    "2026-04":{koncert:516,zoom:56,calls:572,meetings:13,emails:0,tasks:584,cases_open:1,cases_closed:1},
+    "2026-05":{koncert:0,zoom:1,calls:1,meetings:2,emails:0,tasks:1,cases_open:2,cases_closed:0}
+  }, total_open:3, total_closed:2315 },
+
+  { name:"Malik Haider Ali", team:"PLUTUS", monthly:{
+    "2025-09":{koncert:0,zoom:0,calls:0,meetings:0,emails:0,tasks:0,cases_open:0,cases_closed:0},
+    "2025-10":{koncert:0,zoom:0,calls:0,meetings:0,emails:0,tasks:0,cases_open:0,cases_closed:0},
+    "2025-11":{koncert:0,zoom:0,calls:0,meetings:0,emails:0,tasks:0,cases_open:0,cases_closed:0},
+    "2025-12":{koncert:0,zoom:0,calls:0,meetings:0,emails:0,tasks:0,cases_open:0,cases_closed:0},
+    "2026-01":{koncert:0,zoom:2,calls:2,meetings:0,emails:5,tasks:23,cases_open:1,cases_closed:5},
+    "2026-02":{koncert:0,zoom:2,calls:2,meetings:4,emails:0,tasks:2,cases_open:7,cases_closed:28},
+    "2026-03":{koncert:0,zoom:19,calls:21,meetings:7,emails:0,tasks:78,cases_open:4,cases_closed:23},
+    "2026-04":{koncert:0,zoom:55,calls:55,meetings:21,emails:0,tasks:85,cases_open:1,cases_closed:15},
+    "2026-05":{koncert:0,zoom:40,calls:40,meetings:5,emails:0,tasks:58,cases_open:2,cases_closed:1}
+  }, total_open:27, total_closed:219 },
+
+  { name:"Zuha Nadeem", team:"PLUTUS", monthly:{
+    "2025-09":{koncert:87,zoom:1,calls:88,meetings:0,emails:0,tasks:88,cases_open:0,cases_closed:0},
+    "2025-10":{koncert:415,zoom:0,calls:416,meetings:3,emails:28,tasks:418,cases_open:1,cases_closed:3},
+    "2025-11":{koncert:372,zoom:0,calls:373,meetings:9,emails:159,tasks:589,cases_open:0,cases_closed:0},
+    "2025-12":{koncert:340,zoom:0,calls:340,meetings:5,emails:163,tasks:539,cases_open:0,cases_closed:0},
+    "2026-01":{koncert:26,zoom:7,calls:33,meetings:8,emails:51,tasks:171,cases_open:0,cases_closed:0},
+    "2026-02":{koncert:574,zoom:23,calls:597,meetings:23,emails:108,tasks:747,cases_open:0,cases_closed:0},
+    "2026-03":{koncert:0,zoom:15,calls:15,meetings:15,emails:48,tasks:110,cases_open:1,cases_closed:3},
+    "2026-04":{koncert:0,zoom:9,calls:9,meetings:21,emails:57,tasks:124,cases_open:0,cases_closed:0},
+    "2026-05":{koncert:18,zoom:6,calls:24,meetings:2,emails:1,tasks:25,cases_open:0,cases_closed:0}
+  }, total_open:118, total_closed:2693 },
+
+  { name:"Mouaz Naeem", team:"PLUTUS", monthly:{
+    "2025-09":{koncert:27,zoom:0,calls:27,meetings:0,emails:0,tasks:27,cases_open:0,cases_closed:0},
+    "2025-10":{koncert:155,zoom:0,calls:155,meetings:0,emails:0,tasks:155,cases_open:0,cases_closed:2},
+    "2025-11":{koncert:56,zoom:1,calls:57,meetings:0,emails:0,tasks:57,cases_open:0,cases_closed:1},
+    "2025-12":{koncert:86,zoom:3,calls:89,meetings:4,emails:0,tasks:89,cases_open:2,cases_closed:0},
+    "2026-01":{koncert:133,zoom:0,calls:133,meetings:0,emails:0,tasks:133,cases_open:0,cases_closed:1},
+    "2026-02":{koncert:73,zoom:0,calls:73,meetings:7,emails:0,tasks:73,cases_open:1,cases_closed:6},
+    "2026-03":{koncert:73,zoom:1,calls:74,meetings:15,emails:0,tasks:76,cases_open:5,cases_closed:4},
+    "2026-04":{koncert:151,zoom:6,calls:157,meetings:19,emails:0,tasks:157,cases_open:2,cases_closed:1},
+    "2026-05":{koncert:0,zoom:0,calls:0,meetings:2,emails:0,tasks:0,cases_open:1,cases_closed:1}
+  }, total_open:7, total_closed:760 }
+];
+
+/* ============================================================
+   SAMPLE RECORDS — pulled live from Salesforce for embedded drill-throughs.
+   Most recent per rep per metric. Each record links to its SF detail page.
+   ============================================================ */
+const SAMPLE_RECORDS = {
+  "Rebecca Hampson": {
+    calls: [
+      {id:"00TVP00001F3ew62AB", subj:"Inbound from +13362549047", type:"Zoom", direction:"Inbound", duration:618, date:"2026-04-30 19:54", account:""},
+      {id:"00TVP00001F3eJE2AZ", subj:"Outbound to +19132325325", type:"Zoom", direction:"Outbound", duration:56, date:"2026-04-30 19:54", account:"Digital Ally, Inc."},
+      {id:"00TVP00001F4ZeQ2AV", subj:"Outbound to +18282170066", type:"Zoom", direction:"Outbound", duration:183, date:"2026-04-30 19:40", account:""},
+      {id:"00TVP00001F48Z82AJ", subj:"Connected - NLW Company", type:"Zoom", direction:"Outbound", duration:57, date:"2026-04-30 19:38", account:"Brooks Network Services, LLC"},
+      {id:"00TVP00001F3LTd2AN", subj:"Unable to leave a voicemail", type:"Zoom", direction:"Outbound", duration:13, date:"2026-04-30 19:36", account:"Brooks Network Services, LLC"},
+      {id:"00TVP00001F2t3y2AB", subj:"Left Voicemail - Koncert", type:"Koncert", direction:"Outbound", duration:null, date:"2026-04-30 18:09", account:""},
+      {id:"00TVP00001F2ees2AB", subj:"Dialed - Koncert", type:"Koncert", direction:"Outbound", duration:null, date:"2026-04-30 18:04", account:""},
+      {id:"00TVP00001F2yP12AJ", subj:"No Answer - Koncert", type:"Koncert", direction:"Outbound", duration:null, date:"2026-04-30 17:50", account:""}
+    ],
+    meetings: [
+      {id:"00UVP00000CpDhq2AF", subj:"ViewSonic + GovSpend Office Hours", date:"2029-04-02 18:00", account:"ViewSonic Corporation"}
+    ],
+    emails: []
+  },
+  "Zarq Taimur": {
+    calls: [
+      {id:"00TVP00001F52NL2AZ", subj:"Went to Voicemail - Koncert", type:"Koncert", direction:"Outbound", duration:null, date:"2026-04-30 21:06", account:""},
+      {id:"00TVP00001F4tpi2AB", subj:"Went to Voicemail - Koncert", type:"Koncert", direction:"Outbound", duration:null, date:"2026-04-30 21:06", account:""},
+      {id:"00TVP00001F5HYj2AN", subj:"Prospect hungup - Koncert", type:"Koncert", direction:"Outbound", duration:null, date:"2026-04-30 21:05", account:""},
+      {id:"00TVP00001F5GgH2AV", subj:"Other - Koncert", type:"Koncert", direction:"Outbound", duration:null, date:"2026-04-30 20:53", account:""},
+      {id:"00TVP00001F4NLI2A3", subj:"Positive Sentiment (Current Client) - Koncert", type:"Koncert", direction:"Outbound", duration:null, date:"2026-04-30 20:18", account:""},
+      {id:"00TVP00001F5Bua2AF", subj:"Positive Sentiment (Current Client) - Koncert", type:"Koncert", direction:"Outbound", duration:null, date:"2026-04-30 20:15", account:""}
+    ],
+    meetings: [],
+    emails: []
+  },
+  "Zuha Nadeem": {
+    calls: [
+      {id:"00TVP00001F5Lu12AF", subj:"Inbound from +19542106830", type:"Zoom", direction:"Inbound", duration:0, date:"2026-04-30 20:36", account:""},
+      {id:"00TVP00001F3VES2A3", subj:"Inbound from 18633951151", type:"Zoom", direction:"Inbound", duration:0, date:"2026-04-30 19:20", account:""},
+      {id:"00TVP00001F258y2AB", subj:"Inbound from +19542083358", type:"Zoom", direction:"Inbound", duration:21, date:"2026-04-30 15:17", account:""}
+    ],
+    meetings: [],
+    emails: [
+      {id:"02sVP00000o5JhxYAE", subj:"Welcome To GovSpend- Let's Get You Started!", to:"joseph.d@brombergtranslations.com; lina@brombergtranslations.com", date:"2026-04-30 14:03", account:"Bromberg & Associates"},
+      {id:"02sVP00000o1V0BYAU", subj:"Access Granted! 🏛️ GovSpend Opportunity Module", to:"cfalcone@officebasics.com", date:"2026-04-29 20:55", account:"Office Basics"},
+      {id:"02sVP00000o1KuOYAU", subj:"🚨 GovSpend Opportunity Module", to:"aaron.jordan@kelsan.biz", date:"2026-04-29 20:36", account:"Kelsan Products"},
+      {id:"02sVP00000o169tYAA", subj:"Access Granted! 🏛️ GovSpend Opportunity Module", to:"aaguiar@k2united.com", date:"2026-04-29 20:34", account:"K2 United"},
+      {id:"02sVP00000mxDvFYAU", subj:"Quick Reconnect: Getting More Out of GovSpend", to:"manny@agirepair.com", date:"2026-04-17 15:49", account:"AGiREPAIR Inc."}
+    ]
+  },
+  "Mariam Almutawa": {
+    calls: [],
+    meetings: [],
+    emails: [
+      {id:"02sVP00000o5XzVYAU", subj:"RE: Request for quote", to:"elisheva.stoll@beable.com", date:"2026-04-30 15:29", account:"Case 00072442"},
+      {id:"02sVP00000o4TMoYAM", subj:"RE: Box User - building report - missing columns", to:"akawalec@box.com", date:"2026-04-30 12:44", account:"Case 00072421"},
+      {id:"02sVP00000o0mRJYAY", subj:"RE: City of Greenville / Agency # 11722", to:"sdablemont@greenvillesc.gov", date:"2026-04-29 19:45", account:"Case 00072377"},
+      {id:"02sVP00000nzwpJYAQ", subj:"Re: TIME SENSITIVE - User Setup and Dashboard Build for Cority", to:"mvasquez@govspend.com", date:"2026-04-29 17:27", account:"Case 00072303"},
+      {id:"02sVP00000nz16OYAQ", subj:"Re: Request to extend our account access", to:"garrett.leong@sparelabs.com", date:"2026-04-29 16:39", account:"Case 00072366"},
+      {id:"02sVP00000nru1RYAQ", subj:"RE: API usage", to:"mpetrovic@jatheon.com", date:"2026-04-28 14:05", account:"Case 00072294"}
+    ]
+  },
+  "Jonathan Ponoc": {
+    calls: [],
+    meetings: [],
+    emails: [
+      {id:"02sVP00000o4l3cYAA", subj:"Re: Re: Add a user", to:"brian.maki@usbank.com", date:"2026-04-30 13:34", account:""},
+      {id:"02sVP00000nyOJRYA2", subj:"Re: GovSpend Access - JD Potting from Goodyear", to:"jd_potting@goodyear.com; kenneth_miller@goodyear.com", date:"2026-04-29 13:36", account:""},
+      {id:"02sVP00000nyEDcYAM", subj:"Re: Add a user", to:"brian.maki@usbank.com", date:"2026-04-29 13:34", account:""},
+      {id:"02sVP00000nHGVcYAO", subj:"ProLink Staffing - Nationwide Insights for bids and expiring contracts", to:"sboudreaux@govspend.com", date:"2026-04-21 21:35", account:"Case 00072011"},
+      {id:"02sVP00000n8lrzYAA", subj:"EMS LINQ INC - Usage Report", to:"sboudreaux@govspend.com", date:"2026-04-20 16:15", account:"Case 00071935"}
+    ]
+  },
+  "KC Pagulayan": {
+    calls: [],
+    meetings: [],
+    emails: [
+      {id:"02sVP00000o4seZYAQ", subj:"Re: Cannot Login or Reset PW", to:"tim.welsch@gravyty.com", date:"2026-04-30 13:15", account:"Case 00072413"},
+      {id:"02sVP00000o4sjRYAQ", subj:"Re: FW: Cannot Login or Reset PW", to:"afehd@govspend.com", date:"2026-04-30 13:08", account:"Case 00072413"},
+      {id:"02sVP00000o1S5eYAE", subj:"RE: Cannot Login or Reset PW", to:"tim.welsch@gravyty.com", date:"2026-04-29 21:36", account:"Case 00072413"},
+      {id:"02sVP00000o1axXYAQ", subj:"RE: Formal Request to Remove False Solicitation Notice", to:"cdoherty@hufsd.edu", date:"2026-04-29 21:09", account:"Case 00072350"},
+      {id:"02sVP00000nv8cYYAQ", subj:`RE: "City of Gainesville" is requesting quotes for "Charter Buses for Summer Camp Trip"`, to:"rshoffstall@cavendergrandeford.com", date:"2026-04-28 21:40", account:"Case 00072364"},
+      {id:"02sVP00000nbMWtYAM", subj:"RE: Login Issues", to:"jmcgrath@cloudflare.com", date:"2026-04-24 18:40", account:"Case 00072206"}
+    ]
+  },
+  "Alli Miller": {
+    calls: [
+      {id:"00TVP00001F428y2AB", subj:"Inbound from +17034474540", type:"Zoom", direction:"Inbound", duration:0, date:"2026-04-30 20:02", account:""},
+      {id:"00TVP00001F2HqL2AV", subj:"Inbound from +16194056054", type:"Zoom", direction:"Inbound", duration:61, date:"2026-04-30 16:10", account:""},
+      {id:"00TVP00001F2zzM2AR", subj:"Inbound from +19419279406", type:"Zoom", direction:"Inbound", duration:0, date:"2026-04-30 18:29", account:""},
+      {id:"00TVP00001F2pf52AB", subj:"Outbound to +17039896594", type:"Zoom", direction:"Outbound", duration:58, date:"2026-04-30 18:04", account:""},
+      {id:"00TVP00001F0nkU2AR", subj:"Inbound from +17706968091", type:"Zoom", direction:"Inbound", duration:0, date:"2026-04-30 12:50", account:""}
+    ],
+    meetings: [],
+    emails: []
+  },
+  "Jeannie DeFore": {
+    calls: [
+      {id:"00TVP00001F0ZBS2A3", subj:"Inbound from +14103031713", type:"Zoom", direction:"Inbound", duration:31, date:"2026-04-30 13:24", account:""}
+    ],
+    meetings: [
+      {id:"00UVP00000Ddsqw2AB", subj:"Granite Telecommunications - GovSpend Office Hours", date:"2029-05-16 15:00", account:"Granite Telecommunications"},
+      {id:"00UVP00000Debzq2AB", subj:"Presence x GovSpend Prospecting (CS)", date:"2029-04-30 19:00", account:"PresenceLearning"},
+      {id:"00UVP00000DXfYD2A1", subj:"Asset Works - GovSpend Office Hours", date:"2029-04-26 17:00", account:"Asset Works"}
+    ],
+    emails: []
+  },
+  "Kyla Grover": {
+    calls: [
+      {id:"00TVP00001F29Cc2AJ", subj:"Text to Rayna", type:"Text", direction:"Outbound", duration:null, date:"2026-04-30 15:24", account:"RYE Consulting"},
+      {id:"00TVP00001F1RgW2AV", subj:"Text to Mayan", type:"Text", direction:"Outbound", duration:null, date:"2026-04-30 15:24", account:"RYE Consulting"},
+      {id:"00TVP00001F241r2AB", subj:"Text to Jenny", type:"Text", direction:"Outbound", duration:null, date:"2026-04-30 15:24", account:"RYE Consulting"}
+    ],
+    meetings: [],
+    emails: []
+  },
+  "Malik Haider Ali": {
+    calls: [
+      {id:"00TVP00001EvBo12AF", subj:"Outbound to +19052571703", type:"Zoom", direction:"Outbound", duration:null, date:"2026-04-29 22:10", account:""},
+      {id:"00TVP00001Ev2uO2AR", subj:"Outbound to +19708187705", type:"Zoom", direction:"Outbound", duration:null, date:"2026-04-29 22:08", account:""},
+      {id:"00TVP00001EvBRG2A3", subj:"Outbound to +16475677106", type:"Zoom", direction:"Outbound", duration:null, date:"2026-04-29 22:08", account:""}
+    ],
+    meetings: [],
+    emails: []
+  },
+  "Mouaz Naeem": { calls: [], meetings: [], emails: [] }
+};
+
+// targets are monthly (calibrated from observed averages)
+const TARGETS = {
+  PLUTUS: { calls: 200, meetings: 8, emails: 30, cases: 5, tasks: 200 },
+  CSS:    { calls: 70,  meetings: 70, emails: 25, cases: 10, tasks: 250 }
+};
+
+/* ============================================================
+   STATE
+   ============================================================ */
+const state = {
+  period: "CQ",
+  team: "ALL",
+  rep: "ALL",
+  sortKey: { lb:"total", dt:"calls", cases:"open", tasks:"open" },
+  sortDir: { lb:"desc", dt:"desc", cases:"desc", tasks:"desc" }
+};
+
+const PERIOD_DEFS = {
+  CQ:  { label:"Apr-May 2026 (CQ to date)", months:["2026-04","2026-05"] },
+  LQ:  { label:"Jan-Mar 2026 (LQ)",         months:["2026-01","2026-02","2026-03"] },
+  ALL: { label:"All months (Sep'25-May'26)", months: MONTHS },
+  // monthly handled directly by key 2025-09 etc.
+};
+
+function periodMonths(p) {
+  if (PERIOD_DEFS[p]) return PERIOD_DEFS[p].months;
+  if (MONTHS.includes(p)) return [p];
+  return MONTHS;
+}
+function periodLabel(p) {
+  if (PERIOD_DEFS[p]) return PERIOD_DEFS[p].label;
+  if (MONTH_LABELS[p]) return MONTH_LABELS[p];
+  return p;
+}
+
+/* ============================================================
+   HELPERS
+   ============================================================ */
+function $(s, p=document) { return p.querySelector(s); }
+function $$(s, p=document) { return [...p.querySelectorAll(s)]; }
+function fmt(n) { return (n||0).toLocaleString("en-US"); }
+function teamLabel(t){ return t==="CSS" ? "CSS" : "Plutus"; }
+function teamBadge(t){ return `<span class="badge ${t.toLowerCase()}">${teamLabel(t)}</span>`; }
+
+function filteredReps() {
+  let list = REPS.slice();
+  if (state.team !== "ALL") list = list.filter(r => r.team === state.team);
+  if (state.rep !== "ALL")  list = list.filter(r => r.name === state.rep);
+  return list;
+}
+
+function repMetrics(rep, period=state.period) {
+  const months = periodMonths(period);
+  const acc = {koncert:0,zoom:0,calls:0,meetings:0,emails:0,tasks:0,cases_open:0,cases_closed:0};
+  months.forEach(m => {
+    const d = rep.monthly[m] || {};
+    Object.keys(acc).forEach(k => acc[k] += (d[k] || 0));
+  });
+  return acc;
+}
+
+function teamMetrics(team, period=state.period) {
+  const list = team === "ALL" ? REPS : REPS.filter(r => r.team === team);
+  const acc = {koncert:0,zoom:0,calls:0,meetings:0,emails:0,tasks:0,cases_open:0,cases_closed:0};
+  list.forEach(r => {
+    const m = repMetrics(r, period);
+    Object.keys(acc).forEach(k => acc[k] += m[k]);
+  });
+  return acc;
+}
+
+function delta(curr, prev) {
+  if (prev === 0 && curr === 0) return {pct:0, dir:"flat"};
+  if (prev === 0) return {pct:100, dir:"up"};
+  const pct = ((curr - prev) / prev) * 100;
+  return { pct: pct, dir: pct > 1 ? "up" : pct < -1 ? "down" : "flat" };
+}
+function deltaText(d) {
+  const arrow = d.dir==="up"?"▲":d.dir==="down"?"▼":"●";
+  return `<span class="delta ${d.dir}">${arrow} ${Math.abs(d.pct).toFixed(0)}% vs prior</span>`;
+}
+
+function priorPeriodFor(p) {
+  if (p === "CQ") return "LQ";
+  if (p === "LQ") return null;
+  if (p === "ALL") return null;
+  // monthly: previous month
+  const idx = MONTHS.indexOf(p);
+  if (idx > 0) return MONTHS[idx-1];
+  return null;
+}
+
+function statusBadge(rep, period=state.period) {
+  const tgt = TARGETS[rep.team];
+  const m = repMetrics(rep, period);
+  const months = periodMonths(period).length || 1;
+  const callsPct = m.calls / (tgt.calls * months);
+  const meetPct  = m.meetings  / (tgt.meetings * months);
+  const score = (callsPct + meetPct) / 2;
+  if (score >= 1) return `<span class="badge good">On track</span>`;
+  if (score >= 0.7) return `<span class="badge warn">Watch</span>`;
+  return `<span class="badge bad">Behind</span>`;
+}
+
+/* ============================================================
+   MODAL — drill-through
+   ============================================================ */
+function showModal(title, meta, body) {
+  $("#modal-body").innerHTML = `
+    <div class="modal-header">
+      <h2>${title}</h2>
+      <button class="close" id="modal-close">×</button>
+    </div>
+    <div class="meta">${meta}</div>
+    ${body}
+  `;
+  $("#modal-overlay").classList.add("active");
+  $("#modal-close").addEventListener("click", closeModal);
+}
+function closeModal() { $("#modal-overlay").classList.remove("active"); }
+$("#modal-overlay").addEventListener("click", e => { if (e.target.id === "modal-overlay") closeModal(); });
+
+function buildSFLink(metric, repName, period) {
+  // Construct a Salesforce list-view deep link as a starting point for the user.
+  const userId = USER_IDS[repName] || "";
+  const map = {
+    calls:    `${SF_BASE}/lightning/o/Task/list?filterName=Recent`,
+    meetings: `${SF_BASE}/lightning/o/Event/list?filterName=Recent`,
+    emails:   `${SF_BASE}/lightning/o/EmailMessage/list?filterName=Recent`,
+    tasks:    `${SF_BASE}/lightning/o/Task/list?filterName=Recent`,
+    cases:    `${SF_BASE}/lightning/o/Case/list?filterName=Recent`
+  };
+  const userLink = userId ? `${SF_BASE}/lightning/r/User/${userId}/view` : null;
+  return { listUrl: map[metric] || map.tasks, userLink, userId };
+}
+
+function fmtDuration(s) {
+  if (s === null || s === undefined) return "—";
+  const m = Math.floor(s/60), sec = s%60;
+  return `${m}:${sec.toString().padStart(2,"0")}`;
+}
+
+function recordsCard(metric, repName) {
+  const records = SAMPLE_RECORDS[repName]?.[metric === "calls" ? "calls" : metric === "meetings" ? "meetings" : metric === "emails" ? "emails" : null];
+  if (!records || !records.length) {
+    return `<div class="empty-state" style="padding:14px;border:1px dashed var(--line);border-radius:8px;margin-top:12px;font-size:12px;">
+      No sample records embedded for this rep + metric. Use the Salesforce link below to see the live list.
+    </div>`;
+  }
+  const headers = {
+    calls: `<tr><th>Subject</th><th>Type</th><th>Direction</th><th class="num">Duration</th><th>Account</th><th>Date</th><th></th></tr>`,
+    meetings: `<tr><th>Subject</th><th>Account</th><th>Start</th><th></th></tr>`,
+    emails: `<tr><th>Subject</th><th>To</th><th>Date</th><th>Linked</th><th></th></tr>`
+  };
+  const rows = records.map(r => {
+    const sfUrl = `${SF_BASE}/lightning/r/${metric==="calls"||metric==="meetings"?(metric==="calls"?"Task":"Event"):"EmailMessage"}/${r.id}/view`;
+    if (metric === "calls") {
+      const typeColor = r.type==="Koncert"?"badge css":r.type==="Zoom"?"badge plutus":"badge warn";
+      return `<tr>
+        <td style="font-size:12px;">${r.subj}</td>
+        <td><span class="${typeColor}">${r.type}</span></td>
+        <td>${r.direction || "—"}</td>
+        <td class="num">${fmtDuration(r.duration)}</td>
+        <td style="font-size:12px;">${r.account || "—"}</td>
+        <td style="font-size:11.5px;color:var(--muted);">${r.date}</td>
+        <td><a href="${sfUrl}" target="_blank">→</a></td>
+      </tr>`;
+    } else if (metric === "meetings") {
+      return `<tr>
+        <td style="font-size:12px;">${r.subj}</td>
+        <td style="font-size:12px;">${r.account || "—"}</td>
+        <td style="font-size:11.5px;color:var(--muted);">${r.date}</td>
+        <td><a href="${sfUrl}" target="_blank">→</a></td>
+      </tr>`;
+    } else {
+      return `<tr>
+        <td style="font-size:12px;max-width:280px;overflow:hidden;text-overflow:ellipsis;">${r.subj}</td>
+        <td style="font-size:11.5px;max-width:200px;overflow:hidden;text-overflow:ellipsis;">${r.to}</td>
+        <td style="font-size:11.5px;color:var(--muted);">${r.date}</td>
+        <td style="font-size:11.5px;">${r.account || "—"}</td>
+        <td><a href="${sfUrl}" target="_blank">→</a></td>
+      </tr>`;
+    }
+  }).join("");
+  return `<h3 style="margin:18px 0 6px;font-size:13px;">Most recent ${metric} <span class="pill">${records.length} sample${records.length===1?"":"s"}</span></h3>
+    <table>${headers[metric]}<tbody>${rows}</tbody></table>
+    <p style="font-size:11px;color:var(--muted);margin-top:6px;">Click → to open the record in Salesforce.</p>`;
+}
+
+function drillModal(metric, repName, period) {
+  const rep = REPS.find(r => r.name === repName);
+  if (!rep) return;
+  const m = repMetrics(rep, period);
+  const value = m[metric] || 0;
+  const sfLink = buildSFLink(metric, repName, period);
+  const months = periodMonths(period);
+
+  // monthly breakdown — for calls, also show Koncert vs Zoom split
+  let breakdownTable;
+  if (metric === "calls") {
+    const breakdown = months.map(mo => {
+      const d = rep.monthly[mo] || {};
+      return `<tr>
+        <td>${MONTH_LABELS[mo]}</td>
+        <td class="num">${fmt(d.koncert||0)}</td>
+        <td class="num">${fmt(d.zoom||0)}</td>
+        <td class="num"><b>${fmt(d.calls||0)}</b></td>
+      </tr>`;
+    }).join("");
+    breakdownTable = `<table>
+      <thead><tr><th>Month</th><th class="num">Koncert</th><th class="num">Zoom</th><th class="num">Total</th></tr></thead>
+      <tbody>${breakdown}</tbody>
+    </table>`;
+  } else {
+    const breakdown = months.map(mo => `<tr>
+      <td>${MONTH_LABELS[mo]}</td>
+      <td class="num">${fmt(rep.monthly[mo]?.[metric] || 0)}</td>
+    </tr>`).join("");
+    breakdownTable = `<table>
+      <thead><tr><th>Month</th><th class="num">${metric}</th></tr></thead>
+      <tbody>${breakdown}</tbody>
+    </table>`;
+  }
+
+  const titleMap = { calls:"Calls", meetings:"External Meetings", emails:"Outbound Emails", tasks:"Tasks", cases_open:"Open Cases", cases_closed:"Closed Cases" };
+  const title = `${repName} — ${titleMap[metric] || metric}`;
+  let metaText;
+  if (metric === "calls") {
+    metaText = `${teamBadge(rep.team)} · ${periodLabel(period)} · <b>${fmt(value)}</b> calls (${fmt(m.koncert)} Koncert · ${fmt(m.zoom)} Zoom)`;
+  } else {
+    metaText = `${teamBadge(rep.team)} · ${periodLabel(period)} · <b>${fmt(value)}</b> ${titleMap[metric]||""}`;
+  }
+
+  // sample records (only meaningful for calls/meetings/emails)
+  const showRecords = ["calls","meetings","emails"].includes(metric);
+
+  const body = `
+    <div style="margin-bottom:14px;">${breakdownTable}</div>
+    ${showRecords ? recordsCard(metric, repName) : ""}
+    <div style="margin-top:14px;border-top:1px solid var(--line);padding-top:12px;">
+      <p style="font-size:11.5px;color:var(--ink-soft);margin:0 0 6px;">For the full live list:</p>
+      <a class="sf-link" href="${sfLink.listUrl}" target="_blank">Open in Salesforce →</a>
+      ${sfLink.userLink ? `<a class="sf-link" style="margin-left:8px;background:var(--ink-soft);" href="${sfLink.userLink}" target="_blank">View ${repName.split(" ")[0]}'s profile</a>`:""}
+    </div>
+  `;
+  showModal(title, metaText, body);
+}
+
+function drillTeamMetric(metric, team, period) {
+  const list = team === "ALL" ? REPS : REPS.filter(r => r.team === team);
+  const months = periodMonths(period);
+  const titleMap = { calls:"Calls", meetings:"External Meetings", emails:"Outbound Emails", tasks:"Tasks", cases_open:"Open Cases", cases_closed:"Closed Cases" };
+  const rows = list.map(r => {
+    const m = repMetrics(r, period);
+    return { name:r.name, team:r.team, val:m[metric]||0 };
+  }).filter(r=>r.val>0).sort((a,b)=>b.val-a.val);
+
+  const total = rows.reduce((a,r)=>a+r.val,0);
+
+  // Aggregate sample records across reps for this metric (calls/meetings/emails only)
+  let aggRecordsHtml = "";
+  if (["calls","meetings","emails"].includes(metric)) {
+    const collected = [];
+    rows.forEach(r => {
+      const recs = SAMPLE_RECORDS[r.name]?.[metric] || [];
+      recs.forEach(rec => collected.push({ ...rec, _rep: r.name, _team: r.team }));
+    });
+    // sort by date desc and take top 10
+    collected.sort((a,b) => (b.date || "").localeCompare(a.date || ""));
+    const top = collected.slice(0, 10);
+    if (top.length) {
+      const rowsHtml = top.map(rec => {
+        const sfUrl = `${SF_BASE}/lightning/r/${metric==="calls"?"Task":metric==="meetings"?"Event":"EmailMessage"}/${rec.id}/view`;
+        if (metric === "calls") {
+          const typeColor = rec.type==="Koncert"?"badge css":rec.type==="Zoom"?"badge plutus":"badge warn";
+          return `<tr>
+            <td style="font-size:11.5px;"><b>${rec._rep}</b></td>
+            <td style="font-size:12px;">${rec.subj}</td>
+            <td><span class="${typeColor}">${rec.type}</span></td>
+            <td class="num">${fmtDuration(rec.duration)}</td>
+            <td style="font-size:11.5px;color:var(--muted);">${rec.date}</td>
+            <td><a href="${sfUrl}" target="_blank">→</a></td>
+          </tr>`;
+        } else if (metric === "meetings") {
+          return `<tr>
+            <td style="font-size:11.5px;"><b>${rec._rep}</b></td>
+            <td style="font-size:12px;">${rec.subj}</td>
+            <td style="font-size:12px;">${rec.account || "—"}</td>
+            <td style="font-size:11.5px;color:var(--muted);">${rec.date}</td>
+            <td><a href="${sfUrl}" target="_blank">→</a></td>
+          </tr>`;
+        } else {
+          return `<tr>
+            <td style="font-size:11.5px;"><b>${rec._rep}</b></td>
+            <td style="font-size:12px;max-width:280px;overflow:hidden;text-overflow:ellipsis;">${rec.subj}</td>
+            <td style="font-size:11.5px;max-width:180px;overflow:hidden;text-overflow:ellipsis;">${rec.to}</td>
+            <td style="font-size:11.5px;color:var(--muted);">${rec.date}</td>
+            <td><a href="${sfUrl}" target="_blank">→</a></td>
+          </tr>`;
+        }
+      }).join("");
+      const headers = {
+        calls:    `<tr><th>Rep</th><th>Subject</th><th>Type</th><th class="num">Duration</th><th>Date</th><th></th></tr>`,
+        meetings: `<tr><th>Rep</th><th>Subject</th><th>Account</th><th>Start</th><th></th></tr>`,
+        emails:   `<tr><th>Rep</th><th>Subject</th><th>To</th><th>Date</th><th></th></tr>`
+      };
+      aggRecordsHtml = `
+        <h3 style="margin:18px 0 6px;font-size:13px;">Most recent records across the team <span class="pill">${top.length} sample${top.length===1?"":"s"}</span></h3>
+        <table>${headers[metric]}<tbody>${rowsHtml}</tbody></table>
+        <p style="font-size:11px;color:var(--muted);margin-top:6px;">Click → to open the record in Salesforce, or click "drill" on a rep above to see their full breakdown.</p>`;
+    }
+  }
+
+  const body = `
+    <table>
+      <thead><tr><th>Rep</th><th>Team</th><th class="num">${titleMap[metric]||metric}</th><th></th></tr></thead>
+      <tbody>
+        ${rows.map(r=>`<tr><td><b>${r.name}</b></td><td>${teamBadge(r.team)}</td><td class="num">${fmt(r.val)}</td>
+          <td><a href="#" data-drill-rep="${r.name}" data-drill-metric="${metric}">drill →</a></td></tr>`).join("")}
+      </tbody>
+    </table>
+    ${aggRecordsHtml}
+    <div style="margin-top:14px;border-top:1px solid var(--line);padding-top:12px;">
+      <p style="font-size:11.5px;color:var(--ink-soft);margin:0 0 6px;">For the full live list:</p>
+      <a class="sf-link" href="${buildSFLink(metric).listUrl}" target="_blank">Open in Salesforce →</a>
+    </div>
+  `;
+  showModal(`${titleMap[metric]||metric} — ${team==="ALL"?"All Teams":teamLabel(team)}`,
+    `${periodLabel(period)} · <b>${fmt(total)}</b> total`, body);
+
+  // wire inline drills
+  $$("#modal-body a[data-drill-rep]").forEach(a => {
+    a.addEventListener("click", e => {
+      e.preventDefault();
+      drillModal(a.dataset.drillMetric, a.dataset.drillRep, period);
+    });
+  });
+}
+
+/* ============================================================
+   FILTERS
+   ============================================================ */
+function buildRepFilter() {
+  const sel = $("#f-rep");
+  sel.innerHTML = `<option value="ALL">All Reps</option>` +
+    REPS
+      .filter(r => state.team==="ALL" || r.team===state.team)
+      .map(r => `<option value="${r.name}">${r.name} — ${teamLabel(r.team)}</option>`)
+      .join("");
+  sel.value = state.rep && (state.rep==="ALL" || REPS.find(r=>r.name===state.rep && (state.team==="ALL"||r.team===state.team))) ? state.rep : "ALL";
+  state.rep = sel.value;
+
+  const ic = $("#ic-rep");
+  ic.innerHTML = `<option value="">— Choose a rep —</option>` +
+    REPS.map(r => `<option value="${r.name}">${r.name} — ${teamLabel(r.team)}</option>`).join("");
+}
+
+/* ============================================================
+   KPIs
+   ============================================================ */
+function renderKPIs() {
+  const list = filteredReps();
+  const curr = list.reduce((a,r)=>{
+    const m = repMetrics(r);
+    a.calls += m.calls; a.meetings += m.meetings; a.emails += m.emails;
+    a.tasks += m.tasks; a.cases += m.cases_open + m.cases_closed; return a;
+  }, {calls:0,meetings:0,emails:0,tasks:0,cases:0});
+
+  const prior = priorPeriodFor(state.period);
+  const prev = prior ? list.reduce((a,r)=>{
+    const m = repMetrics(r, prior);
+    a.calls += m.calls; a.meetings += m.meetings; a.emails += m.emails;
+    a.tasks += m.tasks; a.cases += m.cases_open + m.cases_closed; return a;
+  }, {calls:0,meetings:0,emails:0,tasks:0,cases:0}) : null;
+
+  const items = [
+    {key:"calls", label:"Calls (in+out)", v:curr.calls, p:prev?.calls},
+    {key:"meetings", label:"External Meetings", v:curr.meetings, p:prev?.meetings},
+    {key:"emails", label:"Outbound Emails", v:curr.emails, p:prev?.emails},
+    {key:"tasks", label:"Tasks Created", v:curr.tasks, p:prev?.tasks}
+  ];
+
+  $("#kpi-row").innerHTML = items.map(it => {
+    const d = (prev && it.p !== undefined) ? delta(it.v, it.p) : null;
+    return `<div class="card kpi" data-kpi="${it.key}">
+      <h3>${it.label} <span class="pill">${periodLabel(state.period)}</span></h3>
+      <div class="value">${fmt(it.v)}</div>
+      ${d ? deltaText(d) : '<div class="delta flat">— no prior period</div>'}
+    </div>`;
+  }).join("");
+
+  $("#exec-period-pill").textContent = periodLabel(state.period);
+  $("#lb-period-pill").textContent = periodLabel(state.period);
+  $("#dt-period-pill").textContent = periodLabel(state.period);
+  $("#cmp-pill-1").textContent = periodLabel(state.period);
+  $("#cmp-pill-2").textContent = periodLabel(state.period);
+  $("#cmp-pill-3").textContent = periodLabel(state.period);
+  $("#cases-period-pill").textContent = periodLabel(state.period);
+
+  // wire KPI clicks
+  $$("#kpi-row .kpi").forEach(card => {
+    card.addEventListener("click", () => {
+      drillTeamMetric(card.dataset.kpi, state.team, state.period);
+    });
+  });
+}
+
+/* ============================================================
+   INSIGHTS
+   ============================================================ */
+function generateInsights() {
+  const list = filteredReps();
+  const ins = [];
+  const months = periodMonths(state.period).length || 1;
+
+  list.forEach(r => {
+    const m = repMetrics(r);
+    const tgt = TARGETS[r.team];
+    const callsTarget = tgt.calls * months;
+    if (callsTarget > 0 && m.calls > 0 && m.calls < callsTarget * 0.5) {
+      ins.push({ level:"bad", icon:"!",
+        head:`${r.name} is ${Math.round((1 - m.calls/callsTarget)*100)}% behind call target`,
+        text:`${fmt(m.calls)} calls vs target of ${fmt(callsTarget)} for ${periodLabel(state.period)}.`,
+        nba:`Schedule a 1:1 within 48h. Pair on a Koncert session this week.`
+      });
+    }
+    if (r.total_open > 100 && (r.total_open / (r.total_open + r.total_closed)) > 0.25) {
+      ins.push({ level:"warn", icon:"≡",
+        head:`${r.name} has ${fmt(r.total_open)} open tasks (since Sep'25)`,
+        text:`Open task ratio is ${Math.round((r.total_open/(r.total_open+r.total_closed))*100)}%. Healthy is <20%.`,
+        nba:`Block 2h to triage. Mark stale items "Not Applicable" or close out completed work.`
+      });
+    }
+  });
+
+  // top performer per metric
+  const sortedByCalls = list.slice().filter(r=>repMetrics(r).calls>0).sort((a,b)=>repMetrics(b).calls - repMetrics(a).calls);
+  if (sortedByCalls.length) {
+    const top = sortedByCalls[0];
+    const tm = repMetrics(top);
+    ins.push({ level:"good", icon:"★",
+      head:`${top.name} leads on call volume (${fmt(tm.calls)})`,
+      text:`Top of ${list.length} reps in ${periodLabel(state.period)}.`,
+      nba:`Have ${top.name} share their approach in next team huddle.`
+    });
+  }
+  const sortedByEmails = list.slice().filter(r=>repMetrics(r).emails>0).sort((a,b)=>repMetrics(b).emails - repMetrics(a).emails);
+  if (sortedByEmails.length) {
+    const top = sortedByEmails[0];
+    const tm = repMetrics(top);
+    ins.push({ level:"good", icon:"✉",
+      head:`${top.name} leads on outbound email (${fmt(tm.emails)})`,
+      text:`Top of ${list.length} reps for ${periodLabel(state.period)}.`,
+      nba:`Document their email cadence template for the team.`
+    });
+  }
+
+  // dropping
+  if (state.period === "CQ") {
+    list.forEach(r => {
+      const cq = repMetrics(r, "CQ");
+      const lq = repMetrics(r, "LQ");
+      const lqMonthly = lq.calls / 3;
+      if (lqMonthly > 50 && cq.calls < lqMonthly * 0.6) {
+        ins.push({ level:"warn", icon:"▼",
+          head:`${r.name}'s call volume dropped vs LQ avg`,
+          text:`From ${Math.round(lqMonthly)}/mo last quarter → ${cq.calls} this month.`,
+          nba:`Audit calendar density and cadence enrollments next 1:1.`
+        });
+      }
+    });
+  }
+
+  const seen = new Set();
+  const out = ins.filter(i => { if (seen.has(i.head)) return false; seen.add(i.head); return true; }).slice(0, 8);
+
+  $("#insights-list").innerHTML = out.length
+    ? out.map(i => `
+      <div class="insight ${i.level}">
+        <div class="icon">${i.icon}</div>
+        <div class="body">
+          <div class="head">${i.head}</div>
+          <div class="text">${i.text}</div>
+          <div class="nba"><b>Next best action →</b> ${i.nba}</div>
+        </div>
+      </div>`).join("")
+    : `<div class="empty-state">No prescriptive flags for this filter.</div>`;
+}
+
+/* ============================================================
+   CHARTS
+   ============================================================ */
+let charts = {};
+function destroy(name) { if (charts[name]) { charts[name].destroy(); delete charts[name]; } }
+function destroyAll() { Object.keys(charts).forEach(destroy); }
+
+function chartClickHandler(metric, getRepName) {
+  return (evt, elements) => {
+    if (!elements || !elements.length) return;
+    const idx = elements[0].index;
+    const repName = getRepName(idx);
+    if (repName === "TEAM") {
+      drillTeamMetric(metric, state.team, state.period);
+    } else if (repName) {
+      drillModal(metric, repName, state.period);
+    }
+  };
+}
+
+function renderCharts() {
+  destroyAll();
+
+  const list = filteredReps();
+  const labels = list.map(r => r.name);
+  const tCss = teamMetrics("CSS");
+  const tPlu = teamMetrics("PLUTUS");
+
+  // -- Activity Mix --
+  charts.mix = new Chart($("#chart-mix"), {
+    type: "bar",
+    data: {
+      labels: ["Calls","Meetings","Emails","Tasks","Cases"],
+      datasets: [
+        { label:"CSS", backgroundColor:"#0b5cff",
+          data: [tCss.calls, tCss.meetings, tCss.emails, tCss.tasks, tCss.cases_open+tCss.cases_closed] },
+        { label:"Plutus", backgroundColor:"#6f42c1",
+          data: [tPlu.calls, tPlu.meetings, tPlu.emails, tPlu.tasks, tPlu.cases_open+tPlu.cases_closed] }
+      ]
+    },
+    options: { responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{position:"bottom"}},
+      scales:{ y:{ beginAtZero:true } },
+      onClick: (evt, els) => {
+        if (!els.length) return;
+        const idx = els[0].index;
+        const dsIdx = els[0].datasetIndex;
+        const team = dsIdx === 0 ? "CSS" : "PLUTUS";
+        const metricMap = ["calls","meetings","emails","tasks","cases_open"];
+        drillTeamMetric(metricMap[idx], team, state.period);
+      }
+    }
+  });
+
+  // -- Monthly Trend --
+  charts.monthly = new Chart($("#chart-monthly"), {
+    type:"line",
+    data:{
+      labels: MONTHS.map(m=>MONTH_LABELS[m]),
+      datasets:[
+        { label:"CSS Calls", borderColor:"#0b5cff", backgroundColor:"#0b5cff20", tension:0.3,
+          data: MONTHS.map(m => REPS.filter(r=>r.team==="CSS").reduce((a,r)=>a+(r.monthly[m]?.calls||0),0)) },
+        { label:"Plutus Calls", borderColor:"#6f42c1", backgroundColor:"#6f42c120", tension:0.3,
+          data: MONTHS.map(m => REPS.filter(r=>r.team==="PLUTUS").reduce((a,r)=>a+(r.monthly[m]?.calls||0),0)) },
+        { label:"CSS Meetings", borderColor:"#1f9d55", borderDash:[4,4], tension:0.3,
+          data: MONTHS.map(m => REPS.filter(r=>r.team==="CSS").reduce((a,r)=>a+(r.monthly[m]?.meetings||0),0)) },
+        { label:"Plutus Meetings", borderColor:"#c97a00", borderDash:[4,4], tension:0.3,
+          data: MONTHS.map(m => REPS.filter(r=>r.team==="PLUTUS").reduce((a,r)=>a+(r.monthly[m]?.meetings||0),0)) }
+      ]
+    },
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{position:"bottom"}},
+      onClick:(evt, els) => {
+        if (!els.length) return;
+        const idx = els[0].index;
+        const monthKey = MONTHS[idx];
+        state.period = monthKey;
+        $("#f-period").value = monthKey;
+        renderAll();
+      }
+    }
+  });
+
+  // -- Tasks open vs closed (executive) --
+  charts.tasksExec = new Chart($("#chart-tasks-exec"), {
+    type:"bar",
+    data:{
+      labels: list.map(r=>r.name),
+      datasets:[
+        { label:"Open", backgroundColor:"#c97a00", data: list.map(r=>r.total_open) },
+        { label:"Closed", backgroundColor:"#1f9d55", data: list.map(r=>r.total_closed) }
+      ]
+    },
+    options:{ indexAxis:"y", responsive:true, maintainAspectRatio:false,
+      scales:{ x:{stacked:true}, y:{stacked:true} },
+      plugins:{legend:{position:"bottom"}},
+      onClick: chartClickHandler("tasks", idx => list[idx]?.name)
+    }
+  });
+
+  // -- Calls per rep (Koncert vs Zoom stacked) --
+  charts.callsRep = new Chart($("#chart-calls-rep"), {
+    type:"bar",
+    data:{
+      labels,
+      datasets:[
+        { label:"Koncert", backgroundColor:"#0b5cff",
+          data: list.map(r => repMetrics(r).koncert) },
+        { label:"Zoom Phone", backgroundColor:"#6f42c1",
+          data: list.map(r => repMetrics(r).zoom) }
+      ]
+    },
+    options:{ indexAxis:"y", responsive:true, maintainAspectRatio:false,
+      scales:{ x:{stacked:true}, y:{stacked:true} },
+      plugins:{legend:{position:"bottom"}},
+      onClick: chartClickHandler("calls", idx => list[idx]?.name)
+    }
+  });
+
+  // -- Meetings per rep --
+  charts.meetRep = new Chart($("#chart-meetings-rep"), {
+    type:"bar",
+    data:{
+      labels,
+      datasets:[{ label:"External Meetings", backgroundColor: list.map(r=>r.team==="CSS"?"#0b5cff":"#6f42c1"),
+        data: list.map(r => repMetrics(r).meetings) }]
+    },
+    options:{ indexAxis:"y", responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      onClick: chartClickHandler("meetings", idx => list[idx]?.name)
+    }
+  });
+
+  // -- Emails per rep --
+  charts.emailsRep = new Chart($("#chart-emails-rep"), {
+    type:"bar",
+    data:{
+      labels,
+      datasets:[{ label:"Outbound Emails", backgroundColor: list.map(r=>r.team==="CSS"?"#0b5cff":"#6f42c1"),
+        data: list.map(r => repMetrics(r).emails) }]
+    },
+    options:{ indexAxis:"y", responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      onClick: chartClickHandler("emails", idx => list[idx]?.name)
+    }
+  });
+
+  // -- Productivity Index --
+  const prod = list.map(r => {
+    const m = repMetrics(r), tgt = TARGETS[r.team];
+    const months = periodMonths(state.period).length || 1;
+    return ((m.calls/(tgt.calls*months || 1)) + (m.meetings/(tgt.meetings*months || 1)) + (m.emails/(tgt.emails*months || 1))) * (100/3);
+  });
+  charts.prod = new Chart($("#chart-prod"), {
+    type:"bar",
+    data:{
+      labels,
+      datasets:[{ label:"Productivity Index", data: prod,
+        backgroundColor: prod.map(v => v>=100?"#1f9d55":v>=70?"#c97a00":"#c0392b") }]
+    },
+    options:{ indexAxis:"y", responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{display:false},
+        tooltip:{ callbacks:{ label:(ctx)=>`Score: ${ctx.parsed.x.toFixed(0)} (target=100)` } } },
+      scales:{ x:{ suggestedMax: 150 } },
+      onClick: chartClickHandler("calls", idx => list[idx]?.name)
+    }
+  });
+
+  // -- Cases by Owner --
+  const caseList = list.map(r => {
+    const m = repMetrics(r);
+    return { name:r.name, team:r.team, open:m.cases_open, closed:m.cases_closed };
+  }).filter(x => x.open + x.closed > 0).sort((a,b)=>(b.open+b.closed)-(a.open+a.closed));
+  charts.cases = new Chart($("#chart-cases"), {
+    type:"bar",
+    data:{
+      labels: caseList.map(c => c.name),
+      datasets:[
+        { label:"Open", backgroundColor:"#c97a00", data: caseList.map(c=>c.open) },
+        { label:"Closed", backgroundColor:"#1f9d55", data: caseList.map(c=>c.closed) }
+      ]
+    },
+    options:{ indexAxis:"y", responsive:true, maintainAspectRatio:false,
+      scales:{ x:{stacked:true}, y:{stacked:true} },
+      plugins:{legend:{position:"bottom"}},
+      onClick: chartClickHandler("cases_open", idx => caseList[idx]?.name)
+    }
+  });
+
+  // -- Tasks by rep (Tasks tab) --
+  charts.tasksRep = new Chart($("#chart-tasks-rep"), {
+    type:"bar",
+    data:{
+      labels: list.map(r=>r.name),
+      datasets:[
+        { label:"Open", backgroundColor:"#c97a00", data: list.map(r=>r.total_open) },
+        { label:"Closed", backgroundColor:"#1f9d55", data: list.map(r=>r.total_closed) }
+      ]
+    },
+    options:{ indexAxis:"y", responsive:true, maintainAspectRatio:false,
+      scales:{ x:{stacked:true}, y:{stacked:true} },
+      plugins:{legend:{position:"bottom"}},
+      onClick: chartClickHandler("tasks", idx => list[idx]?.name)
+    }
+  });
+
+  // -- Tasks volume by month --
+  charts.tasksMonth = new Chart($("#chart-tasks-month"), {
+    type:"line",
+    data:{
+      labels: MONTHS.map(m=>MONTH_LABELS[m]),
+      datasets:[
+        { label:"CSS Tasks", borderColor:"#0b5cff", backgroundColor:"#0b5cff20", tension:0.3, fill:true,
+          data: MONTHS.map(m => REPS.filter(r=>r.team==="CSS").reduce((a,r)=>a+(r.monthly[m]?.tasks||0),0)) },
+        { label:"Plutus Tasks", borderColor:"#6f42c1", backgroundColor:"#6f42c120", tension:0.3, fill:true,
+          data: MONTHS.map(m => REPS.filter(r=>r.team==="PLUTUS").reduce((a,r)=>a+(r.monthly[m]?.tasks||0),0)) }
+      ]
+    },
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{position:"bottom"}},
+      onClick:(evt, els) => {
+        if (!els.length) return;
+        const idx = els[0].index;
+        state.period = MONTHS[idx];
+        $("#f-period").value = MONTHS[idx];
+        renderAll();
+      }
+    }
+  });
+}
+
+/* ============================================================
+   LEADERBOARD
+   ============================================================ */
+function renderLeaderboard() {
+  const list = filteredReps();
+  const search = ($("#lb-search").value || "").toLowerCase();
+
+  const rows = list.map(r => {
+    const m = repMetrics(r);
+    return {
+      rep:r, name:r.name, team:r.team,
+      calls:m.calls, meetings:m.meetings, emails:m.emails, tasks:m.tasks,
+      cases:m.cases_open + m.cases_closed,
+      total: m.calls + m.meetings + m.emails + m.tasks + m.cases_open + m.cases_closed
+    };
+  }).filter(r => r.name.toLowerCase().includes(search));
+
+  const k = state.sortKey.lb, dir = state.sortDir.lb==="asc"?1:-1;
+  rows.sort((a,b)=>{
+    if (typeof a[k] === "string") return a[k].localeCompare(b[k]) * dir;
+    return ((a[k]||0) - (b[k]||0)) * dir;
+  });
+
+  $("#leaderboard tbody").innerHTML = rows.map(r => `
+    <tr data-rep="${r.name}">
+      <td><b>${r.name}</b></td>
+      <td>${teamBadge(r.team)}</td>
+      <td class="num clickable" data-metric="calls">${fmt(r.calls)}</td>
+      <td class="num clickable" data-metric="meetings">${fmt(r.meetings)}</td>
+      <td class="num clickable" data-metric="emails">${fmt(r.emails)}</td>
+      <td class="num clickable" data-metric="tasks">${fmt(r.tasks)}</td>
+      <td class="num clickable" data-metric="cases_open">${fmt(r.cases)}</td>
+      <td class="num"><b>${fmt(r.total)}</b></td>
+      <td>${statusBadge(r.rep)}</td>
+    </tr>
+  `).join("");
+
+  $$("#leaderboard tbody td.clickable").forEach(td => {
+    td.addEventListener("click", e => {
+      e.stopPropagation();
+      const tr = td.closest("tr");
+      drillModal(td.dataset.metric, tr.dataset.rep, state.period);
+    });
+  });
+  $$("#leaderboard tbody tr").forEach(tr => {
+    tr.addEventListener("click", e => {
+      if (e.target.classList.contains("clickable")) return;
+      const name = tr.dataset.rep;
+      switchToTab("ic");
+      $("#ic-rep").value = name;
+      renderICDetail(name);
+    });
+  });
+}
+
+/* ============================================================
+   DATA TABLE
+   ============================================================ */
+function renderDataTable() {
+  const list = filteredReps();
+  const search = ($("#dt-search").value || "").toLowerCase();
+  const rows = list.map(r => {
+    const m = repMetrics(r);
+    return {
+      rep:r, name:r.name, team:r.team,
+      koncert:m.koncert, zoom:m.zoom,
+      calls:m.calls, meetings:m.meetings, emails:m.emails,
+      tasks:m.tasks, open:r.total_open, cases:m.cases_open + m.cases_closed
+    };
+  }).filter(r => r.name.toLowerCase().includes(search));
+
+  const k = state.sortKey.dt, dir = state.sortDir.dt==="asc"?1:-1;
+  rows.sort((a,b)=>{
+    if (typeof a[k]==="string") return a[k].localeCompare(b[k])*dir;
+    return ((a[k]||0)-(b[k]||0))*dir;
+  });
+
+  $("#data-table tbody").innerHTML = rows.map(r => `
+    <tr data-rep="${r.name}">
+      <td><b>${r.name}</b></td>
+      <td>${teamBadge(r.team)}</td>
+      <td class="num clickable" data-metric="calls">${fmt(r.koncert)}</td>
+      <td class="num clickable" data-metric="calls">${fmt(r.zoom)}</td>
+      <td class="num clickable" data-metric="calls"><b>${fmt(r.calls)}</b></td>
+      <td class="num clickable" data-metric="meetings">${fmt(r.meetings)}</td>
+      <td class="num clickable" data-metric="emails">${fmt(r.emails)}</td>
+      <td class="num clickable" data-metric="tasks">${fmt(r.tasks)}</td>
+      <td class="num">${fmt(r.open)}</td>
+      <td class="num clickable" data-metric="cases_open">${fmt(r.cases)}</td>
+    </tr>
+  `).join("");
+
+  $$("#data-table tbody td.clickable").forEach(td => {
+    td.addEventListener("click", e => {
+      e.stopPropagation();
+      const tr = td.closest("tr");
+      drillModal(td.dataset.metric, tr.dataset.rep, state.period);
+    });
+  });
+  $$("#data-table tbody tr").forEach(tr => {
+    tr.addEventListener("click", e => {
+      if (e.target.classList.contains("clickable")) return;
+      switchToTab("ic");
+      $("#ic-rep").value = tr.dataset.rep;
+      renderICDetail(tr.dataset.rep);
+    });
+  });
+}
+
+/* ============================================================
+   IC DETAIL — bar chart (replaces radar)
+   ============================================================ */
+function renderICDetail(name) {
+  const rep = REPS.find(r => r.name === name);
+  if (!rep) {
+    $("#ic-detail").innerHTML = `<div class="empty-state">Select a rep above to see their personalized view.</div>`;
+    return;
+  }
+  const m = repMetrics(rep);
+  const tgt = TARGETS[rep.team];
+  const months = periodMonths(state.period).length || 1;
+  const cs = { open: m.cases_open, closed: m.cases_closed };
+  const closeRate = (cs.open+cs.closed) ? Math.round(cs.closed / (cs.open+cs.closed) * 100) : 0;
+
+  const nbas = [];
+  if (m.calls > 0 && m.calls < tgt.calls * months * 0.7) {
+    nbas.push({ icon:"📞", head:"Increase outbound call volume",
+      text:`At ${fmt(m.calls)} calls vs target ${fmt(tgt.calls*months)} for ${periodLabel(state.period)}.`,
+      level:"warn"});
+  }
+  if (m.meetings > 0 && m.meetings < tgt.meetings * months * 0.7) {
+    nbas.push({ icon:"📅", head:"Re-engage stale accounts for meetings",
+      text:`${fmt(m.meetings)} external meetings vs target ${fmt(tgt.meetings*months)}.`,
+      level:"warn"});
+  }
+  if (m.emails > 0 && m.emails < tgt.emails * months * 0.5) {
+    nbas.push({ icon:"✉", head:"Boost outbound email cadence",
+      text:`${fmt(m.emails)} outbound emails this period vs target ${fmt(tgt.emails*months)}.`,
+      level:"warn"});
+  }
+  if (rep.total_open > 200) {
+    nbas.push({ icon:"≡", head:`Clear ${fmt(rep.total_open)} open tasks`,
+      text:`Triage queue: close completed work, mark stale items "Not Applicable".`,
+      level:"warn"});
+  }
+  if (cs.open >= 3) {
+    nbas.push({ icon:"🎫", head:`Triage ${cs.open} open cases`,
+      text:`Resolve aged cases (>5 days inactive) or escalate with a customer status update.`,
+      level:"warn"});
+  }
+  if (m.calls >= tgt.calls * months && m.meetings >= tgt.meetings * months) {
+    nbas.push({ icon:"🏆", head:"Crushing targets — share what's working",
+      text:`Past target on calls and meetings for ${periodLabel(state.period)}. Document your approach.`,
+      level:"good"});
+  }
+
+  $("#ic-detail").innerHTML = `
+    <h2>${rep.name} ${teamBadge(rep.team)} ${statusBadge(rep)}</h2>
+    <div class="meta">${rep.team==="CSS"?"CSS team (US, relationship-led)":"Plutus team (offshore, dialer-led)"} · ${periodLabel(state.period)}
+      · Targets ${fmt(tgt.calls*months)} calls · ${fmt(tgt.meetings*months)} meetings · ${fmt(tgt.emails*months)} emails</div>
+
+    <div class="ddrow">
+      <div class="stat clickable-stat" data-metric="calls"><div class="lbl">Calls</div><div class="val">${fmt(m.calls)}</div><div class="sub">click to drill in</div></div>
+      <div class="stat clickable-stat" data-metric="meetings"><div class="lbl">External Meetings</div><div class="val">${fmt(m.meetings)}</div><div class="sub">click to drill in</div></div>
+      <div class="stat clickable-stat" data-metric="emails"><div class="lbl">Outbound Emails</div><div class="val">${fmt(m.emails)}</div><div class="sub">click to drill in</div></div>
+      <div class="stat clickable-stat" data-metric="tasks"><div class="lbl">Tasks</div><div class="val">${fmt(m.tasks)}</div><div class="sub">${fmt(rep.total_open)} open · ${fmt(rep.total_closed)} closed</div></div>
+      <div class="stat clickable-stat" data-metric="cases_open"><div class="lbl">Cases</div><div class="val">${fmt(m.cases_open + m.cases_closed)}</div><div class="sub">${cs.open} open · ${cs.closed} closed · ${closeRate}% close</div></div>
+    </div>
+
+    <div class="grid grid-2" style="margin-top:18px;">
+      <div class="card">
+        <h3>Monthly Trend — ${rep.name.split(" ")[0]}</h3>
+        <div class="chart-wrap"><canvas id="ic-trend"></canvas></div>
+      </div>
+      <div class="card">
+        <h3>vs Team Average <span class="pill">${teamLabel(rep.team)}</span></h3>
+        <div class="chart-wrap"><canvas id="ic-vsavg"></canvas></div>
+        <div class="footnote">Per-period totals; team avg excludes ${rep.name}.</div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:16px;">
+      <h3>Next Best Actions for ${rep.name.split(" ")[0]}</h3>
+      ${nbas.length ? nbas.map(n => `
+        <div class="insight ${n.level}">
+          <div class="icon">${n.icon}</div>
+          <div class="body">
+            <div class="head">${n.head}</div>
+            <div class="text">${n.text}</div>
+          </div>
+        </div>`).join("") :
+        `<div class="empty-state">No prescriptive flags — this rep is on track.</div>`}
+    </div>
+  `;
+
+  // wire stat clicks
+  $$(".clickable-stat").forEach(s => {
+    s.style.cursor = "pointer";
+    s.addEventListener("click", () => drillModal(s.dataset.metric, rep.name, state.period));
+  });
+
+  // monthly trend
+  destroy("icTrend"); destroy("icAvg");
+  charts.icTrend = new Chart($("#ic-trend"), {
+    type:"line",
+    data:{
+      labels: MONTHS.map(mo=>MONTH_LABELS[mo]),
+      datasets:[
+        { label:"Calls", borderColor:"#0b5cff", backgroundColor:"#0b5cff20", tension:0.3,
+          data: MONTHS.map(mo=>rep.monthly[mo]?.calls||0) },
+        { label:"Meetings", borderColor:"#1f9d55", borderDash:[4,4], tension:0.3,
+          data: MONTHS.map(mo=>rep.monthly[mo]?.meetings||0) },
+        { label:"Emails", borderColor:"#c97a00", borderDash:[2,2], tension:0.3,
+          data: MONTHS.map(mo=>rep.monthly[mo]?.emails||0) }
+      ]
+    },
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{position:"bottom"}},
+      onClick:(evt, els) => {
+        if (!els.length) return;
+        const idx = els[0].index;
+        state.period = MONTHS[idx];
+        $("#f-period").value = MONTHS[idx];
+        renderAll();
+        renderICDetail(rep.name);
+      }
+    }
+  });
+
+  // vs team avg — BAR CHART (not radar)
+  const peers = REPS.filter(r => r.team===rep.team && r.name !== rep.name);
+  const avg = (key) => peers.length ? peers.reduce((a,r)=>a+repMetrics(r)[key],0)/peers.length : 0;
+  const labels = ["Calls","Meetings","Emails","Tasks","Cases"];
+  const repVals = [m.calls, m.meetings, m.emails, m.tasks, m.cases_open + m.cases_closed];
+  const avgVals = [avg("calls"), avg("meetings"), avg("emails"), avg("tasks"),
+                   peers.length ? peers.reduce((a,r)=>{const x=repMetrics(r); return a+x.cases_open+x.cases_closed;},0)/peers.length : 0];
+  charts.icAvg = new Chart($("#ic-vsavg"), {
+    type:"bar",
+    data:{
+      labels,
+      datasets:[
+        { label: rep.name, backgroundColor: rep.team==="CSS"?"#0b5cff":"#6f42c1", data: repVals },
+        { label: teamLabel(rep.team)+" peer avg", backgroundColor:"#aab9d6", data: avgVals.map(v=>Math.round(v)) }
+      ]
+    },
+    options:{ responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{position:"bottom"} },
+      scales:{ y:{ beginAtZero:true } }
+    }
+  });
+}
+
+/* ============================================================
+   TASKS TAB
+   ============================================================ */
+function renderTasks() {
+  const list = filteredReps();
+  let totOpen = 0, totClosed = 0, agedRisk = 0;
+  list.forEach(r => { totOpen += r.total_open; totClosed += r.total_closed; if (r.total_open > 100) agedRisk++; });
+  const total = totOpen + totClosed;
+  const rate = total ? Math.round(totClosed/total*100) : 0;
+
+  $("#task-kpis").innerHTML = `
+    <div class="card kpi" data-tk="open"><h3>Open Tasks <span class="pill">since Sep'25</span></h3>
+      <div class="value">${fmt(totOpen)}</div>
+      <div class="delta ${totOpen>1000?"down":"flat"}">${totOpen>1000?"high":"healthy"} workload</div></div>
+    <div class="card kpi" data-tk="closed"><h3>Closed Tasks</h3>
+      <div class="value">${fmt(totClosed)}</div>
+      <div class="delta up">completed work</div></div>
+    <div class="card kpi" data-tk="rate"><h3>Close Rate</h3>
+      <div class="value">${rate}%</div>
+      <div class="delta ${rate>=80?"up":rate>=60?"flat":"down"}">${rate>=80?"healthy":rate>=60?"watch":"low"}</div></div>
+  `;
+  $$("#task-kpis .kpi").forEach(card => {
+    card.addEventListener("click", () => drillTeamMetric("tasks", state.team, state.period));
+  });
+
+  // Tasks table
+  const search = ($("#tasks-search").value || "").toLowerCase();
+  const rows = list.map(r => {
+    const total = r.total_open + r.total_closed;
+    return {
+      rep:r, name:r.name, team:r.team,
+      open:r.total_open, closed:r.total_closed, total,
+      rate: total ? Math.round(r.total_closed/total*100) : 0
+    };
+  }).filter(r => r.name.toLowerCase().includes(search));
+
+  const k = state.sortKey.tasks, dir = state.sortDir.tasks==="asc"?1:-1;
+  rows.sort((a,b)=>{
+    if (typeof a[k]==="string") return a[k].localeCompare(b[k])*dir;
+    return ((a[k]||0)-(b[k]||0))*dir;
+  });
+
+  $("#tasks-table tbody").innerHTML = rows.map(r => `
+    <tr data-rep="${r.name}">
+      <td><b>${r.name}</b></td>
+      <td>${teamBadge(r.team)}</td>
+      <td class="num clickable" data-metric="tasks">${fmt(r.open)}</td>
+      <td class="num clickable" data-metric="tasks">${fmt(r.closed)}</td>
+      <td class="num">${fmt(r.total)}</td>
+      <td class="num">${r.rate}%</td>
+    </tr>
+  `).join("");
+  $$("#tasks-table td.clickable").forEach(td => {
+    td.addEventListener("click", e => {
+      e.stopPropagation();
+      const tr = td.closest("tr");
+      drillModal("tasks", tr.dataset.rep, state.period);
+    });
+  });
+}
+
+/* ============================================================
+   CASES TAB
+   ============================================================ */
+function renderCases() {
+  const list = filteredReps();
+  let totOpen = 0, totClosed = 0;
+  list.forEach(r => {
+    const m = repMetrics(r);
+    totOpen += m.cases_open; totClosed += m.cases_closed;
+  });
+  const total = totOpen + totClosed;
+  const rate = total ? Math.round(totClosed/total*100) : 0;
+
+  const cards = [
+    { sel:"#kpi-cases-open",   v:totOpen,   sub:"In active queue" },
+    { sel:"#kpi-cases-closed", v:totClosed, sub:`Resolved in ${periodLabel(state.period)}` },
+    { sel:"#kpi-cases-rate",   v:rate+"%",  sub:rate>=80?"Healthy":rate>=60?"Watch":"Needs attention" }
+  ];
+  cards.forEach(c => {
+    const el = $(c.sel);
+    el.querySelector(".value").textContent = typeof c.v === "string" ? c.v : fmt(c.v);
+    el.querySelector(".delta").innerHTML = `<span style="font-size:11px;color:var(--muted);">${c.sub}</span>`;
+  });
+
+  const search = ($("#cases-search").value || "").toLowerCase();
+  const rows = list.map(r => {
+    const m = repMetrics(r);
+    const t = m.cases_open + m.cases_closed;
+    return { rep:r, name:r.name, team:r.team, open:m.cases_open, closed:m.cases_closed,
+             rate: t ? Math.round(m.cases_closed/t*100) : 0 };
+  }).filter(r => r.open+r.closed > 0).filter(r => r.name.toLowerCase().includes(search));
+
+  const k = state.sortKey.cases, dir = state.sortDir.cases==="asc"?1:-1;
+  rows.sort((a,b)=>{
+    if (typeof a[k] === "string") return a[k].localeCompare(b[k])*dir;
+    return ((a[k]||0)-(b[k]||0))*dir;
+  });
+
+  $("#cases-table tbody").innerHTML = rows.length ? rows.map(r => `
+    <tr data-rep="${r.name}">
+      <td><b>${r.name}</b></td>
+      <td>${teamBadge(r.team)}</td>
+      <td class="num clickable" data-metric="cases_open">${fmt(r.open)}</td>
+      <td class="num clickable" data-metric="cases_closed">${fmt(r.closed)}</td>
+      <td class="num">${r.rate}%</td>
+    </tr>
+  `).join("") : `<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:18px;">No cases for the current filter</td></tr>`;
+  $$("#cases-table td.clickable").forEach(td => {
+    td.addEventListener("click", e => {
+      e.stopPropagation();
+      const tr = td.closest("tr");
+      drillModal(td.dataset.metric, tr.dataset.rep, state.period);
+    });
+  });
+}
+
+/* ============================================================
+   WEEK OF ACTION
+   ============================================================ */
+function getWoaStorage() {
+  try { return JSON.parse(localStorage.getItem("weeksOfAction") || "{}"); } catch(e) { return {}; }
+}
+function setWoaStorage(data) {
+  localStorage.setItem("weeksOfAction", JSON.stringify(data));
+}
+
+function nextMonday() {
+  const now = new Date();
+  const d = new Date(now);
+  const day = d.getDay();
+  const diff = (8 - day) % 7 || 7;
+  d.setDate(d.getDate() + diff);
+  return d.toISOString().slice(0,10);
+}
+function nextFriday() {
+  const m = new Date(nextMonday());
+  m.setDate(m.getDate()+4);
+  return m.toISOString().slice(0,10);
+}
+
+let woaParsedRows = null;
+
+function setupWoa() {
+  // pre-fill week dates with next Mon-Fri
+  $("#woa-start").value = nextMonday();
+  $("#woa-end").value = nextFriday();
+
+  $("#upload-zone").addEventListener("click", () => $("#csv-file").click());
+  $("#upload-zone").addEventListener("dragover", e => { e.preventDefault(); $("#upload-zone").style.borderColor = "var(--brand)"; });
+  $("#upload-zone").addEventListener("dragleave", () => { $("#upload-zone").style.borderColor = ""; });
+  $("#upload-zone").addEventListener("drop", e => {
+    e.preventDefault();
+    const file = e.dataTransfer.files[0];
+    if (file) parseCsv(file);
+    $("#upload-zone").style.borderColor = "";
+  });
+  $("#csv-file").addEventListener("change", e => {
+    const file = e.target.files[0];
+    if (file) parseCsv(file);
+  });
+
+  $("#woa-save").addEventListener("click", saveWeek);
+  $("#woa-template").addEventListener("click", downloadTemplate);
+
+  renderWoaHistory();
+}
+
+const CSV_ALIASES = {
+  account:    ["target account","account","account name","target","company","customer","client","organization","org"],
+  account_id: ["account id","accountid","sfdc account id","sf account id","salesforce account id","id"],
+  rep:        ["rep responsible","rep","owner","responsible","assignee","csm","ae","sales rep","account owner"],
+  reason:     ["reason for outreach","reason","notes","why","outreach reason","purpose","comments","note"]
+};
+const norm = (s) => (s || "").toString().replace(/^\uFEFF/, "").toLowerCase().replace(/\([^)]*\)/g, " ").replace(/[_\-]+/g, " ").replace(/\s+/g, " ").trim();
+
+/* Minimal RFC-4180 CSV parser — no external dep so this runs in artifact sandbox. */
+function parseCSVText(text) {
+  const rows = [];
+  let row = [], field = "", i = 0, inQuotes = false;
+  text = text.replace(/^\uFEFF/, ""); // strip BOM
+  while (i < text.length) {
+    const c = text[i];
+    if (inQuotes) {
+      if (c === '"') {
+        if (text[i+1] === '"') { field += '"'; i += 2; continue; }
+        inQuotes = false; i++; continue;
+      }
+      field += c; i++; continue;
+    }
+    if (c === '"') { inQuotes = true; i++; continue; }
+    if (c === ",") { row.push(field); field = ""; i++; continue; }
+    if (c === "\r") { i++; continue; }
+    if (c === "\n") { row.push(field); rows.push(row); row = []; field = ""; i++; continue; }
+    field += c; i++;
+  }
+  if (field.length || row.length) { row.push(field); rows.push(row); }
+  // strip wholly-empty rows
+  return rows.filter(r => r.some(c => (c || "").toString().trim() !== ""));
+}
+
+// Given an array of header strings, build {account: matchedHeader, rep: ..., reason: ...}
+function mapAliasHeaders(headers) {
+  const map = {};
+  Object.keys(CSV_ALIASES).forEach(field => {
+    for (const a of CSV_ALIASES[field]) {
+      const match = headers.find(h => norm(h) === a);
+      if (match) { map[field] = match; break; }
+    }
+  });
+  return map;
+}
+
+// Detect if Papa's header row is junk (empty or auto-named like "_1","_2",...)
+function looksLikeJunkHeaders(headers) {
+  if (!headers || headers.length === 0) return true;
+  const junkCount = headers.filter(h => !h || /^_\d+$/.test(h.trim())).length;
+  return junkCount / headers.length > 0.5; // more than half are junk
+}
+
+function parseCsv(file) {
+  const reader = new FileReader();
+  reader.onerror = () => alert("Couldn't read the file.");
+  reader.onload = () => {
+    const text = (reader.result || "").toString();
+    const allRows = parseCSVText(text);
+    if (!allRows.length) {
+      showCsvError(file, [], "The file appears to be empty.");
+      return;
+    }
+
+    // Search the first ~10 rows for one that looks like a header.
+    let headerRowIdx = -1;
+    let headerMap = {};
+    const scanLimit = Math.min(10, allRows.length);
+    for (let i = 0; i < scanLimit; i++) {
+      const m = mapAliasHeaders(allRows[i]);
+      // accept if we found account OR account_id, plus at least one other field
+      const hasAcct = !!(m.account || m.account_id);
+      if (hasAcct && Object.keys(m).length >= 2) {
+        headerRowIdx = i;
+        headerMap = m;
+        break;
+      }
+    }
+    // Fallback: if no row had 2+ matches but one had any of the aliases, use it
+    if (headerRowIdx === -1) {
+      for (let i = 0; i < scanLimit; i++) {
+        const m = mapAliasHeaders(allRows[i]);
+        if (m.account || m.account_id) { headerRowIdx = i; headerMap = m; break; }
+      }
+    }
+
+    if (headerRowIdx === -1) {
+      showCsvError(file, allRows.slice(0, 3),
+        "I couldn't find a header row matching <b>Target Account</b>, <b>Account ID</b>, <b>Rep Responsible</b>, or <b>Reason for Outreach</b> in the first 10 rows.");
+      return;
+    }
+
+    const headerRow = allRows[headerRowIdx];
+    const idxOf = (key) => headerMap[key] ? headerRow.findIndex(h => norm(h) === norm(headerMap[key])) : -1;
+    const accountIdx    = idxOf("account");
+    const accountIdIdx  = idxOf("account_id");
+    const repIdx        = idxOf("rep");
+    const reasonIdx     = idxOf("reason");
+
+    const dataRows = allRows.slice(headerRowIdx + 1);
+    const rows = dataRows.map(r => ({
+      account:    (accountIdx   >= 0 ? (r[accountIdx]   || "") : "").trim(),
+      account_id: (accountIdIdx >= 0 ? (r[accountIdIdx] || "") : "").trim(),
+      rep:        (repIdx       >= 0 ? (r[repIdx]       || "") : "").trim(),
+      reason:     (reasonIdx    >= 0 ? (r[reasonIdx]    || "") : "").trim()
+    })).filter(r => r.account || r.account_id);
+
+    const zone = $("#upload-zone");
+    if (rows.length === 0) {
+      showCsvError(file, allRows.slice(0, Math.min(5, allRows.length)),
+        `Found a header row at position ${headerRowIdx+1} but no data rows below it had a Target Account or Account ID value.`);
+      return;
+    }
+
+    // Validate rep names against the roster (exact match, case-insensitive)
+    const validReps = new Set(REPS.map(r => r.name.toLowerCase()));
+    const unmatchedReps = new Set();
+    rows.forEach(r => {
+      if (r.rep && !validReps.has(r.rep.toLowerCase())) unmatchedReps.add(r.rep);
+    });
+
+    woaParsedRows = rows;
+    const matched = Object.entries(headerMap).map(([k,v]) => `<b>${k}</b> ← "${v}"`).join(" · ");
+    const skipNote = headerRowIdx > 0 ? `<p style="font-size:11px;color:var(--muted);margin:2px 0;">(Skipped ${headerRowIdx} row${headerRowIdx===1?"":"s"} above the header.)</p>` : "";
+    const hasIds = rows.filter(r => r.account_id).length;
+    const idNote = hasIds === rows.length
+      ? `<p style="font-size:11px;color:var(--good);margin:2px 0;">✓ All ${rows.length} rows have Account IDs — live activity pull will be precise.</p>`
+      : hasIds > 0
+        ? `<p style="font-size:11px;color:var(--warn);margin:2px 0;">⚠ ${rows.length - hasIds} of ${rows.length} rows missing Account ID — those rows won't pull live activity.</p>`
+        : `<p style="font-size:11px;color:var(--warn);margin:2px 0;">⚠ No Account IDs found. Live activity pull requires the Account ID column.</p>`;
+    const repNote = unmatchedReps.size > 0
+      ? `<p style="font-size:11px;color:var(--warn);margin:2px 0;">⚠ Unrecognized rep names: ${[...unmatchedReps].map(r=>`"${r}"`).join(", ")}. Use exact full names: ${REPS.map(r=>r.name).join(", ")}.</p>`
+      : "";
+
+    zone.innerHTML = `
+      <p style="font-weight:600;color:var(--good);">✓ Loaded ${rows.length} accounts from "${file.name}"</p>
+      <p style="font-size:11.5px;color:var(--ink-soft);margin:4px 0;">Mapped: ${matched}</p>
+      ${skipNote}
+      ${idNote}
+      ${repNote}
+      <p style="font-size:12px;color:var(--ink-soft);">Click "Save This Week" to commit, then use the Refresh Activity button to pull from Salesforce</p>
+      <button class="btn ghost" id="upload-retry" style="margin-top:8px;">Choose a different file</button>`;
+    $("#upload-retry").addEventListener("click", (e) => { e.stopPropagation(); resetUploadZone(); });
+  };
+  reader.readAsText(file);
+}
+
+function showCsvError(file, sampleRows, diagnosticHtml) {
+  woaParsedRows = null;
+  const zone = $("#upload-zone");
+  const preview = sampleRows.length
+    ? `<table style="font-size:11.5px;margin-top:8px;">
+         <thead><tr>${sampleRows[0].map((_,i)=>`<th>Col ${i+1}</th>`).join("")}</tr></thead>
+         <tbody>${sampleRows.map(r => `<tr>${r.map(c => `<td style="padding:4px 6px;border:1px solid var(--line);">${(c||"").toString().slice(0,40)}</td>`).join("")}</tr>`).join("")}</tbody>
+       </table>`
+    : "";
+  zone.innerHTML = `
+    <p style="font-weight:600;color:var(--bad);">⚠ Couldn't parse "${file.name}"</p>
+    <p style="font-size:12px;color:var(--ink-soft);margin:6px 0;">${diagnosticHtml}</p>
+    ${preview}
+    <p style="font-size:12px;color:var(--ink-soft);margin-top:10px;">
+      Required (case-insensitive, in any column order): <b>Target Account</b>, <b>Rep Responsible</b>, <b>Reason for Outreach</b>.
+      Headers can be on any of the first 10 rows. Use the "Download CSV Template" button to grab a starter file.
+    </p>
+    <button class="btn ghost" id="upload-retry" style="margin-top:8px;">Try a different file</button>`;
+  const retry = $("#upload-retry");
+  if (retry) retry.addEventListener("click", (e) => { e.stopPropagation(); resetUploadZone(); });
+}
+
+function resetUploadZone() {
+  woaParsedRows = null;
+  const zone = $("#upload-zone");
+  zone.innerHTML = `<input type="file" id="csv-file" accept=".csv" />
+    <p style="font-weight:600;font-size:14px;">📁 Click to choose CSV (or drag & drop)</p>
+    <p style="font-size:12px;color:var(--muted);">Required columns: Target Account, Rep Responsible, Reason for Outreach</p>`;
+  $("#csv-file").addEventListener("change", e => { if (e.target.files[0]) parseCsv(e.target.files[0]); });
+}
+
+function saveWeek() {
+  if (!woaParsedRows || !woaParsedRows.length) {
+    alert("Upload a CSV first.");
+    return;
+  }
+  const start = $("#woa-start").value, end = $("#woa-end").value;
+  if (!start || !end) { alert("Pick both start and end dates."); return; }
+  const key = `${start}_${end}`;
+  const label = formatWeekLabel(start, end);
+
+  const all = getWoaStorage();
+  all[key] = {
+    label, start, end,
+    rows: woaParsedRows.map(r => ({
+      account:    r.account,
+      account_id: r.account_id,
+      rep:        r.rep,
+      reason:     r.reason,
+      meetings: { count: 0, records: [] },
+      emails:   { count: 0, records: [] },
+      calls:    { count: 0, records: [] },
+      texts:    { count: 0, records: [] },
+      insights: "",
+      lastRefreshed: null
+    })),
+    savedAt: new Date().toISOString(),
+    lastRefreshedAt: null
+  };
+  setWoaStorage(all);
+  resetUploadZone();
+  renderWoaHistory(key);
+}
+
+function downloadTemplate() {
+  const csv = "Target Account,Account ID,Rep Responsible,Reason for Outreach\nCity of Springfield,0015e00000h2NehAAE,Alli Miller,Renewal conversation due Q2\nState of Texas,0015e00000h2M8oAAE,Rebecca Hampson,Stalled adoption — re-engage\n";
+  const blob = new Blob([csv], {type:"text/csv"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "week_of_action_template.csv";
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function formatWeekLabel(start, end) {
+  const s = new Date(start), e = new Date(end);
+  return `Week of ${s.getMonth()+1}/${s.getDate()}-${e.getMonth()+1}/${e.getDate()}`;
+}
+
+function renderWoaHistory(activeKey=null) {
+  const all = getWoaStorage();
+  const keys = Object.keys(all).sort().reverse();
+  $("#woa-count").textContent = keys.length;
+  $("#woa-empty").style.display = keys.length ? "none" : "block";
+
+  if (!keys.length) {
+    $("#woa-content").innerHTML = "";
+    $("#week-tabs").innerHTML = "";
+    return;
+  }
+
+  const selected = activeKey && all[activeKey] ? activeKey : keys[0];
+  $("#week-tabs").innerHTML = keys.map(k => `
+    <button data-week="${k}" class="${k===selected?"active":""}">${all[k].label}</button>
+  `).join("") + `<button class="btn" id="woa-refresh" style="margin-left:auto;">⟳ Refresh Activity</button>
+                 <button class="btn ghost" id="woa-export">Export</button>
+                 <button class="btn danger" id="woa-delete">Delete Week</button>`;
+
+  $$("#week-tabs button[data-week]").forEach(b => b.addEventListener("click", () => renderWoaHistory(b.dataset.week)));
+  $("#woa-refresh").addEventListener("click", () => refreshWeekActivity(selected));
+  $("#woa-export").addEventListener("click", () => exportWeek(selected));
+  $("#woa-delete").addEventListener("click", () => {
+    if (confirm(`Delete ${all[selected].label}?`)) {
+      delete all[selected];
+      setWoaStorage(all);
+      renderWoaHistory();
+    }
+  });
+
+  renderWoaTable(selected);
+}
+
+function renderWoaTable(key) {
+  const all = getWoaStorage();
+  const week = all[key];
+  if (!week) { $("#woa-content").innerHTML = ""; return; }
+
+  const refreshNote = week.lastRefreshedAt
+    ? `<span style="color:var(--good);">Activity last refreshed ${new Date(week.lastRefreshedAt).toLocaleString()}</span>`
+    : `<span style="color:var(--warn);">Activity not yet pulled — click "⟳ Refresh Activity" above to fetch from Salesforce.</span>`;
+
+  $("#woa-content").innerHTML = `
+    <h2 style="margin:14px 0 4px;font-size:16px;">${week.label}</h2>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">
+      ${week.rows.length} target accounts · saved ${new Date(week.savedAt).toLocaleString()} · ${refreshNote}
+    </div>
+    <div id="woa-status" style="display:none;margin-bottom:10px;padding:10px 12px;border-radius:8px;background:var(--brand-soft);color:var(--brand);font-size:12.5px;"></div>
+    <input class="search" id="woa-search" placeholder="Filter accounts or reps…" />
+    <table id="woa-table">
+      <thead>
+        <tr>
+          <th>Target Account</th>
+          <th>Account ID</th>
+          <th>Rep Responsible</th>
+          <th>Reason for Outreach</th>
+          <th class="num">Meetings</th>
+          <th class="num">Emails</th>
+          <th class="num">Calls</th>
+          <th class="num">Texts</th>
+          <th>Insights</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+    <p style="font-size:11.5px;color:var(--muted);margin-top:10px;">
+      Activity counts are pulled live from Salesforce when you click <b>⟳ Refresh Activity</b>. Click any number to see the underlying records.
+      The Insights column is reserved for a future iteration.
+    </p>
+  `;
+  paintWoaRows(key);
+  $("#woa-search").addEventListener("input", () => paintWoaRows(key));
+}
+
+function paintWoaRows(key) {
+  const all = getWoaStorage();
+  const week = all[key];
+  if (!week) return;
+  const search = ($("#woa-search").value || "").toLowerCase();
+  const rows = week.rows.filter(r =>
+    (r.account || "").toLowerCase().includes(search) ||
+    (r.rep || "").toLowerCase().includes(search) ||
+    (r.account_id || "").toLowerCase().includes(search)
+  );
+
+  $("#woa-table tbody").innerHTML = rows.map((r) => {
+    const i = week.rows.indexOf(r);
+    const acctLink = r.account_id
+      ? `${SF_BASE}/lightning/r/Account/${r.account_id}/view`
+      : `${SF_BASE}/lightning/o/Account/list/SearchManager?searchTerm=${encodeURIComponent(r.account)}`;
+    const repValid = !r.rep || REPS.some(x => x.name.toLowerCase() === r.rep.toLowerCase());
+    const repCell = r.rep
+      ? (repValid ? r.rep : `<span title="Not in roster" class="badge bad" style="font-size:10px;">${r.rep}</span>`)
+      : "—";
+    const idCell = r.account_id
+      ? `<span style="font-family:monospace;font-size:11px;color:var(--muted);">${r.account_id}</span>`
+      : `<span class="badge warn" style="font-size:10px;">missing</span>`;
+    return `<tr>
+      <td><a href="${acctLink}" target="_blank" style="color:var(--brand);text-decoration:none;"><b>${r.account || r.account_id}</b></a></td>
+      <td>${idCell}</td>
+      <td>${repCell}</td>
+      <td style="font-size:12.5px;color:var(--ink-soft);">${r.reason || "—"}</td>
+      <td class="num clickable" data-key="${key}" data-idx="${i}" data-act="meetings">${r.meetings.count}</td>
+      <td class="num clickable" data-key="${key}" data-idx="${i}" data-act="emails">${r.emails.count}</td>
+      <td class="num clickable" data-key="${key}" data-idx="${i}" data-act="calls">${r.calls.count}</td>
+      <td class="num clickable" data-key="${key}" data-idx="${i}" data-act="texts">${r.texts.count}</td>
+      <td style="font-size:12px;color:var(--muted);">${r.insights || "<span style='color:var(--muted);'>(coming soon)</span>"}</td>
+    </tr>`;
+  }).join("");
+
+  $$("#woa-table td.clickable").forEach(td => {
+    td.addEventListener("click", () => openWoaActivity(td.dataset.key, parseInt(td.dataset.idx), td.dataset.act));
+  });
+}
+
+/* ============================================================
+   LIVE SALESFORCE REFRESH for Week of Action
+   ============================================================ */
+const SF_TOOL = "mcp__3f337ca8-36f2-4fa4-8b84-b880f9f14158__soqlQuery";
+
+async function runSoql(q) {
+  if (!window.cowork || typeof window.cowork.callMcpTool !== "function") {
+    throw new Error("Live Salesforce queries require this dashboard to run as a Cowork artifact.");
+  }
+  const res = await window.cowork.callMcpTool(SF_TOOL, { q });
+  if (res?.isError) {
+    throw new Error("SOQL error: " + (res.content?.[0]?.text || "unknown"));
+  }
+  let payload = res?.structuredContent;
+  if (!payload && res?.content?.[0]?.text) {
+    try { payload = JSON.parse(res.content[0].text); } catch (e) { payload = null; }
+  }
+  return payload || { records: [], totalSize: 0 };
+}
+
+function setWoaStatus(msg, type="info") {
+  const el = $("#woa-status");
+  if (!el) return;
+  if (!msg) { el.style.display = "none"; el.textContent = ""; return; }
+  el.style.display = "block";
+  const colors = {
+    info: "background:var(--brand-soft);color:var(--brand);",
+    good: "background:var(--good-soft);color:var(--good);",
+    warn: "background:var(--warn-soft);color:var(--warn);",
+    bad:  "background:var(--bad-soft);color:var(--bad);"
+  };
+  el.style.cssText = `display:block;margin-bottom:10px;padding:10px 12px;border-radius:8px;font-size:12.5px;${colors[type]||colors.info}`;
+  el.innerHTML = msg;
+}
+
+async function refreshWeekActivity(key) {
+  const all = getWoaStorage();
+  const week = all[key];
+  if (!week) return;
+  const rows = week.rows;
+
+  // Validate we can resolve everything we need
+  const repNameToId = {};
+  REPS.forEach(r => { repNameToId[r.name.toLowerCase()] = USER_IDS[r.name]; });
+
+  const accountIds = [...new Set(rows.map(r => r.account_id).filter(Boolean))];
+  const ownerIds   = [...new Set(rows.map(r => repNameToId[(r.rep||"").toLowerCase()]).filter(Boolean))];
+
+  if (!accountIds.length || !ownerIds.length) {
+    setWoaStatus(`⚠ Need at least one row with both an Account ID and a roster-matched Rep. Found ${accountIds.length} Account IDs, ${ownerIds.length} matched reps.`, "warn");
+    return;
+  }
+
+  // SOQL date literals: convert YYYY-MM-DD to ISO datetime range (start 00:00, end of last day 23:59:59)
+  const start = `${week.start}T00:00:00Z`;
+  const endExclusive = (() => { const d = new Date(week.end); d.setDate(d.getDate()+1); return d.toISOString().slice(0,10) + "T00:00:00Z"; })();
+
+  const acctList = accountIds.map(id => `'${id}'`).join(",");
+  const ownerList = ownerIds.map(id => `'${id}'`).join(",");
+
+  setWoaStatus(`⟳ Pulling activity from Salesforce — ${accountIds.length} accounts × ${ownerIds.length} reps...`, "info");
+
+  try {
+    // Run all four queries in parallel
+    const [callsResp, textsResp, eventsResp, emailsResp] = await Promise.all([
+      runSoql(`SELECT Id, Subject, Type, CallType, CallDurationInSeconds, CreatedDate, OwnerId, Owner.Name, AccountId, Account.Name FROM Task WHERE AccountId IN (${acctList}) AND OwnerId IN (${ownerList}) AND CreatedDate >= ${start} AND CreatedDate < ${endExclusive} AND (Type IN ('Koncert','Call') OR TaskSubtype = 'Call') ORDER BY CreatedDate DESC LIMIT 1000`),
+      runSoql(`SELECT Id, Subject, Type, CreatedDate, OwnerId, Owner.Name, AccountId, Account.Name FROM Task WHERE AccountId IN (${acctList}) AND OwnerId IN (${ownerList}) AND CreatedDate >= ${start} AND CreatedDate < ${endExclusive} AND (Subject LIKE 'Text%' OR Subject LIKE '%SMS%' OR Type = 'Text') ORDER BY CreatedDate DESC LIMIT 500`),
+      runSoql(`SELECT Id, Subject, StartDateTime, OwnerId, Owner.Name, AccountId, Account.Name FROM Event WHERE AccountId IN (${acctList}) AND OwnerId IN (${ownerList}) AND StartDateTime >= ${start} AND StartDateTime < ${endExclusive} AND Id IN (SELECT EventId FROM EventRelation WHERE AccountId != null) ORDER BY StartDateTime DESC LIMIT 500`),
+      runSoql(`SELECT Id, Subject, ToAddress, MessageDate, CreatedById, CreatedBy.Name, RelatedToId, RelatedTo.Name, ParentId FROM EmailMessage WHERE Incoming = false AND CreatedById IN (${ownerList}) AND MessageDate >= ${start} AND MessageDate < ${endExclusive} AND (RelatedToId IN (${acctList}) OR ParentId IN (SELECT Id FROM Case WHERE AccountId IN (${acctList}))) ORDER BY MessageDate DESC LIMIT 500`)
+    ]);
+
+    // Bucket records by (accountId, repId)
+    const bucket = (resp, accountIdGetter, ownerIdGetter, dateGetter, kind) => {
+      const map = {};
+      (resp.records || []).forEach(rec => {
+        const accId = accountIdGetter(rec);
+        const ownId = ownerIdGetter(rec);
+        if (!accId || !ownId) return;
+        const k = `${accId}|${ownId}`;
+        if (!map[k]) map[k] = [];
+        map[k].push({ ...rec, _kind: kind, _date: dateGetter(rec) });
+      });
+      return map;
+    };
+
+    const callMap = bucket(callsResp,  r => r.AccountId, r => r.OwnerId,     r => r.CreatedDate,   "call");
+    const textMap = bucket(textsResp,  r => r.AccountId, r => r.OwnerId,     r => r.CreatedDate,   "text");
+    const eventMap= bucket(eventsResp, r => r.AccountId, r => r.OwnerId,     r => r.StartDateTime, "event");
+    // emails: bucket by RelatedToId (account) + CreatedById
+    const emailMap = {};
+    (emailsResp.records || []).forEach(rec => {
+      // figure out which target account this email belongs to
+      let accId = accountIds.includes(rec.RelatedToId) ? rec.RelatedToId : null;
+      // if email is on a Case, we don't know directly which account — fallback: if exactly one account in our list, attribute to it; else skip
+      if (!accId && rec.ParentId && accountIds.length === 1) accId = accountIds[0];
+      const ownId = rec.CreatedById;
+      if (!accId || !ownId) return;
+      const k = `${accId}|${ownId}`;
+      if (!emailMap[k]) emailMap[k] = [];
+      emailMap[k].push({ ...rec, _kind: "email", _date: rec.MessageDate });
+    });
+
+    // Apply to each row
+    const now = new Date().toISOString();
+    rows.forEach(r => {
+      const ownId = repNameToId[(r.rep||"").toLowerCase()];
+      if (!r.account_id || !ownId) {
+        // can't pull for this row — skip but don't reset
+        return;
+      }
+      const k = `${r.account_id}|${ownId}`;
+      r.calls    = { count: (callMap[k]||[]).length,  records: callMap[k]||[] };
+      r.texts    = { count: (textMap[k]||[]).length,  records: textMap[k]||[] };
+      r.meetings = { count: (eventMap[k]||[]).length, records: eventMap[k]||[] };
+      r.emails   = { count: (emailMap[k]||[]).length, records: emailMap[k]||[] };
+      r.lastRefreshed = now;
+    });
+    week.lastRefreshedAt = now;
+    setWoaStorage(all);
+
+    const totalActivity = rows.reduce((a,r)=>a+r.calls.count+r.texts.count+r.meetings.count+r.emails.count,0);
+    setWoaStatus(`✓ Refreshed ${rows.length} accounts. ${totalActivity} total activity records found in ${week.label}.`, "good");
+    setTimeout(() => setWoaStatus(null), 6000);
+    renderWoaTable(key);
+  } catch (e) {
+    console.error(e);
+    setWoaStatus(`⚠ Refresh failed: ${e.message}. Make sure this dashboard is open as a Cowork artifact (not a static HTML file).`, "bad");
+  }
+}
+
+async function openWoaActivity(key, idx, act) {
+  const all = getWoaStorage();
+  const week = all[key];
+  const row = week.rows[idx];
+  const data = row[act];
+  const labels = { meetings:"Meetings", emails:"Emails", calls:"Calls", texts:"Texts" };
+
+  const sfAccountLink = row.account_id
+    ? `${SF_BASE}/lightning/r/Account/${row.account_id}/view`
+    : `${SF_BASE}/lightning/o/Account/list/SearchManager?searchTerm=${encodeURIComponent(row.account)}`;
+
+  const recordObj = (sfid, rec) => `${SF_BASE}/lightning/r/${rec._kind==="event"?"Event":rec._kind==="email"?"EmailMessage":"Task"}/${sfid}/view`;
+
+  const renderCallRow = (r) => `<tr>
+    <td style="font-size:12px;"><a href="${recordObj(r.Id,r)}" target="_blank" style="color:var(--brand);text-decoration:none;">${r.Subject || "(no subject)"}</a></td>
+    <td>${r.Type === "Koncert" ? '<span class="badge css">Koncert</span>' : r.CallType ? '<span class="badge plutus">Zoom</span>' : '<span class="badge warn">Other</span>'}</td>
+    <td>${r.CallType || "—"}</td>
+    <td class="num">${fmtDuration(r.CallDurationInSeconds)}</td>
+    <td style="font-size:11.5px;color:var(--muted);">${(r.CreatedDate||"").slice(0,16).replace("T"," ")}</td>
+  </tr>`;
+
+  const renderEventRow = (r) => `<tr>
+    <td style="font-size:12px;"><a href="${recordObj(r.Id,r)}" target="_blank" style="color:var(--brand);text-decoration:none;">${r.Subject || "(no subject)"}</a></td>
+    <td style="font-size:11.5px;">${r.Account?.Name || ""}</td>
+    <td style="font-size:11.5px;color:var(--muted);">${(r.StartDateTime||"").slice(0,16).replace("T"," ")}</td>
+    <td>
+      <button class="btn ghost" style="padding:2px 8px;font-size:10.5px;" data-attendees="${r.Id}">Attendees</button>
+    </td>
+  </tr>`;
+
+  const renderEmailRow = (r) => `<tr>
+    <td style="font-size:12px;max-width:280px;overflow:hidden;text-overflow:ellipsis;"><a href="${recordObj(r.Id,r)}" target="_blank" style="color:var(--brand);text-decoration:none;">${r.Subject || "(no subject)"}</a></td>
+    <td style="font-size:11.5px;max-width:200px;overflow:hidden;text-overflow:ellipsis;">${r.ToAddress || "—"}</td>
+    <td style="font-size:11.5px;color:var(--muted);">${(r.MessageDate||"").slice(0,16).replace("T"," ")}</td>
+    <td>
+      <button class="btn ghost" style="padding:2px 8px;font-size:10.5px;" data-emailbody="${r.Id}">Body</button>
+    </td>
+  </tr>`;
+
+  const renderTextRow = (r) => `<tr>
+    <td style="font-size:12px;"><a href="${recordObj(r.Id,r)}" target="_blank" style="color:var(--brand);text-decoration:none;">${r.Subject || "(no subject)"}</a></td>
+    <td style="font-size:11.5px;color:var(--muted);">${(r.CreatedDate||"").slice(0,16).replace("T"," ")}</td>
+  </tr>`;
+
+  const headers = {
+    calls:    `<tr><th>Subject</th><th>Type</th><th>Direction</th><th class="num">Duration</th><th>Date</th></tr>`,
+    meetings: `<tr><th>Subject</th><th>Account</th><th>Start</th><th></th></tr>`,
+    emails:   `<tr><th>Subject</th><th>To</th><th>Date</th><th></th></tr>`,
+    texts:    `<tr><th>Subject</th><th>Date</th></tr>`
+  };
+  const renderers = { calls: renderCallRow, meetings: renderEventRow, emails: renderEmailRow, texts: renderTextRow };
+
+  const recs = data.records || [];
+  const tableHtml = recs.length
+    ? `<table>${headers[act]}<tbody>${recs.map(renderers[act]).join("")}</tbody></table>`
+    : `<div class="empty-state" style="padding:14px;">
+        ${row.lastRefreshed
+          ? `No ${act} found for this account/rep in ${week.label}.`
+          : `No data yet — click <b>⟳ Refresh Activity</b> on the week tab to pull from Salesforce.`}
+      </div>`;
+
+  const refreshNote = row.lastRefreshed
+    ? `<span style="color:var(--good);font-size:11px;">Pulled ${new Date(row.lastRefreshed).toLocaleString()}</span>`
+    : `<span style="color:var(--warn);font-size:11px;">Not yet refreshed</span>`;
+
+  showModal(`${labels[act]} — ${row.account || row.account_id}`,
+    `Rep: <b>${row.rep || "—"}</b> · ${week.label} · ${data.count} record${data.count===1?"":"s"} · ${refreshNote}`,
+    `
+    <p style="font-size:12.5px;color:var(--ink-soft);margin-bottom:8px;">${row.reason || ""}</p>
+    <a class="sf-link" href="${sfAccountLink}" target="_blank">Open Account in Salesforce →</a>
+    <h3 style="margin:18px 0 6px;font-size:13px;">${labels[act]} (${recs.length})</h3>
+    ${tableHtml}
+    <div id="extra-detail" style="margin-top:14px;"></div>
+    `);
+
+  // wire attendees buttons (Events) — fetch EventRelation for that event
+  $$("#modal-body button[data-attendees]").forEach(b => b.addEventListener("click", async () => {
+    const eid = b.dataset.attendees;
+    const target = $("#extra-detail");
+    target.innerHTML = `<p style="font-size:12px;color:var(--muted);">Loading attendees for event ${eid}...</p>`;
+    try {
+      const resp = await runSoql(`SELECT Id, RelationId, Relation.Name, IsInvitee, Status FROM EventRelation WHERE EventId = '${eid}' AND RelationId != null`);
+      const list = (resp.records || []).map(er => `<li><b>${er.Relation?.Name || er.RelationId}</b> ${er.IsInvitee ? "<span class=\"badge css\" style=\"font-size:10px;\">invitee</span>" : ""} ${er.Status ? `· ${er.Status}` : ""}</li>`).join("");
+      target.innerHTML = `<h3 style="font-size:13px;margin:0 0 4px;">Attendees</h3><ul style="margin:4px 0;padding-left:20px;font-size:12.5px;">${list || "<li>(none)</li>"}</ul>`;
+    } catch (e) { target.innerHTML = `<p style="color:var(--bad);font-size:12px;">${e.message}</p>`; }
+  }));
+  // wire body buttons (Emails) — fetch TextBody snippet
+  $$("#modal-body button[data-emailbody]").forEach(b => b.addEventListener("click", async () => {
+    const emid = b.dataset.emailbody;
+    const target = $("#extra-detail");
+    target.innerHTML = `<p style="font-size:12px;color:var(--muted);">Loading body for email ${emid}...</p>`;
+    try {
+      const resp = await runSoql(`SELECT Id, Subject, ToAddress, CcAddress, TextBody FROM EmailMessage WHERE Id = '${emid}'`);
+      const e = (resp.records || [])[0];
+      if (!e) { target.innerHTML = `<p style="color:var(--muted);font-size:12px;">Email not found.</p>`; return; }
+      const body = (e.TextBody || "").slice(0, 1500);
+      target.innerHTML = `
+        <h3 style="font-size:13px;margin:0 0 4px;">${e.Subject || "(no subject)"}</h3>
+        <div style="font-size:11.5px;color:var(--muted);margin-bottom:6px;">To: ${e.ToAddress || "—"}${e.CcAddress ? " · CC: " + e.CcAddress : ""}</div>
+        <pre style="white-space:pre-wrap;font-family:inherit;font-size:12px;background:#fafbfd;border:1px solid var(--line);border-radius:6px;padding:10px;max-height:300px;overflow:auto;">${body || "(empty body)"}</pre>`;
+    } catch (e) { target.innerHTML = `<p style="color:var(--bad);font-size:12px;">${e.message}</p>`; }
+  }));
+}
+
+function exportWeek(key) {
+  const all = getWoaStorage();
+  const week = all[key];
+  if (!week) return;
+  const rows = [["Target Account","Account ID","Rep","Reason","Meetings","Emails","Calls","Texts","Insights"]];
+  week.rows.forEach(r => rows.push([
+    r.account, r.account_id, r.rep, r.reason,
+    r.meetings.count, r.emails.count, r.calls.count, r.texts.count,
+    r.insights
+  ]));
+  const csv = rows.map(r => r.map(c => `"${(c+"").replace(/"/g,'""')}"`).join(",")).join("\n");
+  const blob = new Blob([csv], {type:"text/csv"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `${week.label.replace(/[\s\/]+/g,"_")}.csv`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+/* ============================================================
+   ORCHESTRATION
+   ============================================================ */
+function switchToTab(tabId) {
+  $$(".tab").forEach(b => b.classList.toggle("active", b.dataset.tab===tabId));
+  $$(".tabpanel").forEach(p => p.classList.toggle("active", p.id==="tab-"+tabId));
+  setTimeout(renderCharts, 50);
+}
+
+function renderAll() {
+  renderKPIs();
+  generateInsights();
+  renderCharts();
+  renderLeaderboard();
+  renderDataTable();
+  renderTasks();
+  renderCases();
+  if ($("#ic-rep").value) renderICDetail($("#ic-rep").value);
+}
+
+/* ============================================================
+   WIRING
+   ============================================================ */
+function wire() {
+  $("#refreshed").textContent = REFRESHED;
+
+  buildRepFilter();
+  setupWoa();
+
+  $("#f-period").addEventListener("change", e => { state.period = e.target.value; renderAll(); });
+  $("#f-team").addEventListener("change", e => {
+    state.team = e.target.value; state.rep = "ALL"; buildRepFilter(); renderAll();
+  });
+  $("#f-rep").addEventListener("change", e => { state.rep = e.target.value; renderAll(); });
+  $("#reset").addEventListener("click", () => {
+    state.period = "CQ"; state.team = "ALL"; state.rep = "ALL";
+    $("#f-period").value="CQ"; $("#f-team").value="ALL"; buildRepFilter(); renderAll();
+  });
+
+  $$(".tab").forEach(btn => btn.addEventListener("click", () => switchToTab(btn.dataset.tab)));
+
+  $("#lb-search").addEventListener("input", renderLeaderboard);
+  $("#dt-search").addEventListener("input", renderDataTable);
+  $("#cases-search").addEventListener("input", renderCases);
+  $("#tasks-search").addEventListener("input", renderTasks);
+
+  $$("#leaderboard th[data-sort]").forEach(th => th.addEventListener("click", () => {
+    const k = th.dataset.sort;
+    if (state.sortKey.lb === k) state.sortDir.lb = state.sortDir.lb==="asc"?"desc":"asc";
+    else { state.sortKey.lb = k; state.sortDir.lb = "desc"; }
+    renderLeaderboard();
+  }));
+  $$("#data-table th[data-sort]").forEach(th => th.addEventListener("click", () => {
+    const k = th.dataset.sort;
+    if (state.sortKey.dt === k) state.sortDir.dt = state.sortDir.dt==="asc"?"desc":"asc";
+    else { state.sortKey.dt = k; state.sortDir.dt = "desc"; }
+    renderDataTable();
+  }));
+  $$("#cases-table th[data-sort]").forEach(th => th.addEventListener("click", () => {
+    const k = th.dataset.sort;
+    if (state.sortKey.cases === k) state.sortDir.cases = state.sortDir.cases==="asc"?"desc":"asc";
+    else { state.sortKey.cases = k; state.sortDir.cases = "desc"; }
+    renderCases();
+  }));
+  $$("#tasks-table th[data-sort]").forEach(th => th.addEventListener("click", () => {
+    const k = th.dataset.sort;
+    if (state.sortKey.tasks === k) state.sortDir.tasks = state.sortDir.tasks==="asc"?"desc":"asc";
+    else { state.sortKey.tasks = k; state.sortDir.tasks = "desc"; }
+    renderTasks();
+  }));
+
+  $("#ic-rep").addEventListener("change", e => renderICDetail(e.target.value));
+
+  document.addEventListener("keydown", e => { if (e.key === "Escape") closeModal(); });
+
+  renderAll();
+}
+
+window.addEventListener("DOMContentLoaded", wire);
+</script>
+</body>
+</html>
