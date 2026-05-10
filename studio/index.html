@@ -1251,7 +1251,7 @@ async function collectRegistryEntry() {
   const titleGuess = (lastChat.match(/title[:\-]?\s*"([^"]+)"/i) || [])[1] || titleCase(state.targetSlug);
   const title = ask('Dashboard title', titleGuess);
   const description = ask('Description (≤160 chars)', '');
-  const sections = ['operational', 'intelligence', 'ai-cost', 'reference'];
+  const sections = ['tech-ops', 'operational', 'intelligence', 'ai-cost', 'reference'];
   let section = '';
   while (!sections.includes(section)) {
     section = ask(`Section: ${sections.join(' | ')}`, 'operational');
@@ -1280,6 +1280,7 @@ function titleCase(s) {
 
 function insertRegistryEntry(indexHtml, entry) {
   const sectionMap = {
+    'tech-ops': 'TECH OPS',
     operational: 'OPERATIONAL',
     intelligence: 'INTELLIGENCE',
     'ai-cost': 'AI & COST',

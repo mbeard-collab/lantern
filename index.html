@@ -150,6 +150,7 @@
       <span>Dashboards</span>
     </a>
     <div class="nav-links">
+      <a class="nav-link" href="#tech-ops">Technology Ops</a>
       <a class="nav-link" href="#operational">Operational</a>
       <a class="nav-link" href="#intelligence">Intelligence</a>
       <a class="nav-link" href="#ai-cost">AI &amp; Cost</a>
@@ -199,6 +200,14 @@
 </section>
 
 <!-- ============ SECTIONS ============ -->
+<section class="section" id="tech-ops">
+  <div class="section-head">
+    <h2 class="section-title">Technology Ops</h2>
+    <span class="section-count" data-count-for="tech-ops"></span>
+  </div>
+  <div class="grid" data-grid="tech-ops"></div>
+</section>
+
 <section class="section" id="operational">
   <div class="section-head">
     <h2 class="section-title">Operational</h2>
@@ -244,6 +253,8 @@
    ========================================================== */
 
 const DASHBOARDS = [
+  // ---------- TECH OPS ----------
+
   // ---------- OPERATIONAL ----------
   {
     id: "sales",
@@ -444,7 +455,7 @@ document.getElementById('hero-cadence').textContent = (cadenceLabel[featured.cad
 document.getElementById('hero-cta').href = featured.href;
 
 // Render sections
-const sections = ["operational", "intelligence", "ai-cost", "reference"];
+const sections = ["tech-ops", "operational", "intelligence", "ai-cost", "reference"];
 sections.forEach(section => {
   const items = DASHBOARDS.filter(d => d.section === section);
   const grid = document.querySelector(`[data-grid="${section}"]`);

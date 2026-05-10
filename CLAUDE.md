@@ -97,7 +97,7 @@ When a dashboard is created or substantively changed, update its entry in the `D
 - `updated`: set to `"today"` for fresh changes
 - `description`: keep ≤ 160 chars, action-oriented
 - `cadence`: one of `daily`, `weekly`, `ondemand`, `realtime`
-- `section`: one of `operational`, `intelligence`, `ai-cost`, `reference`
+- `section`: one of `tech-ops`, `operational`, `intelligence`, `ai-cost`, `reference`
 
 If a brand-new dashboard is being added (not a refresh of an existing one), append a new object to the array with all fields populated.
 
