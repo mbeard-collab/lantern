@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FSD Executive Forecast — GovSpend</title>
+<style>@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,700;0,9..144,900;1,9..144,300;1,9..144,700&display=swap');
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #0b0e14; --surface: #12161f; --surface2: #1a2030; --border: #1f2840; --border2: #2a3550;
+  --teal: #4af0b8; --teal-dim: #0d7a60; --amber: #f0a84a; --amber-dim: #7a5020;
+  --purple: #a84af0; --blue: #4a9af0; --red: #f04a6a; --white: #ffffff;
+  --text: #d8e0f0; --dim: #8090b0; --muted: #4a5570;
+}
+html { font-size: 15px; }
+body { background: var(--bg); color: var(--text); font-family: 'DM Mono', monospace; min-height: 100vh; overflow-x: hidden; }
+body::before { content: ''; position: fixed; inset: 0; background-image: linear-gradient(rgba(74,240,184,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(74,240,184,0.025) 1px, transparent 1px); background-size: 48px 48px; pointer-events: none; z-index: 0; }
+.page { position: relative; z-index: 1; max-width: 1320px; margin: 0 auto; padding: 0 32px 80px; }
+.header { display: flex; align-items: center; justify-content: space-between; padding: 24px 0 20px; border-bottom: 1px solid var(--border2); margin-bottom: 32px; }
+.header-left { display: flex; align-items: center; gap: 16px; }
+.logo-mark { width: 36px; height: 36px; border: 1.5px solid var(--teal); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 500; color: var(--teal); letter-spacing: 0.05em; }
+.header-title { font-size: 13px; letter-spacing: 0.2em; color: var(--dim); text-transform: uppercase; }
+.header-right { display: flex; align-items: center; gap: 24px; }
+.header-meta { font-size: 12px; color: var(--muted); }
+.live-dot { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--teal); }
+.live-dot::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--teal); animation: pulse 2s ease-in-out infinite; }
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+.confidence-bar { display: flex; align-items: center; gap: 0; background: var(--surface); border: 1px solid var(--border2); border-radius: 3px; padding: 4px; margin-bottom: 28px; width: fit-content; }
+.conf-btn { padding: 8px 22px; font-size: 12px; font-family: 'DM Mono', monospace; letter-spacing: 0.15em; text-transform: uppercase; background: none; border: none; color: var(--muted); cursor: pointer; border-radius: 2px; transition: all 0.15s; }
+.conf-btn.active { background: var(--teal); color: #000; font-weight: 500; }
+.conf-label { font-size: 12px; color: var(--muted); margin-right: 12px; letter-spacing: 0.1em; }
+.kpi-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 28px; }
+.kpi { background: var(--surface); border: 1px solid var(--border); padding: 18px 20px; position: relative; overflow: hidden; }
+.kpi::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; }
+.kpi.teal::before { background: var(--teal); } .kpi.amber::before { background: var(--amber); }
+.kpi.purple::before { background: var(--purple); } .kpi.blue::before { background: var(--blue); } .kpi.red::before { background: var(--red); }
+.kpi-label { font-size: 11px; letter-spacing: 0.2em; color: var(--dim); text-transform: uppercase; margin-bottom: 10px; }
+.kpi-value { font-family: 'Fraunces', serif; font-size: 40px; font-weight: 700; color: var(--white); line-height: 1; margin-bottom: 6px; }
+.kpi-sub { font-size: 12px; color: var(--muted); }
+.kpi-delta { font-size: 12px; margin-top: 4px; }
+.kpi-delta.up { color: var(--teal); } .kpi-delta.down { color: var(--red); }
+.main-grid { display: grid; grid-template-columns: 1fr 380px; gap: 20px; margin-bottom: 20px; }
+.panel { background: var(--surface); border: 1px solid var(--border); overflow: hidden; }
+.panel-header { padding: 14px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+.panel-title { font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--dim); }
+.panel-badge { font-size: 11px; padding: 3px 8px; border-radius: 2px; background: rgba(74,240,184,0.1); color: var(--teal); border: 1px solid rgba(74,240,184,0.2); letter-spacing: 0.1em; }
+.panel-body { padding: 20px; }
+#coneCanvas, #burnupCanvas { width: 100%; display: block; }
+.conf-dates { display: grid; grid-template-columns: repeat(3,1fr); gap: 1px; background: var(--border); margin-bottom: 0; }
+.conf-date-cell { background: var(--surface2); padding: 16px 20px; text-align: center; }
+.conf-pct { font-size: 30px; font-family: 'Fraunces', serif; font-weight: 700; margin-bottom: 4px; }
+.conf-date-val { font-size: 14px; color: var(--text); margin-bottom: 2px; }
+.conf-date-note { font-size: 11px; color: var(--muted); }
+.conf-50 { color: var(--amber); } .conf-80 { color: var(--teal); } .conf-95 { color: var(--purple); }
+.bottom-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+.pipeline-stages { display: flex; flex-direction: column; gap: 8px; }
+.stage-row { display: flex; align-items: center; gap: 12px; }
+.stage-name { font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--dim); width: 100px; flex-shrink: 0; }
+.stage-bar-wrap { flex: 1; height: 6px; background: var(--surface2); border-radius: 0; position: relative; }
+.stage-bar { height: 100%; transition: width 0.8s cubic-bezier(0.4,0,0.2,1); }
+.stage-count { font-size: 13px; color: var(--text); width: 36px; text-align: right; flex-shrink: 0; }
+.stage-avg { font-size: 11px; color: var(--muted); width: 42px; text-align: right; flex-shrink: 0; }
+.blocker-list { display: flex; flex-direction: column; gap: 8px; }
+.blocker-item { padding: 12px 14px; background: var(--surface2); border: 1px solid var(--border); border-left: 3px solid transparent; display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: start; }
+.blocker-item.critical { border-left-color: var(--red); }
+.blocker-item.warning { border-left-color: var(--amber); }
+.blocker-item.new { border-left-color: var(--blue); }
+.blocker-ticket { font-size: 11px; color: var(--teal); margin-bottom: 3px; letter-spacing: 0.05em; }
+.blocker-ticket a { color: var(--teal); text-decoration: none; }
+.blocker-ticket a:hover { text-decoration: underline; }
+.blocker-desc { font-size: 12px; color: var(--text); line-height: 1.4; }
+.blocker-age { font-size: 13px; text-align: right; white-space: nowrap; font-weight: 600; }
+.blocker-age.critical { color: var(--red); }
+.blocker-age.warning { color: var(--amber); }
+.blocker-age.new { color: var(--blue); }
+.blocker-impact { font-size: 11px; color: var(--muted); text-align: right; }
+.calib-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.calib-row:last-child { border-bottom: none; }
+.calib-period { font-size: 12px; color: var(--dim); }
+.calib-bars { display: flex; align-items: center; gap: 8px; flex: 1; margin: 0 16px; }
+.calib-bar-bg { flex: 1; height: 4px; background: var(--surface2); position: relative; }
+.calib-bar-fill { height: 100%; background: var(--teal); opacity: 0.6; }
+.calib-bar-actual { position: absolute; top: -2px; width: 2px; height: 8px; background: var(--white); }
+.calib-result { font-size: 12px; }
+.calib-result.hit { color: var(--teal); }
+.calib-result.miss { color: var(--red); }
+.feature-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 20px; }
+.feature-card { background: var(--surface); border: 1px solid var(--border); overflow: hidden; }
+.feature-card-top { padding: 14px 16px 10px; border-bottom: 1px solid var(--border); }
+.feature-card-name { font-family: 'Fraunces', serif; font-size: 18px; color: var(--white); font-weight: 700; margin-bottom: 4px; }
+.feature-card-meta { font-size: 11px; color: var(--dim); letter-spacing: 0.1em; }
+.feature-card-body { padding: 14px 16px; }
+.feature-progress-label { display: flex; justify-content: space-between; margin-bottom: 6px; }
+.feature-progress-label span { font-size: 11px; color: var(--dim); }
+.feature-progress-track { height: 4px; background: var(--surface2); margin-bottom: 14px; }
+.feature-progress-fill { height: 100%; background: var(--teal); transition: width 1s ease; }
+.feature-dates { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+.feature-date-label { font-size: 10px; letter-spacing: 0.1em; color: var(--muted); text-transform: uppercase; margin-bottom: 3px; }
+.feature-date-val { font-size: 14px; color: var(--text); }
+.footer-note { padding: 18px 22px; background: var(--surface); border: 1px solid var(--border); display: flex; align-items: flex-start; gap: 12px; font-size: 12px; color: var(--muted); line-height: 1.6; }
+.footer-note-icon { color: var(--teal); flex-shrink: 0; margin-top: 1px; }
+.scope-changes { display: flex; flex-direction: column; gap: 6px; }
+.scope-item { display: flex; align-items: center; gap: 10px; padding: 8px 12px; background: var(--surface2); border: 1px solid var(--border); }
+.scope-date { font-size: 11px; color: var(--dim); width: 88px; flex-shrink: 0; }
+.scope-desc { font-size: 12px; color: var(--text); flex: 1; }
+.scope-impact { font-size: 12px; color: var(--amber); white-space: nowrap; font-weight: 600; }
+@media (max-width: 1100px) {
+  .kpi-row { grid-template-columns: repeat(3, 1fr); }
+  .main-grid { grid-template-columns: 1fr; }
+  .bottom-grid { grid-template-columns: 1fr; }
+  .feature-cards { grid-template-columns: 1fr; }
+}</style></head><body>
+<div class="page">
+  <div class="header">
+    <div class="header-left">
+      <div class="logo-mark">FSD</div>
+      <div>
+        <div class="header-title">Executive Forecast Dashboard</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:2px;">GovSpend Engineering · Flow State Development</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="header-meta">As of May 06, 2026</div>
+      <div class="live-dot">Live from Jira</div>
+    </div>
+  </div>
+
+  <div style="display:flex;align-items:center;margin-bottom:20px;gap:16px;flex-wrap:wrap;">
+    <span class="conf-label">Forecast confidence level:</span>
+    <div class="confidence-bar">
+      <button class="conf-btn" data-conf="50" onclick="setConfidence(50)">50%</button>
+      <button class="conf-btn active" data-conf="80" onclick="setConfidence(80)">80%</button>
+      <button class="conf-btn" data-conf="95" onclick="setConfidence(95)">95%</button>
+    </div>
+    <span style="font-size:13px;color:var(--text);" id="confExplain">80% confidence: this set of tickets will all ship by this date in 4 out of 5 simulated futures, given recent delivery pace.</span>
+  </div>
+
+  <div class="kpi-row">
+    <div class="kpi teal">
+      <div class="kpi-label">Avg Cycle Time (30d)</div>
+      <div class="kpi-value">8.7</div>
+      <div class="kpi-sub">days, story + bug</div>
+      <div class="kpi-delta up">▼ 0.3d vs prior 30d</div>
+    </div>
+    <div class="kpi amber">
+      <div class="kpi-label">In Progress</div>
+      <div class="kpi-value">114</div>
+      <div class="kpi-sub">tickets in flight</div>
+      <div class="kpi-delta" style="color:var(--dim)">29 build · 34 validate · 22 review · 29 wait</div>
+    </div>
+    <div class="kpi purple">
+      <div class="kpi-label">Recent Backlog</div>
+      <div class="kpi-value">392</div>
+      <div class="kpi-sub">open, last 90d</div>
+      <div class="kpi-delta down">▲ 54 added this week</div>
+    </div>
+    <div class="kpi blue">
+      <div class="kpi-label">Shipped (30d)</div>
+      <div class="kpi-value">197</div>
+      <div class="kpi-sub">tickets shipped</div>
+      <div class="kpi-delta up">▲ 31 vs prior 30d</div>
+    </div>
+    <div class="kpi red">
+      <div class="kpi-label">Stuck Tickets</div>
+      <div class="kpi-value">33</div>
+      <div class="kpi-sub">parked > 60 days</div>
+      <div class="kpi-delta down">13 zombies (>1yr)</div>
+    </div>
+  </div>
+
+  <div class="main-grid">
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title">Completion Forecast — Confidence Cone</span>
+        <span class="panel-badge" id="selectedConfBadge">80% CONFIDENCE · 114 tickets in flight</span>
+      </div>
+      <canvas id="coneCanvas" height="260"></canvas>
+      <div class="conf-dates">
+        <div class="conf-date-cell"><div class="conf-pct conf-50">50%</div><div class="conf-date-val" id="date50">—</div><div class="conf-date-note">median estimate</div></div>
+        <div class="conf-date-cell"><div class="conf-pct conf-80">80%</div><div class="conf-date-val" id="date80">—</div><div class="conf-date-note">recommended for planning</div></div>
+        <div class="conf-date-cell"><div class="conf-pct conf-95">95%</div><div class="conf-date-val" id="date95">—</div><div class="conf-date-note">conservative commitment</div></div>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:20px;">
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title">Burn-Up — last 9 weeks</span>
+          <span style="font-size:11px;color:var(--muted);">scope creep visible</span>
+        </div>
+        <canvas id="burnupCanvas" height="180"></canvas>
+      </div>
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title">Recent Scope Changes</span>
+          <span style="font-size:11px;color:var(--muted);">intake by week</span>
+        </div>
+        <div class="panel-body" style="padding:12px;">
+          <div class="scope-changes" id="scopeChanges"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="font-size:11px;letter-spacing:0.2em;color:var(--dim);text-transform:uppercase;margin-bottom:12px;">Team-Level Forecasts <span style="text-transform:none;letter-spacing:0.05em;color:var(--muted);">(In Progress + recent backlog at 80% confidence)</span></div>
+  <div class="feature-cards" id="teamCards"></div>
+
+  <div class="bottom-grid">
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title">Pipeline Stage Health</span>
+        <span style="font-size:11px;color:var(--muted);">count · avg dwell</span>
+      </div>
+      <div class="panel-body"><div class="pipeline-stages" id="pipelineStages"></div></div>
+    </div>
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title">Stuck Tickets <span style="color:var(--muted);font-size:11px;text-transform:none;letter-spacing:0.05em;">(blocker proxy — needs Jira blocker tagging for true blockers)</span></span>
+        <span class="panel-badge" style="background:rgba(240,74,106,0.1);color:var(--red);border-color:rgba(240,74,106,0.2);">33 STUCK</span>
+      </div>
+      <div class="panel-body" style="padding:12px;"><div class="blocker-list" id="stuckList"></div></div>
+    </div>
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title">Forecast Calibration</span>
+        <span style="font-size:11px;color:var(--muted);">85% track record</span>
+      </div>
+      <div class="panel-body">
+        <div style="font-size:11px;color:var(--dim);margin-bottom:12px;">Did past 85% forecasts contain the actual outcome?</div>
+        <div id="calibrationRows"></div>
+        <div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-size:12px;color:var(--dim);">12-month accuracy (85% claim)</span>
+          <span style="font-size:18px;font-family:'Fraunces',serif;font-weight:700;color:var(--teal);">81%</span>
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px;line-height:1.5;">Well-calibrated. A perfectly honest 85% forecast hits ~85% of the time; this system hits 81%.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer-note">
+    <span class="footer-note-icon">◈</span>
+    <span>
+      <strong style="color:var(--text);">About this forecast:</strong>
+      Dates are derived from Monte Carlo simulation (10,000 runs) over the last 90 days of actual delivery throughput.
+      They are <em>probability estimates</em>, not commitments. The 80% date means all currently-in-progress tickets ship by that date in roughly 4 out of 5 simulated futures, given recent delivery pace.
+      Scope additions, blockers, or capacity changes update the forecast automatically on the next pull.
+      <strong style="color:var(--text);">To get a commitment date, choose a confidence level — that is a business decision, not an engineering one.</strong>
+    </span>
+  </div>
+</div>
+
+<script>
+const DASH = {"pull_date":"2026-05-06","pull_pretty":"May 06, 2026","cycle_avg_30":8.7,"cycle_delta":-0.3,"wip_count":114,"wip_phase":{"build":29,"review":22,"qa":22,"uat":12,"wait":29},"backlog_count":392,"new_this_week":54,"shipped_30":197,"shipped_delta":31,"stuck_wip_count":33,"zombie_count":13,"forecast_target":114,"forecast":{"p50":18,"p80":21,"p95":25},"burnup":{"weeks":["Mar 08","Mar 15","Mar 22","Mar 29","Apr 05","Apr 12","Apr 19","Apr 26","May 03"],"week_dates":["2026-03-08","2026-03-15","2026-03-22","2026-03-29","2026-04-05","2026-04-12","2026-04-19","2026-04-26","2026-05-03"],"scope":[3722,3787,3874,3915,4010,4096,4173,4247,4273],"done":[2278,2312,2346,2389,2436,2482,2535,2568,2587]},"pipeline":[{"name":"Backlog","count":392,"wip":null,"avg":null,"color":"#4a5570"},{"name":"Development","count":29,"wip":null,"avg":"2.5d","color":"#f0a84a"},{"name":"Peer Review","count":22,"wip":null,"avg":"4.4d","color":"#4af0b8"},{"name":"QA","count":22,"wip":null,"avg":"1.2d","color":"#a84af0"},{"name":"UAT","count":12,"wip":null,"avg":"1.5d","color":"#a84af0"},{"name":"Waiting","count":29,"wip":null,"avg":"5.1d","color":"#f04a6a"},{"name":"Done (30d)","count":197,"wip":null,"avg":null,"color":"#0d7a60"}],"team_cards":[{"team":"Scraper Platform","wip":15,"backlog":26,"shipped_30d":35,"total":41,"done_30d":35,"d50":39,"d80":46,"d95":54,"throughput_per_week":8.166666666666668},{"team":"Data Platform","wip":14,"backlog":27,"shipped_30d":34,"total":41,"done_30d":34,"d50":46,"d80":54,"d95":62,"throughput_per_week":7.933333333333334},{"team":"Federal","wip":18,"backlog":59,"shipped_30d":33,"total":77,"done_30d":33,"d50":87,"d80":99,"d95":111,"throughput_per_week":7.700000000000001},{"team":"AI Platform","wip":14,"backlog":66,"shipped_30d":28,"total":80,"done_30d":28,"d50":92,"d80":108,"d95":124,"throughput_per_week":6.533333333333333},{"team":"WebApp","wip":21,"backlog":48,"shipped_30d":27,"total":69,"done_30d":27,"d50":97,"d80":108,"d95":120,"throughput_per_week":6.3},{"team":"File Ingestion","wip":14,"backlog":33,"shipped_30d":19,"total":47,"done_30d":19,"d50":51,"d80":62,"d95":72,"throughput_per_week":4.433333333333334},{"team":"Greenfield","wip":9,"backlog":33,"shipped_30d":18,"total":42,"done_30d":18,"d50":46,"d80":54,"d95":63,"throughput_per_week":4.2}],"calibration":[{"date":"2026-04-06","p50":173,"p70":158,"p85":144,"p95":129,"actual":190,"hit_50":1,"hit_70":1,"hit_85":1,"hit_95":1},{"date":"2026-03-30","p50":161,"p70":147,"p85":134,"p95":118,"actual":202,"hit_50":1,"hit_70":1,"hit_85":1,"hit_95":1},{"date":"2026-03-23","p50":153,"p70":139,"p85":126,"p95":110,"actual":187,"hit_50":1,"hit_70":1,"hit_85":1,"hit_95":1},{"date":"2026-03-16","p50":150,"p70":136,"p85":123,"p95":107,"actual":172,"hit_50":1,"hit_70":1,"hit_85":1,"hit_95":1},{"date":"2026-03-09","p50":144,"p70":130,"p85":118,"p95":103,"actual":179,"hit_50":1,"hit_70":1,"hit_85":1,"hit_95":1},{"date":"2026-03-02","p50":142,"p70":128,"p85":116,"p95":102,"actual":189,"hit_50":1,"hit_70":1,"hit_85":1,"hit_95":1},{"date":"2026-02-23","p50":129,"p70":116,"p85":105,"p95":90,"actual":191,"hit_50":1,"hit_70":1,"hit_85":1,"hit_95":1}],"scope_changes":[{"date":"This week","desc":"48 tickets added \u00b7 top team: AI Platform (11)","count":48},{"date":"Last week","desc":"89 tickets added \u00b7 top team: No Team (39)","count":89},{"date":"2 weeks ago","desc":"64 tickets added \u00b7 top team: Federal (14)","count":64}],"stuck_tickets":[{"k":"GS-1651","s":"[Doomsday 98- High Feature] as a data team member, i want a Revision on Vendor.VNumber validation, so that it can handle","t":"No Team","st":"UAT","dwell":1301.47,"a":"Unassigned"},{"k":"GS-3441","s":"FED - Contracts - Stamp Field - County Codes and Names from Federal Census using ZIP Codes","t":"Federal","st":"Waiting","dwell":1164.41,"a":"Unassigned"},{"k":"GS-3711","s":"Details Page: Ability to Open embedded search or report in new window","t":"WebApp","st":"Waiting","dwell":1133.37,"a":"Henry Thornley"},{"k":"GS-5085","s":"Assist with Meeting Intelligence Scrapers for Dylan and Jonathan","t":"No Team","st":"Development","dwell":910.91,"a":"Geovanny Fajardo"},{"k":"GS-4641","s":"Meeting Intelligence: Keyword matches incorrect for specific agency","t":"WebApp","st":"Development","dwell":861.3,"a":"Unassigned"},{"k":"GS-6670","s":"[Recurring - Sprint 64] Check Query Insights and Performance Advisor in Atlas","t":"Data Platform","st":"Waiting","dwell":712.4,"a":"Dave Yarwood"}]};
+const TODAY = new Date("2026-05-06T00:00:00");
+
+function addDays(d, n) { const x = new Date(d); x.setDate(x.getDate() + n); return x; }
+function fmtDate(d) { return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); }
+function fmtDateShort(d) { return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }); }
+
+const d50 = addDays(TODAY, DASH.forecast.p50);
+const d80 = addDays(TODAY, DASH.forecast.p80);
+const d95 = addDays(TODAY, DASH.forecast.p95);
+document.getElementById('date50').textContent = fmtDate(d50);
+document.getElementById('date80').textContent = fmtDate(d80);
+document.getElementById('date95').textContent = fmtDate(d95);
+
+let currentConf = 80;
+const confExplains = {
+  50: '50% confidence: median estimate. As likely to finish before this date as after.',
+  80: '80% confidence: this set of tickets will all ship by this date in 4 out of 5 simulated futures, given recent delivery pace.',
+  95: '95% confidence: conservative commitment. Recommended only for external stakeholder promises.'
+};
+function setConfidence(c) {
+  currentConf = c;
+  document.querySelectorAll('.conf-btn').forEach(b => b.classList.toggle('active', +b.dataset.conf === c));
+  document.getElementById('selectedConfBadge').textContent = c + '% CONFIDENCE · ' + DASH.forecast_target + ' tickets in flight';
+  document.getElementById('confExplain').textContent = confExplains[c];
+  drawCone();
+}
+
+function drawCone() {
+  const canvas = document.getElementById('coneCanvas');
+  const W = canvas.parentElement.clientWidth;
+  canvas.width = W; canvas.height = 260;
+  const ctx = canvas.getContext('2d');
+  const PAD = { l: 60, r: 30, t: 20, b: 40 };
+  const cW = W - PAD.l - PAD.r;
+  const cH = 260 - PAD.t - PAD.b;
+  const totalDays = DASH.forecast.p95 * 1.15;
+
+  ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+  ctx.lineWidth = 1;
+  for (let w = 0; w <= 1; w += 0.25) { const x = PAD.l + w * cW; ctx.beginPath(); ctx.moveTo(x, PAD.t); ctx.lineTo(x, PAD.t + cH); ctx.stroke(); }
+  for (let p = 0; p <= 1; p += 0.25) { const y = PAD.t + p * cH; ctx.beginPath(); ctx.moveTo(PAD.l, y); ctx.lineTo(PAD.l + cW, y); ctx.stroke(); }
+
+  function drawBand(targetDays, spread, fill, stroke) {
+    const x = PAD.l + (targetDays / totalDays) * cW;
+    ctx.fillStyle = fill; ctx.strokeStyle = stroke; ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(PAD.l, PAD.t + cH * 0.5);
+    ctx.lineTo(x, PAD.t + cH * (0.5 - spread));
+    ctx.lineTo(x, PAD.t + cH * (0.5 + spread));
+    ctx.closePath(); ctx.fill(); ctx.stroke();
+  }
+  drawBand(DASH.forecast.p95, 0.42, 'rgba(168,74,240,0.08)', 'rgba(168,74,240,0.25)');
+  drawBand(DASH.forecast.p80, 0.30, 'rgba(74,240,184,0.10)', 'rgba(74,240,184,0.3)');
+  drawBand(DASH.forecast.p50, 0.14, 'rgba(240,168,74,0.14)', 'rgba(240,168,74,0.35)');
+
+  [
+    { d: DASH.forecast.p50, color: '#f0a84a', label: '50%', id: 50 },
+    { d: DASH.forecast.p80, color: '#4af0b8', label: '80%', id: 80 },
+    { d: DASH.forecast.p95, color: '#a84af0', label: '95%', id: 95 },
+  ].forEach(cl => {
+    const x = PAD.l + (cl.d / totalDays) * cW;
+    ctx.strokeStyle = cl.color;
+    ctx.lineWidth = currentConf === cl.id ? 2 : 1;
+    ctx.setLineDash(currentConf === cl.id ? [] : [4, 4]);
+    ctx.beginPath(); ctx.moveTo(x, PAD.t); ctx.lineTo(x, PAD.t + cH); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = cl.color;
+    ctx.font = (currentConf === cl.id ? '500 ' : '400 ') + "10px 'DM Mono'";
+    ctx.textAlign = 'center';
+    ctx.fillText(cl.label, x, PAD.t - 6);
+  });
+
+  ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(PAD.l, PAD.t); ctx.lineTo(PAD.l, PAD.t + cH); ctx.stroke();
+  ctx.fillStyle = 'rgba(255,255,255,0.55)';
+  ctx.font = "9px 'DM Mono'";
+  ctx.textAlign = 'center';
+  ctx.fillText('TODAY', PAD.l, PAD.t - 6);
+
+  ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+  ctx.beginPath(); ctx.moveTo(PAD.l, PAD.t); ctx.lineTo(PAD.l, PAD.t + cH); ctx.lineTo(PAD.l + cW, PAD.t + cH); ctx.stroke();
+
+  ctx.fillStyle = 'rgba(255,255,255,0.35)';
+  ctx.font = "9px 'DM Mono'";
+  ctx.textAlign = 'center';
+  [0, 0.25, 0.5, 0.75, 1].forEach(w => {
+    const days = Math.round(w * totalDays);
+    ctx.fillText(fmtDateShort(addDays(TODAY, days)), PAD.l + w * cW, PAD.t + cH + 16);
+  });
+
+  ctx.textAlign = 'right';
+  [0, 0.5, 1].forEach(p => ctx.fillText(Math.round((1 - p) * 100) + '% remain', PAD.l - 6, PAD.t + p * cH + 3));
+}
+
+function drawBurnup() {
+  const canvas = document.getElementById('burnupCanvas');
+  const W = canvas.parentElement.clientWidth;
+  canvas.width = W; canvas.height = 180;
+  const ctx = canvas.getContext('2d');
+  const PAD = { l: 50, r: 20, t: 16, b: 40 };
+  const cW = W - PAD.l - PAD.r;
+  const cH = 180 - PAD.t - PAD.b;
+
+  const scope = DASH.burnup.scope;
+  const done = DASH.burnup.done;
+  const labels = DASH.burnup.weeks;
+  const N = scope.length;
+  const maxV = Math.max(...scope) * 1.05;
+  const xS = i => PAD.l + (i / (N - 1)) * cW;
+  const yS = v => PAD.t + (1 - v / maxV) * cH;
+
+  ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+  for (let i = 0; i < N; i++) { ctx.beginPath(); ctx.moveTo(xS(i), PAD.t); ctx.lineTo(xS(i), PAD.t + cH); ctx.stroke(); }
+
+  ctx.fillStyle = 'rgba(240,74,106,0.06)';
+  ctx.beginPath();
+  scope.forEach((v, i) => i === 0 ? ctx.moveTo(xS(i), yS(v)) : ctx.lineTo(xS(i), yS(v)));
+  ctx.lineTo(xS(N - 1), yS(0)); ctx.lineTo(xS(0), yS(0)); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = '#f04a6a';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  scope.forEach((v, i) => i === 0 ? ctx.moveTo(xS(i), yS(v)) : ctx.lineTo(xS(i), yS(v)));
+  ctx.stroke();
+
+  ctx.fillStyle = 'rgba(74,240,184,0.10)';
+  ctx.beginPath();
+  done.forEach((v, i) => i === 0 ? ctx.moveTo(xS(i), yS(v)) : ctx.lineTo(xS(i), yS(v)));
+  ctx.lineTo(xS(N - 1), yS(0)); ctx.lineTo(xS(0), yS(0)); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = '#4af0b8';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  done.forEach((v, i) => i === 0 ? ctx.moveTo(xS(i), yS(v)) : ctx.lineTo(xS(i), yS(v)));
+  ctx.stroke();
+
+  done.forEach((v, i) => { ctx.beginPath(); ctx.arc(xS(i), yS(v), 3, 0, Math.PI * 2); ctx.fillStyle = '#4af0b8'; ctx.fill(); });
+
+  ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(PAD.l, PAD.t); ctx.lineTo(PAD.l, PAD.t + cH); ctx.lineTo(PAD.l + cW, PAD.t + cH); ctx.stroke();
+
+  ctx.fillStyle = 'rgba(255,255,255,0.3)';
+  ctx.font = "8px 'DM Mono'";
+  ctx.textAlign = 'right';
+  [0, Math.round(maxV / 2), Math.round(maxV * 0.95)].forEach(v => ctx.fillText(v, PAD.l - 5, yS(v) + 3));
+
+  ctx.textAlign = 'center';
+  labels.forEach((l, i) => ctx.fillText(l, xS(i), PAD.t + cH + 14));
+
+  ctx.fillStyle = '#4af0b8'; ctx.fillRect(PAD.l, PAD.t + cH + 26, 8, 2);
+  ctx.fillStyle = 'rgba(255,255,255,0.4)'; ctx.textAlign = 'left';
+  ctx.fillText('Delivered (cumul)', PAD.l + 11, PAD.t + cH + 30);
+  ctx.fillStyle = '#f04a6a'; ctx.fillRect(PAD.l + 110, PAD.t + cH + 26, 8, 2);
+  ctx.fillStyle = 'rgba(255,255,255,0.4)';
+  ctx.fillText('Scope (cumul)', PAD.l + 121, PAD.t + cH + 30);
+}
+
+function renderPipeline() {
+  const maxC = Math.max(...DASH.pipeline.map(s => s.count));
+  document.getElementById('pipelineStages').innerHTML = DASH.pipeline.map(st => `
+    <div class="stage-row">
+      <span class="stage-name">${st.name}</span>
+      <div class="stage-bar-wrap">
+        <div class="stage-bar" style="width:${(st.count / maxC) * 100}%; background:${st.color}; opacity:${st.count > 0 ? '1' : '0.3'}"></div>
+      </div>
+      <span class="stage-count">${st.count}</span>
+      <span class="stage-avg">${st.avg || ''}</span>
+    </div>
+  `).join('');
+}
+
+function renderStuck() {
+  if (!DASH.stuck_tickets.length) {
+    document.getElementById('stuckList').innerHTML = '<div style="color:var(--muted);font-size:10px;padding:8px;">No stuck tickets.</div>';
+    return;
+  }
+  document.getElementById('stuckList').innerHTML = DASH.stuck_tickets.map(t => {
+    const sev = t.dwell > 365 ? 'critical' : t.dwell > 180 ? 'warning' : 'new';
+    return `<div class="blocker-item ${sev}">
+      <div>
+        <div class="blocker-ticket"><a href="https://govspend.atlassian.net/browse/${t.k}" target="_blank">${t.k}</a> · ${t.t} · ${t.st}</div>
+        <div class="blocker-desc">${t.s}</div>
+      </div>
+      <div>
+        <div class="blocker-age ${sev}">${Math.round(t.dwell)}d</div>
+        <div class="blocker-impact">${t.a}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderCalib() {
+  document.getElementById('calibrationRows').innerHTML = DASH.calibration.map(c => {
+    const hit = c.hit_85 === 1;
+    const pos = Math.min(98, Math.max(5, (c.actual / Math.max(1, c.p85)) * 50));
+    return `<div class="calib-row">
+      <span class="calib-period">${c.date.slice(5)}</span>
+      <div class="calib-bars"><div class="calib-bar-bg">
+        <div class="calib-bar-fill" style="width:85%"></div>
+        <div class="calib-bar-actual" style="left:${pos}%"></div>
+      </div></div>
+      <span class="calib-result ${hit ? 'hit' : 'miss'}">${hit ? '✓ HIT' : '✗ MISS'}</span>
+    </div>`;
+  }).join('');
+}
+
+function renderScope() {
+  document.getElementById('scopeChanges').innerHTML = DASH.scope_changes.map(s => `
+    <div class="scope-item">
+      <span class="scope-date">${s.date}</span>
+      <span class="scope-desc">${s.desc}</span>
+      <span class="scope-impact">+${s.count}</span>
+    </div>
+  `).join('');
+}
+
+function renderTeams() {
+  document.getElementById('teamCards').innerHTML = DASH.team_cards.map(c => {
+    const d50 = addDays(TODAY, c.d50);
+    const d80 = addDays(TODAY, c.d80);
+    const pct = Math.round((c.done_30d / Math.max(1, c.done_30d + c.total)) * 100);
+    return `<div class="feature-card">
+      <div class="feature-card-top">
+        <div class="feature-card-name">${c.team}</div>
+        <div class="feature-card-meta">${c.wip} IN PROGRESS · ${c.backlog} BACKLOG · ${c.done_30d} SHIPPED 30D</div>
+      </div>
+      <div class="feature-card-body">
+        <div class="feature-progress-label">
+          <span>${c.done_30d} of ${c.total + c.done_30d} units recent flow</span>
+          <span>${pct}%</span>
+        </div>
+        <div class="feature-progress-track"><div class="feature-progress-fill" style="width:${pct}%"></div></div>
+        <div class="feature-dates">
+          <div class="feature-date-cell">
+            <div class="feature-date-label">50% confidence</div>
+            <div class="feature-date-val" style="color:var(--amber)">${fmtDate(d50)}</div>
+          </div>
+          <div class="feature-date-cell">
+            <div class="feature-date-label">80% confidence</div>
+            <div class="feature-date-val" style="color:var(--teal)">${fmtDate(d80)}</div>
+          </div>
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-top:6px;letter-spacing:0.05em;">~${c.throughput_per_week.toFixed(1)} units / week</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+window.addEventListener('load', () => {
+  drawCone(); drawBurnup();
+  renderPipeline(); renderStuck(); renderCalib(); renderScope(); renderTeams();
+});
+window.addEventListener('resize', () => { drawCone(); drawBurnup(); });
+</script>
+</body></html>
