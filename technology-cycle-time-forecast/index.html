@@ -124,6 +124,14 @@ table a:hover { text-decoration: underline; }
 
 footer { margin-top: 28px; padding-top: 16px; border-top: 1px solid var(--border); color: var(--text-dim); font-size: 12px; text-align: center; }
 
+.daymode-toggle { display: inline-flex; align-items: center; gap: 8px; margin-left: auto; }
+.daymode-toggle .label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; }
+.daymode-pill { background: var(--panel-2); border: 1px solid var(--border); border-radius: 16px; padding: 2px; display: inline-flex; }
+.daymode-btn { background: transparent; color: var(--text-dim); border: none; padding: 5px 14px; font-size: 12px; font-weight: 600; border-radius: 14px; cursor: pointer; transition: all 0.15s; }
+.daymode-btn.active { background: var(--accent); color: white; }
+.biz-banner { display: none; padding: 8px 14px; background: rgba(251, 191, 36, 0.1); border: 1px solid rgba(251, 191, 36, 0.3); color: var(--warn); border-radius: 6px; margin-bottom: 12px; font-size: 12px; }
+.biz-banner.active { display: block; }
+
 @media (max-width: 1100px) {
   .kpi-grid, .kpi-grid.wip { grid-template-columns: repeat(2, 1fr); }
   .chart-grid { grid-template-columns: 1fr; }
@@ -144,6 +152,21 @@ footer { margin-top: 28px; padding-top: 16px; border-top: 1px solid var(--border
 </header>
 
 <div id="tab-cycletime" class="tab-panel active">
+
+<div style="display: flex; align-items: center; margin: 16px 0 12px;">
+  <div style="font-size: 12px; color: var(--text-dim);">All cycle-time numbers (state averages, lead times, charts) below respect the toggle.</div>
+  <div class="daymode-toggle">
+    <span class="label">View as</span>
+    <div class="daymode-pill">
+      <button class="daymode-btn active" data-mode="calendar">Calendar days</button>
+      <button class="daymode-btn" data-mode="business">Business days</button>
+    </div>
+  </div>
+</div>
+
+<div class="biz-banner" id="biz-banner">
+  <strong>Business days view active.</strong> Cycle-time numbers below are approximated as calendar days × 5/7 (≈0.714) to reflect rough working-day cycle time. WIP dwell, intake/delivery counts, forecasts, and calibration always use calendar days.
+</div>
 
 <div class="controls">
   <div class="preset-row">
@@ -415,6 +438,11 @@ const BUNDLE = {"completed":[{"k":"GS-9392","s":"Document MAI Schema Updates","s
 const COMPLETED = BUNDLE.completed;
 const WIP = BUNDLE.wip;
 const LIFECYCLE = BUNDLE.lifecycle || [];
+
+// Day mode: 'calendar' (raw days) or 'business' (× 5/7)
+let dayMode = 'calendar';
+const BIZ_FACTOR = 5/7;
+function dD(d) { return dayMode === 'business' ? d * BIZ_FACTOR : d; }
 const STATES = ['Development', 'Peer Review', 'QA', 'UAT', 'Waiting'];
 const COLORS = { 'Development': '#5b9bd5', 'Peer Review': '#f4a261', 'QA': '#2a9d8f', 'UAT': '#b388ff', 'Waiting': '#e76f51' };
 const STATE_TAGS = { 'Development': 'dev', 'Peer Review': 'pr', 'QA': 'qa', 'UAT': 'uat', 'Waiting': 'wait' };
@@ -607,7 +635,7 @@ function renderKPIs(rows) {
     const elV = document.getElementById('kpi-' + ids[i]);
     const elM = document.getElementById('kpi-' + ids[i] + '-meta');
     if (stat.n === 0) { elV.innerHTML = '—'; elM.textContent = 'no tickets'; }
-    else { elV.innerHTML = stat.avg.toFixed(2) + '<span class="unit">d avg</span>'; elM.textContent = `med ${stat.median.toFixed(2)}d · ${stat.n} ticket${stat.n===1?'':'s'}`; }
+    else { elV.innerHTML = dD(stat.avg).toFixed(2) + '<span class="unit">d avg</span>'; elM.textContent = `med ${dD(stat.median).toFixed(2)}d · ${stat.n} ticket${stat.n===1?'':'s'}`; }
   });
   const done = rows.filter(r => r.st === 'Done');
   const elV = document.getElementById('kpi-total');
@@ -627,8 +655,8 @@ function renderOverviewChart(rows) {
   makeChart('chart-overview', 'bar', {
     labels: STATES,
     datasets: [
-      { label: 'Avg', data: stats.map(s => +s.avg.toFixed(2)), backgroundColor: STATES.map(s => COLORS[s]), borderRadius: 4 },
-      { label: 'Median', data: stats.map(s => +s.median.toFixed(2)), backgroundColor: STATES.map(s => COLORS[s] + '70'), borderRadius: 4 },
+      { label: 'Avg', data: stats.map(s => +dD(s.avg).toFixed(2)), backgroundColor: STATES.map(s => COLORS[s]), borderRadius: 4 },
+      { label: 'Median', data: stats.map(s => +dD(s.median).toFixed(2)), backgroundColor: STATES.map(s => COLORS[s] + '70'), borderRadius: 4 },
     ]
   }, {
     responsive: true, maintainAspectRatio: false,
@@ -643,7 +671,7 @@ function renderTrendChart(rows) {
     label: s,
     data: months.map(m => {
       const sub = rows.filter(r => r.m === m && r.v[i] > 0);
-      return sub.length ? +(sub.reduce((a, r) => a + r.d[i], 0) / sub.length).toFixed(2) : null;
+      return sub.length ? +dD(sub.reduce((a, r) => a + r.d[i], 0) / sub.length).toFixed(2) : null;
     }),
     borderColor: COLORS[s], backgroundColor: COLORS[s] + '40', tension: 0.3, spanGaps: true, borderWidth: 2, pointRadius: 3,
   }));
@@ -651,7 +679,7 @@ function renderTrendChart(rows) {
     label: 'Dev → Done',
     data: months.map(m => {
       const sub = rows.filter(r => r.m === m && r.st === 'Done');
-      return sub.length ? +(sub.reduce((a,r)=>a+r.dTotal, 0) / sub.length).toFixed(2) : null;
+      return sub.length ? +dD(sub.reduce((a,r)=>a+r.dTotal, 0) / sub.length).toFixed(2) : null;
     }),
     borderColor: '#e6eaff', backgroundColor: 'rgba(230,234,255,0.15)', tension: 0.3, spanGaps: true, borderWidth: 3, borderDash: [6, 4], pointRadius: 4, pointStyle: 'rectRot',
   });
@@ -668,7 +696,7 @@ function renderTeamChart(rows) {
     label: s,
     data: teams.map(t => {
       const sub = rows.filter(r => r.t === t && r.v[i] > 0);
-      return sub.length ? +(sub.reduce((a, r) => a + r.d[i], 0) / sub.length).toFixed(2) : 0;
+      return sub.length ? +dD(sub.reduce((a, r) => a + r.d[i], 0) / sub.length).toFixed(2) : 0;
     }),
     backgroundColor: COLORS[s], borderRadius: 3,
   }));
@@ -692,7 +720,7 @@ function renderAssigneeChart(rows) {
     .filter(x => x.n >= 2).sort((a,b) => b.avg - a.avg).slice(0, 15);
   makeChart('chart-assignee', 'bar', {
     labels: top.map(t => `${t.a}  (${t.n})`),
-    datasets: [{ label: 'Avg total active days', data: top.map(t => +t.avg.toFixed(2)), backgroundColor: '#6c8aff', borderRadius: 3 }]
+    datasets: [{ label: 'Avg total active days', data: top.map(t => +dD(t.avg).toFixed(2)), backgroundColor: '#6c8aff', borderRadius: 3 }]
   }, {
     indexAxis: 'y', responsive: true, maintainAspectRatio: false,
     plugins: { legend: { display: false }, tooltip: tooltipStyle },
@@ -879,8 +907,8 @@ function renderLifecycleKPIs(rows) {
     const v = document.getElementById('kpi-' + id);
     const m = document.getElementById('kpi-' + id + '-meta');
     if (!stat.n) { v.innerHTML = '—'; m.textContent = 'no tickets'; return; }
-    v.innerHTML = stat.avg.toFixed(1) + '<span class="unit">d avg</span>';
-    m.textContent = `med ${stat.median.toFixed(1)}d · ${stat.n} ticket${stat.n===1?'':'s'}`;
+    v.innerHTML = dD(stat.avg).toFixed(1) + '<span class="unit">d avg</span>';
+    m.textContent = `med ${dD(stat.median).toFixed(1)}d · ${stat.n} ticket${stat.n===1?'':'s'}`;
   }
   set('c2d', c2d); set('d2r', d2r); set('c2r', c2r);
 }
@@ -888,7 +916,7 @@ function renderLifecycleTrend(rows) {
   const months = [...new Set(rows.map(r => r.m).filter(Boolean))].sort();
   function avgFor(month, key) {
     const sub = rows.filter(r => r.m === month && r[key] != null);
-    return sub.length ? +(sub.reduce((a,r) => a + r[key], 0) / sub.length).toFixed(2) : null;
+    return sub.length ? +dD(sub.reduce((a,r) => a + r[key], 0) / sub.length).toFixed(2) : null;
   }
   makeChart('chart-lifecycle-trend', 'line', {
     labels: months,
@@ -907,7 +935,7 @@ function renderLifecycleTeam(rows) {
   const teams = [...new Set(rows.map(r => r.t))].sort();
   function avgFor(team, key) {
     const sub = rows.filter(r => r.t === team && r[key] != null);
-    return sub.length ? +(sub.reduce((a,r) => a + r[key], 0) / sub.length).toFixed(2) : 0;
+    return sub.length ? +dD(sub.reduce((a,r) => a + r[key], 0) / sub.length).toFixed(2) : 0;
   }
   makeChart('chart-lifecycle-team', 'bar', {
     labels: teams,
@@ -1425,6 +1453,17 @@ assigneeSorted.forEach(([name, n]) => {
   o.value = name;
   o.textContent = `${name} (${n})`;
   document.getElementById('fc-assignee').appendChild(o);
+});
+
+
+// Day-mode toggle wiring
+document.querySelectorAll('.daymode-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    dayMode = btn.dataset.mode;
+    document.querySelectorAll('.daymode-btn').forEach(b => b.classList.toggle('active', b === btn));
+    document.getElementById('biz-banner').classList.toggle('active', dayMode === 'business');
+    renderAll();
+  });
 });
 
 // Initial render — must be at the end so all helper functions/consts are initialized
