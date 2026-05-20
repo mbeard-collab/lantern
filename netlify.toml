@@ -14,5 +14,10 @@
   to = "/.netlify/functions/commit"
   status = 200
 
+[[redirects]]
+  from = "/api/voting/*"
+  to = "/.netlify/functions/voting/:splat"
+  status = 200
+
 [dev]
   framework = "#static"

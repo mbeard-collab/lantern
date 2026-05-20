@@ -326,9 +326,22 @@
 <!-- ============ MANAGE MODAL ============ -->
 <div id="manage-modal" class="modal-bg" hidden>
   <div class="modal wide">
-    <h3>Manage dashboards</h3>
-    <p>Open or delete existing dashboards. Deleting removes the file from <code>main</code> and unregisters it from the landing page.</p>
-    <div id="manage-list" class="manage-list"></div>
+    <h3>Manage</h3>
+    <div class="mode-tabs" style="margin-top: 6px; margin-bottom: 14px;">
+      <button class="mode-tab active" data-manage-tab="dashboards">Dashboards</button>
+      <button class="mode-tab" data-manage-tab="voting">Voting</button>
+    </div>
+
+    <div id="manage-tab-dashboards">
+      <p>Open or delete existing dashboards. Deleting removes the file from <code>main</code> and unregisters it from the landing page.</p>
+      <div id="manage-list" class="manage-list"></div>
+    </div>
+
+    <div id="manage-tab-voting" hidden>
+      <p>Open ballots, view results, or upload a new <code>items.json</code> to refresh a ballot. Updates commit to <code>main</code> and trigger a deploy.</p>
+      <div id="voting-list" class="manage-list"></div>
+    </div>
+
     <div id="manage-error" class="err" hidden></div>
     <div class="row">
       <button id="manage-close" class="btn btn-primary">Close</button>
@@ -942,9 +955,95 @@ const manageList = document.getElementById('manage-list');
 const manageClose = document.getElementById('manage-close');
 const manageError = document.getElementById('manage-error');
 const manageBtn = document.getElementById('manage-btn');
+const votingList = document.getElementById('voting-list');
+
+// Known voting polls. Add new entries here when polls are created.
+const VOTING_POLLS = [
+  { id: 'gs15687', title: '[2026] Commercial Requests', url: '/voting/gs15687/', resultsUrl: '/voting/gs15687/results.html' },
+];
 
 manageBtn.addEventListener('click', openManage);
 manageClose.addEventListener('click', () => { manageModal.hidden = true; });
+
+document.querySelectorAll('.mode-tab[data-manage-tab]').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.mode-tab[data-manage-tab]').forEach(t => t.classList.toggle('active', t === tab));
+    const target = tab.dataset.manageTab;
+    document.getElementById('manage-tab-dashboards').hidden = target !== 'dashboards';
+    document.getElementById('manage-tab-voting').hidden = target !== 'voting';
+    manageError.hidden = true;
+    if (target === 'voting') renderVotingList();
+  });
+});
+
+function renderVotingList() {
+  votingList.innerHTML = VOTING_POLLS.map(p => `
+    <div class="manage-row" data-poll="${escapeHtml(p.id)}">
+      <div class="info">
+        <div class="name">${escapeHtml(p.title)}</div>
+        <div class="meta">/voting/${escapeHtml(p.id)}/ · ballot + results</div>
+      </div>
+      <div class="actions">
+        <a class="btn" href="${escapeHtml(p.url)}" target="_blank" rel="noopener">Open</a>
+        <a class="btn" href="${escapeHtml(p.resultsUrl)}" target="_blank" rel="noopener">Results</a>
+        <button class="btn" data-poll-update="${escapeHtml(p.id)}">Update items…</button>
+      </div>
+    </div>
+  `).join('');
+  votingList.querySelectorAll('button[data-poll-update]').forEach(btn => {
+    btn.addEventListener('click', () => updateVotingItems(btn.dataset.pollUpdate));
+  });
+}
+
+async function updateVotingItems(pollId) {
+  manageError.hidden = true;
+  const file = await pickFile('.json,application/json');
+  if (!file) return;
+  let text;
+  try {
+    text = await file.text();
+    const parsed = JSON.parse(text);
+    if (!parsed || !Array.isArray(parsed.items)) throw new Error('JSON must have an "items" array.');
+  } catch (e) {
+    manageError.textContent = `Invalid file: ${e.message}`;
+    manageError.hidden = false;
+    return;
+  }
+  if (!confirm(`Replace voting items for "${pollId}" with the contents of ${file.name}? Commits to main and triggers a Netlify deploy (~30s).`)) return;
+
+  let admin;
+  try { admin = await ensureAdmin(); } catch { return; }
+
+  try {
+    const res = await fetch('/api/voting/update-items', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pollId, items_json: text, auth: admin }),
+    });
+    const data = await res.json();
+    if (res.status === 401) {
+      clearAdmin();
+      manageError.textContent = 'Session expired — sign in again.';
+      manageError.hidden = false;
+      return;
+    }
+    if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+    alert(`Updated. ${data.itemCount} items committed (${data.commitSha?.slice(0,7) || 'no sha'}). Deploy fires in ~30s.`);
+  } catch (e) {
+    manageError.textContent = e.message;
+    manageError.hidden = false;
+  }
+}
+
+function pickFile(accept) {
+  return new Promise(resolve => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = accept;
+    input.onchange = () => resolve(input.files[0] || null);
+    input.click();
+  });
+}
 
 async function openManage() {
   manageError.hidden = true;

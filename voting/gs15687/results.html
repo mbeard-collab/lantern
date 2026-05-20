@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Voting Results — Commercial Requests (GS-15687)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  :root {
+    --bg:#f7f8fa; --card:#ffffff; --ink:#1f2933; --muted:#6b7280;
+    --accent:#2563eb; --accent-dark:#1e40af; --border:#e5e7eb;
+    --hi:#16a34a; --lo:#dc2626; --warn:#f59e0b;
+    --bar1:#fee2e2; --bar2:#fef3c7; --bar3:#dbeafe; --bar4:#d1fae5; --bar5:#86efac;
+  }
+  * { box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+         background: var(--bg); color: var(--ink); margin: 0; line-height: 1.45; }
+  header { background: white; border-bottom: 1px solid var(--border); padding: 20px 28px; }
+  header h1 { margin: 0 0 6px; font-size: 20px; }
+  header .sub { color: var(--muted); font-size: 13px; }
+  header .stats { display: flex; gap: 28px; margin-top: 14px; flex-wrap: wrap; }
+  header .stat { background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 10px 16px; min-width: 120px; }
+  header .stat-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+  header .stat-value { font-size: 22px; font-weight: 600; }
+
+  main { max-width: 1180px; margin: 0 auto; padding: 24px 28px 80px; }
+
+  .controls { display: flex; gap: 10px; align-items: center; margin-bottom: 18px; }
+  .btn { background: var(--accent); color: white; border: 0; padding: 8px 14px; border-radius: 6px;
+         cursor: pointer; font-weight: 600; font-size: 13px; }
+  .btn:hover { background: var(--accent-dark); }
+  .btn.secondary { background: white; color: var(--accent); border: 1px solid var(--accent); }
+  .btn.ghost { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+  .results-link { color: var(--accent); text-decoration: none; font-size: 13px; }
+  .results-link:hover { text-decoration: underline; }
+
+  .row { background: #fff; border: 1px solid var(--border); border-radius: 10px;
+         padding: 14px 16px; margin-bottom: 10px; display: grid;
+         grid-template-columns: 60px 1fr 280px; gap: 18px; align-items: center; }
+  .rank { font-size: 18px; font-weight: 700; color: var(--muted); font-variant-numeric: tabular-nums; text-align: center; }
+  .item-info .name { font-weight: 600; font-size: 14px; margin-bottom: 3px; }
+  .item-info .key { font-size: 11px; color: var(--muted); font-family: ui-monospace, monospace; }
+  .item-info .key a { color: var(--accent); text-decoration: none; }
+  .item-info .key a:hover { text-decoration: underline; }
+
+  .scoring { text-align: right; }
+  .score { font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .score.hi { color: var(--hi); }
+  .score.mid { color: var(--accent); }
+  .score.lo { color: var(--lo); }
+  .score-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .dist { display: flex; gap: 3px; margin-top: 6px; height: 18px; }
+  .dist-bar { flex: 1; background: var(--border); border-radius: 3px; position: relative; min-width: 22px; }
+  .dist-bar.b1 { background: var(--bar1); }
+  .dist-bar.b2 { background: var(--bar2); }
+  .dist-bar.b3 { background: var(--bar3); }
+  .dist-bar.b4 { background: var(--bar4); }
+  .dist-bar.b5 { background: var(--bar5); }
+  .dist-bar span { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+                   font-size: 10px; font-weight: 700; color: #374151; }
+  .dist-labels { display: flex; gap: 3px; font-size: 9px; color: var(--muted); margin-top: 2px; }
+  .dist-labels span { flex: 1; text-align: center; min-width: 22px; }
+
+  .empty { background: #fff; border: 1px dashed var(--border); border-radius: 10px; padding: 24px;
+           color: var(--muted); font-size: 14px; text-align: center; }
+
+  .admin-section { margin-top: 36px; border-top: 1px solid var(--border); padding-top: 24px; }
+  .admin-section h2 { font-size: 14px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin: 0 0 12px; }
+  .ballot-card { background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; margin-bottom: 10px; }
+  .ballot-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
+  .ballot-voter { font-weight: 600; font-size: 14px; }
+  .ballot-email { font-size: 12px; color: var(--muted); margin-left: 8px; }
+  .ballot-date { font-size: 11px; color: var(--muted); }
+  .ballot-votes { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 6px; font-size: 12px; }
+  .ballot-vote { display: flex; justify-content: space-between; padding: 4px 8px; background: #f9fafb; border-radius: 4px; }
+  .ballot-vote .v { font-weight: 600; }
+  .ballot-vote .v[data-v="5"] { color: var(--hi); }
+  .ballot-vote .v[data-v="4"] { color: var(--accent); }
+  .ballot-vote .v[data-v="1"], .ballot-vote .v[data-v="2"] { color: var(--lo); }
+  .ballot-vote .v[data-v="skip"] { color: var(--muted); }
+
+  /* Login modal */
+  .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.45); display: flex;
+              align-items: center; justify-content: center; z-index: 100; padding: 20px; }
+  .modal { background: white; border-radius: 12px; padding: 24px; max-width: 420px; width: 100%; }
+  .modal h3 { margin: 0 0 6px; font-size: 16px; }
+  .modal p { margin: 0 0 14px; font-size: 13px; color: var(--muted); }
+  .modal label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 4px; font-weight: 500; }
+  .modal input { width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; margin-bottom: 12px; }
+  .modal .err { color: var(--lo); font-size: 12px; margin-bottom: 10px; }
+  .modal .row { display: flex; gap: 8px; justify-content: flex-end; margin-top: 8px; grid-template-columns: none; padding: 0; background: transparent; border: 0; }
+
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+           background: #111827; color: white; padding: 10px 16px; border-radius: 8px;
+           font-size: 13px; opacity: 0; transition: opacity 0.2s; pointer-events: none; }
+  .toast.show { opacity: 1; }
+  .toast.error { background: #991b1b; }
+
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Voting Results — <span id="ballot-title">…</span></h1>
+  <div class="sub">
+    Epic <a id="epic-link" href="#" target="_blank" rel="noopener">…</a>
+    · refreshed <span id="refreshed-at">…</span>
+    · <a class="results-link" href="./">← Back to ballot</a>
+  </div>
+  <div class="stats">
+    <div class="stat"><div class="stat-label">Voters</div><div class="stat-value" id="voter-count">—</div></div>
+    <div class="stat"><div class="stat-label">Items voted on</div><div class="stat-value" id="items-voted">—</div></div>
+    <div class="stat"><div class="stat-label">Total items</div><div class="stat-value" id="total-items">—</div></div>
+  </div>
+</header>
+
+<main>
+  <div class="controls">
+    <button class="btn ghost" id="refresh-btn">↻ Refresh</button>
+    <button class="btn secondary" id="show-raw">Show individual ballots (admin)</button>
+  </div>
+
+  <div id="results"></div>
+
+  <section id="admin-section" class="admin-section" hidden>
+    <h2>Individual ballots <span id="ballot-count" style="color:var(--muted); font-weight:400; text-transform:none; letter-spacing:0;"></span></h2>
+    <div id="ballot-list"></div>
+  </section>
+</main>
+
+<!-- Login modal -->
+<div id="login-modal" class="modal-bg" hidden>
+  <div class="modal">
+    <h3>Admin sign in</h3>
+    <p>Showing individual ballots requires admin access. Same login as the Studio.</p>
+    <label>Email</label>
+    <input type="email" id="login-email" autocomplete="email" placeholder="you@govspend.com" />
+    <label>Admin password</label>
+    <input type="password" id="login-password" autocomplete="current-password" />
+    <div class="err" id="login-error" hidden></div>
+    <div class="row">
+      <button class="btn ghost" id="login-cancel">Cancel</button>
+      <button class="btn" id="login-confirm">Sign in</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const POLL_ID = "gs15687";
+const ADMIN_STORAGE_KEY = "studio.admin";
+let META = {};
+let ITEMS_BY_KEY = {};
+
+function loadAdmin() {
+  try { return JSON.parse(localStorage.getItem(ADMIN_STORAGE_KEY) || "null"); } catch { return null; }
+}
+function saveAdmin(a) { localStorage.setItem(ADMIN_STORAGE_KEY, JSON.stringify(a)); }
+function clearAdmin() { localStorage.removeItem(ADMIN_STORAGE_KEY); }
+
+async function init() {
+  try {
+    const itemsRes = await fetch("./items.json", { cache: "no-store" });
+    const itemsData = await itemsRes.json();
+    META = itemsData;
+    (itemsData.items || []).forEach(it => ITEMS_BY_KEY[it.key] = it);
+    document.getElementById("ballot-title").textContent = itemsData.title || "Ballot";
+    document.getElementById("epic-link").textContent = itemsData.epic || "Epic";
+    document.getElementById("epic-link").href = itemsData.epic_url || "#";
+    document.getElementById("refreshed-at").textContent = itemsData.refreshed_at || "(unknown)";
+    document.getElementById("total-items").textContent = (itemsData.items || []).length;
+  } catch (e) {
+    showToast("Could not load ballot metadata: " + e.message, true);
+  }
+  await loadAggregate();
+}
+
+async function loadAggregate() {
+  try {
+    const res = await fetch(`/api/voting/aggregate?pollId=${POLL_ID}`, { cache: "no-store" });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+
+    document.getElementById("voter-count").textContent = data.voter_count;
+    document.getElementById("items-voted").textContent = (data.results || []).filter(r => r.count > 0).length;
+
+    renderResults(data.results || []);
+  } catch (e) {
+    document.getElementById("results").innerHTML = `<div class="empty" style="color:#991b1b;">Couldn't load results: ${e.message}</div>`;
+  }
+}
+
+function renderResults(results) {
+  const wrap = document.getElementById("results");
+  if (!results.length) {
+    wrap.innerHTML = `<div class="empty">No votes yet. Share the ballot URL with the team and refresh.</div>`;
+    return;
+  }
+  // Sort: items WITH votes first (by avg desc), then unvoted items at bottom
+  results.sort((a, b) => {
+    if (a.count === 0 && b.count === 0) return 0;
+    if (a.count === 0) return 1;
+    if (b.count === 0) return -1;
+    return (b.average || 0) - (a.average || 0);
+  });
+
+  wrap.innerHTML = "";
+  results.forEach((r, i) => {
+    const item = ITEMS_BY_KEY[r.key] || { friendly: r.key, url: "#", priority: "—" };
+    const row = document.createElement("div");
+    row.className = "row";
+
+    const scoreCls = r.average >= 4 ? "hi" : r.average >= 3 ? "mid" : r.average == null ? "" : "lo";
+    const avgDisplay = r.average == null ? "—" : r.average.toFixed(2);
+    const maxBucket = Math.max(...Object.values(r.distribution || {1:0,2:0,3:0,4:0,5:0}), 1);
+
+    row.innerHTML = `
+      <div class="rank">${i + 1}</div>
+      <div class="item-info">
+        <div class="name">${escapeHtml(item.friendly)}</div>
+        <div class="key"><a href="${escapeHtml(item.url)}" target="_blank" rel="noopener">${escapeHtml(r.key)}</a> · ${escapeHtml(item.priority || "—")} priority · ${escapeHtml(item.requestor || "—")}</div>
+      </div>
+      <div class="scoring">
+        <div class="score ${scoreCls}">${avgDisplay}</div>
+        <div class="score-sub">${r.count} vote${r.count === 1 ? "" : "s"}${r.skip_count ? ` · ${r.skip_count} skip` : ""}</div>
+        <div class="dist" title="Distribution: 1-2-3-4-5">
+          ${[1,2,3,4,5].map(n => {
+            const v = r.distribution[n] || 0;
+            const h = Math.max(20, Math.round((v / maxBucket) * 100));
+            return `<div class="dist-bar b${n}" style="opacity:${v > 0 ? 1 : 0.35};"><span>${v || ""}</span></div>`;
+          }).join("")}
+        </div>
+        <div class="dist-labels"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span></div>
+      </div>
+    `;
+    wrap.appendChild(row);
+  });
+}
+
+// ----- Admin: show individual ballots -----
+
+async function showRawBallots() {
+  let admin = loadAdmin();
+  if (!admin) {
+    admin = await openLogin();
+    if (!admin) return;
+  }
+  try {
+    const res = await fetch("/api/voting/ballots", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ pollId: POLL_ID, auth: admin }),
+    });
+    const data = await res.json();
+    if (res.status === 401) {
+      clearAdmin();
+      showToast("Sign-in expired. Click again to re-authenticate.", true);
+      return;
+    }
+    if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+    renderBallots(data.ballots || []);
+  } catch (e) {
+    showToast("Couldn't load ballots: " + e.message, true);
+  }
+}
+
+function renderBallots(ballots) {
+  const section = document.getElementById("admin-section");
+  const list = document.getElementById("ballot-list");
+  const counter = document.getElementById("ballot-count");
+  counter.textContent = ` — ${ballots.length} ballot${ballots.length === 1 ? "" : "s"}`;
+  list.innerHTML = ballots.map(b => `
+    <div class="ballot-card">
+      <div class="ballot-head">
+        <div>
+          <span class="ballot-voter">${escapeHtml(b.voter)}</span>
+          <span class="ballot-email">${escapeHtml(b.voter_email)}</span>
+        </div>
+        <span class="ballot-date">${new Date(b.voted_at).toLocaleString()}</span>
+      </div>
+      <div class="ballot-votes">
+        ${Object.entries(b.votes || {}).map(([k, v]) => {
+          const it = ITEMS_BY_KEY[k];
+          const name = it ? it.friendly : k;
+          return `<div class="ballot-vote"><span title="${escapeHtml(name)}">${escapeHtml(k)}</span><span class="v" data-v="${v}">${v}</span></div>`;
+        }).join("")}
+      </div>
+    </div>
+  `).join("");
+  section.hidden = false;
+  section.scrollIntoView({ behavior: "smooth" });
+}
+
+// ----- Login modal -----
+
+let loginResolver = null;
+function openLogin() {
+  return new Promise(resolve => {
+    loginResolver = resolve;
+    const a = loadAdmin();
+    document.getElementById("login-email").value = a?.email || "";
+    document.getElementById("login-password").value = "";
+    document.getElementById("login-error").hidden = true;
+    document.getElementById("login-modal").hidden = false;
+    setTimeout(() => document.getElementById("login-email").focus(), 30);
+  });
+}
+async function submitLogin() {
+  const email = document.getElementById("login-email").value.trim().toLowerCase();
+  const password = document.getElementById("login-password").value;
+  const err = document.getElementById("login-error");
+  err.hidden = true;
+  if (!email || !password) { err.textContent = "Email and password are required."; err.hidden = false; return; }
+  // Test against ballots endpoint with a known-only-admin call. Quickest: POST to /api/voting/ballots.
+  try {
+    const res = await fetch("/api/voting/ballots", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ pollId: POLL_ID, auth: { email, password } }),
+    });
+    if (res.status === 401) { err.textContent = "Not authorized."; err.hidden = false; return; }
+    if (!res.ok) { err.textContent = `Sign-in failed (${res.status}).`; err.hidden = false; return; }
+    const admin = { email, password };
+    saveAdmin(admin);
+    document.getElementById("login-modal").hidden = true;
+    if (loginResolver) { loginResolver(admin); loginResolver = null; }
+  } catch (e) {
+    err.textContent = e.message; err.hidden = false;
+  }
+}
+function cancelLogin() {
+  document.getElementById("login-modal").hidden = true;
+  if (loginResolver) { loginResolver(null); loginResolver = null; }
+}
+
+document.getElementById("login-confirm").addEventListener("click", submitLogin);
+document.getElementById("login-cancel").addEventListener("click", cancelLogin);
+document.getElementById("show-raw").addEventListener("click", showRawBallots);
+document.getElementById("refresh-btn").addEventListener("click", loadAggregate);
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+function showToast(msg, isError) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.toggle("error", !!isError);
+  t.classList.add("show");
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(() => t.classList.remove("show"), 3500);
+}
+
+init();
+</script>
+</body>
+</html>

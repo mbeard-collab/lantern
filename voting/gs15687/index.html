@@ -1,0 +1,489 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Commercial Voting Ballot — [2026] Commercial Requests (GS-15687)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  :root {
+    --bg:#f7f8fa; --card:#ffffff; --ink:#1f2933; --muted:#6b7280;
+    --accent:#2563eb; --accent-dark:#1e40af; --border:#e5e7eb;
+    --new:#fff7d6; --new-bd:#facc15;
+    --done:#ecfdf5; --done-ink:#065f46;
+    --cancelled:#fef2f2; --cancelled-ink:#991b1b;
+    --sprint:#eef2ff; --sprint-ink:#3730a3;
+    --backlog:#f1f5f9; --backlog-ink:#334155;
+    --pri-high:#dc2626; --pri-med:#d97706; --pri-low:#0891b2;
+    --why-bg:#f8fafc; --why-bd:#e2e8f0;
+    --ok:#16a34a;
+  }
+  * { box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+         background: var(--bg); color: var(--ink); margin: 0; line-height: 1.45; }
+  header { background: white; border-bottom: 1px solid var(--border); padding: 20px 28px;
+           position: sticky; top:0; z-index: 10; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+  header h1 { margin: 0 0 6px; font-size: 20px; }
+  header .sub { color: var(--muted); font-size: 13px; }
+  .controls { display: flex; gap: 12px; align-items: center; margin-top: 12px; flex-wrap: wrap; }
+  .controls input[type="text"], .controls input[type="email"] {
+    padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 14px; width: 220px;
+  }
+  .controls .progress { color: var(--muted); font-size: 13px; }
+  .controls .last-submit { color: var(--ok); font-size: 12px; margin-left: 4px; }
+  .btn { background: var(--accent); color: white; border: 0; padding: 9px 16px; border-radius: 6px;
+         cursor: pointer; font-weight: 600; font-size: 14px; }
+  .btn:hover { background: var(--accent-dark); }
+  .btn.secondary { background: white; color: var(--accent); border: 1px solid var(--accent); }
+  .btn.ghost { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+  .btn.ghost:hover { background: #f3f4f6; color: var(--ink); }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  main { max-width: 1180px; margin: 0 auto; padding: 24px 28px 80px; }
+
+  .bucket { margin-top: 28px; }
+  .bucket h2 { font-size: 16px; margin: 0 0 4px; display: flex; align-items: center; gap: 10px; }
+  .bucket .bucket-sub { color: var(--muted); font-size: 12px; margin-bottom: 10px; }
+
+  .pill { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px;
+          font-weight: 600; letter-spacing: 0.02em; text-transform: uppercase; }
+  .pill.sprint { background: var(--sprint); color: var(--sprint-ink); }
+  .pill.backlog { background: var(--backlog); color: var(--backlog-ink); }
+  .pill.new { background: var(--new); color: #92400e; border: 1px solid var(--new-bd); }
+  .pill.done { background: var(--done); color: var(--done-ink); }
+  .pill.cancelled { background: var(--cancelled); color: var(--cancelled-ink); }
+  .pill.status { background: #f3f4f6; color: #374151; }
+  .pill.priority { background: #f3f4f6; color: #374151; }
+  .pill.priority[data-pri="Highest"], .pill.priority[data-pri="High"] { background: #fee2e2; color: var(--pri-high); }
+  .pill.priority[data-pri="Medium"] { background: #fef3c7; color: var(--pri-med); }
+  .pill.priority[data-pri="Low"], .pill.priority[data-pri="Lowest"] { background: #cffafe; color: var(--pri-low); }
+
+  .item { background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+          padding: 14px 16px; margin-bottom: 10px; display: grid;
+          grid-template-columns: 1fr auto; gap: 14px; align-items: start; }
+  .item.new { border-color: var(--new-bd); background: #fffbea; }
+  .item.cancelled-row { opacity: 0.72; }
+
+  .item .friendly { font-weight: 600; font-size: 15px; margin-bottom: 4px; }
+  .item .meta { color: var(--muted); font-size: 12px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .item .meta .orig { font-style: italic; }
+  .item a.jira-link {
+    color: var(--accent); text-decoration: none; font-weight: 600;
+    display: inline-flex; align-items: center; gap: 3px;
+    padding: 2px 8px; border: 1px solid var(--accent); border-radius: 999px;
+    font-size: 11px; line-height: 1;
+  }
+  .item a.jira-link:hover { background: var(--accent); color: white; }
+  .item a.jira-link svg { width: 11px; height: 11px; }
+
+  details.why { margin-top: 8px; background: var(--why-bg); border: 1px solid var(--why-bd); border-radius: 8px; padding: 0; }
+  details.why > summary {
+    cursor: pointer; list-style: none; padding: 8px 12px; font-size: 12px; font-weight: 600;
+    color: var(--accent-dark); display: flex; align-items: center; gap: 6px; user-select: none;
+  }
+  details.why > summary::-webkit-details-marker { display: none; }
+  details.why > summary::before { content: "▸"; display: inline-block; color: var(--muted); transition: transform 0.15s ease; font-size: 10px; }
+  details.why[open] > summary::before { transform: rotate(90deg); }
+  details.why > summary:hover { color: var(--accent); }
+  details.why .why-body { padding: 0 12px 10px 24px; font-size: 13px; color: #374151; line-height: 1.5; }
+  details.why.empty > summary { color: var(--muted); cursor: default; }
+  details.why.empty > summary::before { content: ""; }
+
+  .vote { display: flex; gap: 4px; align-items: center; padding-top: 2px; }
+  .vote label { font-size: 12px; color: var(--muted); margin-right: 6px; }
+  .vote button { width: 32px; height: 32px; border-radius: 6px; border: 1px solid var(--border);
+                 background: white; cursor: pointer; font-weight: 600; font-size: 13px; color: var(--ink); }
+  .vote button:hover { border-color: var(--accent); }
+  .vote button.selected { background: var(--accent); color: white; border-color: var(--accent); }
+  .vote button.skip { width: auto; padding: 0 10px; font-size: 11px; color: var(--muted); }
+  .vote button.skip.selected { background: #6b7280; color: white; border-color: #6b7280; }
+
+  .empty { padding: 14px; background: #fff; border: 1px dashed var(--border); border-radius: 10px;
+           color: var(--muted); font-size: 13px; text-align: center; }
+
+  .scale-key { background: #fff; border: 1px solid var(--border); border-radius: 8px;
+               padding: 10px 14px; font-size: 12px; color: var(--muted); margin-top: 10px;
+               display: flex; gap: 18px; flex-wrap: wrap; align-items: center; }
+  .scale-key strong { color: var(--ink); }
+
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+           background: #111827; color: white; padding: 10px 16px; border-radius: 8px;
+           font-size: 13px; opacity: 0; transition: opacity 0.2s; pointer-events: none; max-width: 90vw; }
+  .toast.show { opacity: 1; }
+  .toast.error { background: #991b1b; }
+
+  .results-link { color: var(--accent); font-size: 13px; text-decoration: none; }
+  .results-link:hover { text-decoration: underline; }
+
+  footer { text-align: center; color: var(--muted); font-size: 12px; padding: 24px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Commercial Voting Ballot — <span id="ballot-title">[2026] Commercial Requests</span></h1>
+  <div class="sub">
+    Epic <a id="epic-link" href="#" target="_blank" rel="noopener">…</a>
+    · <span id="item-count">…</span>
+    · refreshed <span id="refreshed-at">…</span>
+    · <a class="results-link" id="results-link" href="./results.html">View results →</a>
+  </div>
+  <div class="controls">
+    <input id="voter" type="text" placeholder="Your name (e.g., Kathryn Sanders)" autocomplete="name" />
+    <input id="voter-email" type="email" placeholder="Your @govspend.com email" autocomplete="email" />
+    <span class="progress" id="progress">0 of 0 voted</span>
+    <span class="last-submit" id="last-submit" hidden></span>
+    <button class="btn" id="submit">Submit ballot</button>
+    <button class="btn secondary" id="download">Download backup</button>
+    <button class="btn ghost" id="reset">Reset votes</button>
+  </div>
+  <div class="scale-key">
+    <strong>Voting scale (1–5):</strong>
+    <span><strong>1</strong> = Not important / nice-to-have</span>
+    <span><strong>2</strong> = Low priority</span>
+    <span><strong>3</strong> = Moderate priority</span>
+    <span><strong>4</strong> = High priority</span>
+    <span><strong>5</strong> = Critical / customers asking now</span>
+    <span><strong>Skip</strong> = No opinion / not relevant</span>
+  </div>
+</header>
+
+<main id="main">
+  <div class="empty" style="margin-top: 28px;">Loading ballot…</div>
+</main>
+
+<div class="toast" id="toast"></div>
+<footer>
+  Built from Jira epic GS-15687 · votes are saved server-side when you click Submit. Backup JSON download available.
+</footer>
+
+<svg style="display:none">
+  <symbol id="extlink" viewBox="0 0 16 16">
+    <path fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"
+          d="M9.5 2h4.5v4.5M14 2l-6.5 6.5M11 9.5V13a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h3.5"/>
+  </symbol>
+</svg>
+
+<script>
+const STORAGE_KEY = "gs15687_ballot_v3";
+const POLL_ID = "gs15687";
+
+let ITEMS = [];
+let META = { refreshed_at: "", epic: "GS-15687", epic_url: "", title: "" };
+let state = loadState();
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch (e) {}
+  return { voter: "", voter_email: "", votes: {} };
+}
+function saveState() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
+}
+
+async function init() {
+  // Load ballot items.
+  try {
+    const res = await fetch("./items.json", { cache: "no-store" });
+    if (!res.ok) throw new Error(`items.json: ${res.status}`);
+    const data = await res.json();
+    ITEMS = data.items || [];
+    META = data;
+    document.getElementById("ballot-title").textContent = data.title || "Ballot";
+    document.getElementById("epic-link").textContent = data.epic || "Epic";
+    document.getElementById("epic-link").href = data.epic_url || "#";
+    document.getElementById("refreshed-at").textContent = data.refreshed_at || "(unknown)";
+    document.getElementById("item-count").textContent = `${ITEMS.length} item${ITEMS.length === 1 ? "" : "s"}`;
+  } catch (e) {
+    document.getElementById("main").innerHTML = `<div class="empty" style="color:#991b1b;">Couldn't load ballot items: ${e.message}</div>`;
+    return;
+  }
+
+  // Restore voter fields.
+  document.getElementById("voter").value = state.voter || "";
+  document.getElementById("voter-email").value = state.voter_email || "";
+
+  // Check for existing server-side ballot.
+  if (state.voter_email) await loadExistingBallot(state.voter_email);
+
+  renderBuckets();
+  updateProgress();
+}
+
+function bucketFor(item) {
+  if (item.isNew) return "NEW";
+  if (item.sprint && item.sprint !== "Backlog") return "SPRINT";
+  return "BACKLOG";
+}
+
+function renderBuckets() {
+  const main = document.getElementById("main");
+  main.innerHTML = "";
+  const groups = {
+    "NEW":     { label: "New items (since last refresh)", sub: "Tickets added to the epic after the previous version of this ballot.", items: [] },
+    "SPRINT":  { label: "In a sprint",                    sub: "Items currently scheduled into a sprint, in sprint order.",          items: [] },
+    "BACKLOG": { label: "Backlog",                        sub: "Items in the epic but not yet scheduled.",                           items: [] },
+  };
+  ITEMS.forEach(it => groups[bucketFor(it)].items.push(it));
+  renderBucket(main, groups.NEW, true);
+  renderBucket(main, groups.SPRINT, false);
+  renderBucket(main, groups.BACKLOG, false);
+}
+
+function renderBucket(main, group, isNewBucket) {
+  const wrap = document.createElement("section");
+  wrap.className = "bucket";
+  const h2 = document.createElement("h2");
+  h2.textContent = group.label;
+  const count = document.createElement("span");
+  count.className = "pill " + (isNewBucket ? "new" : "sprint");
+  count.textContent = group.items.length + " item" + (group.items.length === 1 ? "" : "s");
+  h2.appendChild(count);
+  wrap.appendChild(h2);
+  const sub = document.createElement("div");
+  sub.className = "bucket-sub";
+  sub.textContent = group.sub;
+  wrap.appendChild(sub);
+  if (group.items.length === 0) {
+    const empty = document.createElement("div");
+    empty.className = "empty";
+    empty.textContent = isNewBucket
+      ? (META.baseline_exists ? "No new items since the last refresh." : "No new items yet — this section will populate when tickets are added to the epic.")
+      : "No items.";
+    wrap.appendChild(empty);
+  } else {
+    group.items.forEach(it => wrap.appendChild(renderItem(it)));
+  }
+  main.appendChild(wrap);
+}
+
+function renderItem(it) {
+  const row = document.createElement("div");
+  row.className = "item" + (it.isNew ? " new" : "") + (it.status === "Cancelled" ? " cancelled-row" : "");
+
+  const left = document.createElement("div");
+  const friendly = document.createElement("div");
+  friendly.className = "friendly";
+  friendly.textContent = it.friendly;
+  left.appendChild(friendly);
+
+  const meta = document.createElement("div");
+  meta.className = "meta";
+
+  const a = document.createElement("a");
+  a.href = it.url;
+  a.target = "_blank";
+  a.rel = "noopener";
+  a.className = "jira-link";
+  a.title = `Open ${it.key} in Jira`;
+  a.innerHTML = `Jira <svg aria-hidden="true"><use href="#extlink"/></svg>`;
+  meta.appendChild(a);
+
+  meta.appendChild(makePill(it.sprint === "Backlog" ? "backlog" : "sprint", it.sprint));
+  if (it.status === "Cancelled") meta.appendChild(makePill("cancelled", "Cancelled"));
+  else meta.appendChild(makePill("status", it.status));
+  const pri = document.createElement("span");
+  pri.className = "pill priority";
+  pri.dataset.pri = it.priority;
+  pri.textContent = "Priority: " + it.priority;
+  meta.appendChild(pri);
+
+  if (it.requestor) {
+    const r = document.createElement("span");
+    r.textContent = "Requestor: " + it.requestor;
+    meta.appendChild(r);
+  }
+
+  const orig = document.createElement("span");
+  orig.className = "orig";
+  orig.textContent = "Original: " + it.summary;
+  meta.appendChild(orig);
+
+  left.appendChild(meta);
+
+  const why = document.createElement("details");
+  why.className = "why" + (it.why ? "" : " empty");
+  const summary = document.createElement("summary");
+  summary.textContent = it.why ? "Why this matters" : "Why this matters — (no commercial summary available)";
+  why.appendChild(summary);
+  if (it.why) {
+    const body = document.createElement("div");
+    body.className = "why-body";
+    body.textContent = it.why;
+    why.appendChild(body);
+    why.addEventListener("click", e => e.stopPropagation());
+  } else {
+    why.addEventListener("click", e => { e.preventDefault(); e.stopPropagation(); });
+  }
+  left.appendChild(why);
+
+  const vote = document.createElement("div");
+  vote.className = "vote";
+  const lbl = document.createElement("label");
+  lbl.textContent = "Vote:";
+  vote.appendChild(lbl);
+  [1,2,3,4,5].forEach(n => {
+    const b = document.createElement("button");
+    b.textContent = n;
+    b.dataset.value = n;
+    b.title = scaleLabel(n);
+    b.addEventListener("click", () => castVote(it.key, n, row));
+    vote.appendChild(b);
+  });
+  const skip = document.createElement("button");
+  skip.className = "skip";
+  skip.textContent = "Skip";
+  skip.dataset.value = "skip";
+  skip.addEventListener("click", () => castVote(it.key, "skip", row));
+  vote.appendChild(skip);
+
+  row.appendChild(left);
+  row.appendChild(vote);
+
+  applyVoteUI(row, state.votes[it.key]);
+  return row;
+}
+
+function makePill(cls, text) {
+  const s = document.createElement("span");
+  s.className = "pill " + cls;
+  s.textContent = text;
+  return s;
+}
+function scaleLabel(n) {
+  return { 1:"Not important", 2:"Low priority", 3:"Moderate priority", 4:"High priority", 5:"Critical" }[n];
+}
+function castVote(key, value, row) {
+  state.votes[key] = value;
+  saveState();
+  applyVoteUI(row, value);
+  updateProgress();
+}
+function applyVoteUI(row, value) {
+  row.querySelectorAll(".vote button").forEach(b => {
+    b.classList.toggle("selected", String(b.dataset.value) === String(value));
+  });
+}
+function updateProgress() {
+  const total = ITEMS.length;
+  const voted = Object.keys(state.votes).length;
+  document.getElementById("progress").textContent = `${voted} of ${total} voted`;
+}
+
+async function loadExistingBallot(email) {
+  try {
+    const res = await fetch(`/api/voting/votecheck?pollId=${POLL_ID}&email=${encodeURIComponent(email)}`, { cache: "no-store" });
+    if (!res.ok) return;
+    const data = await res.json();
+    if (data.ballot && data.ballot.votes) {
+      // Server has a ballot for this email. Merge: if local localStorage is empty, hydrate from server.
+      if (Object.keys(state.votes).length === 0) {
+        state.votes = data.ballot.votes;
+        state.voter = data.ballot.voter || state.voter;
+        saveState();
+      }
+      const lastSub = document.getElementById("last-submit");
+      lastSub.hidden = false;
+      lastSub.textContent = `Last submitted ${new Date(data.ballot.voted_at).toLocaleString()}`;
+    }
+  } catch (e) { /* ignore */ }
+}
+
+// ----- Submit / Download / Reset -----
+
+async function submitBallot() {
+  const voter = document.getElementById("voter").value.trim();
+  const voter_email = document.getElementById("voter-email").value.trim().toLowerCase();
+  if (!voter) return showToast("Please enter your name.", true);
+  if (!voter_email || !voter_email.includes("@")) return showToast("Please enter a valid email.", true);
+
+  state.voter = voter;
+  state.voter_email = voter_email;
+  saveState();
+
+  const btn = document.getElementById("submit");
+  btn.disabled = true; btn.textContent = "Submitting…";
+  try {
+    const res = await fetch("/api/voting/vote", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        pollId: POLL_ID,
+        voter, voter_email,
+        item_count: ITEMS.length,
+        votes: state.votes,
+      }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+    const lastSub = document.getElementById("last-submit");
+    lastSub.hidden = false;
+    lastSub.textContent = `Submitted ${new Date(data.voted_at).toLocaleString()}`;
+    showToast("Ballot submitted. Re-submit any time to update your votes.");
+  } catch (e) {
+    showToast(`Couldn't submit: ${e.message}`, true);
+  } finally {
+    btn.disabled = false; btn.textContent = "Submit ballot";
+  }
+}
+
+function downloadBallot() {
+  const voter = document.getElementById("voter").value.trim();
+  const voter_email = document.getElementById("voter-email").value.trim();
+  if (!voter) return showToast("Please enter your name before downloading.", true);
+  state.voter = voter; state.voter_email = voter_email; saveState();
+  const payload = {
+    epic: META.epic, pollId: POLL_ID,
+    voter, voter_email,
+    voted_at: new Date().toISOString(),
+    ballot_refreshed_at: META.refreshed_at,
+    item_count: ITEMS.length,
+    votes: ITEMS.map(it => ({
+      key: it.key, friendly: it.friendly, sprint: it.sprint, requestor: it.requestor,
+      vote: state.votes[it.key] === undefined ? null : state.votes[it.key],
+    })),
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  const safe = (voter || "ballot").replace(/[^a-z0-9_-]+/gi, "_");
+  link.href = url;
+  link.download = `commercial-vote-${safe}-${new Date().toISOString().slice(0,10)}.json`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+  showToast("Backup downloaded.");
+}
+
+function resetVotes() {
+  if (!confirm("Clear all votes from this device? (This does not delete your submitted ballot on the server.)")) return;
+  state.votes = {};
+  saveState();
+  renderBuckets();
+  updateProgress();
+}
+
+function showToast(msg, isError) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.toggle("error", !!isError);
+  t.classList.add("show");
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(() => t.classList.remove("show"), 3500);
+}
+
+document.getElementById("submit").addEventListener("click", submitBallot);
+document.getElementById("download").addEventListener("click", downloadBallot);
+document.getElementById("reset").addEventListener("click", resetVotes);
+document.getElementById("voter").addEventListener("input", e => { state.voter = e.target.value; saveState(); });
+document.getElementById("voter-email").addEventListener("blur", async e => {
+  state.voter_email = e.target.value.trim().toLowerCase();
+  saveState();
+  if (state.voter_email) await loadExistingBallot(state.voter_email);
+});
+
+init();
+</script>
+</body>
+</html>
