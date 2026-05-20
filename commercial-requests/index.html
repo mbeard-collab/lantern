@@ -1,0 +1,430 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Commercial Voting Ballot — [2026] Commercial Requests (GS-15687)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  :root {
+    --bg:#f7f8fa; --card:#ffffff; --ink:#1f2933; --muted:#6b7280;
+    --accent:#2563eb; --accent-dark:#1e40af; --border:#e5e7eb;
+    --new:#fff7d6; --new-bd:#facc15;
+    --done:#ecfdf5; --done-ink:#065f46;
+    --cancelled:#fef2f2; --cancelled-ink:#991b1b;
+    --sprint:#eef2ff; --sprint-ink:#3730a3;
+    --backlog:#f1f5f9; --backlog-ink:#334155;
+    --pri-high:#dc2626; --pri-med:#d97706; --pri-low:#0891b2;
+    --why-bg:#f8fafc; --why-bd:#e2e8f0;
+  }
+  * { box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+         background: var(--bg); color: var(--ink); margin: 0; line-height: 1.45; }
+  header { background: white; border-bottom: 1px solid var(--border); padding: 20px 28px;
+           position: sticky; top:0; z-index: 10; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+  header h1 { margin: 0 0 6px; font-size: 20px; }
+  header .sub { color: var(--muted); font-size: 13px; }
+  .controls { display: flex; gap: 16px; align-items: center; margin-top: 12px; flex-wrap: wrap; }
+  .controls input[type="text"] {
+    padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 14px; width: 260px;
+  }
+  .controls .progress { color: var(--muted); font-size: 13px; }
+  .btn { background: var(--accent); color: white; border: 0; padding: 9px 16px; border-radius: 6px;
+         cursor: pointer; font-weight: 600; font-size: 14px; }
+  .btn:hover { background: var(--accent-dark); }
+  .btn.secondary { background: white; color: var(--accent); border: 1px solid var(--accent); }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  main { max-width: 1180px; margin: 0 auto; padding: 24px 28px 80px; }
+
+  .bucket { margin-top: 28px; }
+  .bucket h2 { font-size: 16px; margin: 0 0 4px; display: flex; align-items: center; gap: 10px; }
+  .bucket .bucket-sub { color: var(--muted); font-size: 12px; margin-bottom: 10px; }
+
+  .pill { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px;
+          font-weight: 600; letter-spacing: 0.02em; text-transform: uppercase; }
+  .pill.sprint { background: var(--sprint); color: var(--sprint-ink); }
+  .pill.backlog { background: var(--backlog); color: var(--backlog-ink); }
+  .pill.new { background: var(--new); color: #92400e; border: 1px solid var(--new-bd); }
+  .pill.done { background: var(--done); color: var(--done-ink); }
+  .pill.cancelled { background: var(--cancelled); color: var(--cancelled-ink); }
+  .pill.status { background: #f3f4f6; color: #374151; }
+  .pill.priority { background: #f3f4f6; color: #374151; }
+  .pill.priority[data-pri="Highest"], .pill.priority[data-pri="High"] { background: #fee2e2; color: var(--pri-high); }
+  .pill.priority[data-pri="Medium"] { background: #fef3c7; color: var(--pri-med); }
+  .pill.priority[data-pri="Low"], .pill.priority[data-pri="Lowest"] { background: #cffafe; color: var(--pri-low); }
+
+  .item { background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+          padding: 14px 16px; margin-bottom: 10px; display: grid;
+          grid-template-columns: 1fr auto; gap: 14px; align-items: start; }
+  .item.new { border-color: var(--new-bd); background: #fffbea; }
+  .item.cancelled-row { opacity: 0.72; }
+
+  .item .friendly { font-weight: 600; font-size: 15px; margin-bottom: 4px; }
+  .item .meta { color: var(--muted); font-size: 12px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .item .meta .orig { font-style: italic; }
+  .item a.jira-link {
+    color: var(--accent); text-decoration: none; font-weight: 600;
+    display: inline-flex; align-items: center; gap: 3px;
+    padding: 2px 8px; border: 1px solid var(--accent); border-radius: 999px;
+    font-size: 11px; line-height: 1;
+  }
+  .item a.jira-link:hover { background: var(--accent); color: white; }
+  .item a.jira-link svg { width: 11px; height: 11px; }
+
+  /* "Why this matters" disclosure */
+  details.why {
+    margin-top: 8px;
+    background: var(--why-bg);
+    border: 1px solid var(--why-bd);
+    border-radius: 8px;
+    padding: 0;
+  }
+  details.why > summary {
+    cursor: pointer;
+    list-style: none;
+    padding: 8px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--accent-dark);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    user-select: none;
+  }
+  details.why > summary::-webkit-details-marker { display: none; }
+  details.why > summary::before {
+    content: "▸";
+    display: inline-block;
+    color: var(--muted);
+    transition: transform 0.15s ease;
+    font-size: 10px;
+  }
+  details.why[open] > summary::before { transform: rotate(90deg); }
+  details.why > summary:hover { color: var(--accent); }
+  details.why .why-body {
+    padding: 0 12px 10px 24px;
+    font-size: 13px;
+    color: #374151;
+    line-height: 1.5;
+  }
+  details.why.empty > summary { color: var(--muted); cursor: default; }
+  details.why.empty > summary::before { content: ""; }
+
+  .vote { display: flex; gap: 4px; align-items: center; padding-top: 2px; }
+  .vote label { font-size: 12px; color: var(--muted); margin-right: 6px; }
+  .vote button { width: 32px; height: 32px; border-radius: 6px; border: 1px solid var(--border);
+                 background: white; cursor: pointer; font-weight: 600; font-size: 13px; color: var(--ink); }
+  .vote button:hover { border-color: var(--accent); }
+  .vote button.selected { background: var(--accent); color: white; border-color: var(--accent); }
+  .vote button.skip { width: auto; padding: 0 10px; font-size: 11px; color: var(--muted); }
+  .vote button.skip.selected { background: #6b7280; color: white; border-color: #6b7280; }
+
+  .empty { padding: 14px; background: #fff; border: 1px dashed var(--border); border-radius: 10px;
+           color: var(--muted); font-size: 13px; text-align: center; }
+
+  .scale-key { background: #fff; border: 1px solid var(--border); border-radius: 8px;
+               padding: 10px 14px; font-size: 12px; color: var(--muted); margin-top: 10px;
+               display: flex; gap: 18px; flex-wrap: wrap; align-items: center; }
+  .scale-key strong { color: var(--ink); }
+
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+           background: #111827; color: white; padding: 10px 16px; border-radius: 8px;
+           font-size: 13px; opacity: 0; transition: opacity 0.2s; pointer-events: none; }
+  .toast.show { opacity: 1; }
+
+  footer { text-align: center; color: var(--muted); font-size: 12px; padding: 24px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Commercial Voting Ballot — [2026] Commercial Requests</h1>
+  <div class="sub">Epic <a href="https://govspend.atlassian.net/browse/GS-15687" target="_blank" rel="noopener">GS-15687</a> · 58 items · refreshed 2026-05-20 18:41 UTC</div>
+  <div class="controls">
+    <input id="voter" type="text" placeholder="Your name (e.g., Kathryn Sanders)" autocomplete="name" />
+    <span class="progress" id="progress">0 of 58 voted</span>
+    <button class="btn" id="download">Download my ballot</button>
+    <button class="btn secondary" id="reset">Reset votes</button>
+  </div>
+  <div class="scale-key">
+    <strong>Voting scale (1–5):</strong>
+    <span><strong>1</strong> = Not important / nice-to-have</span>
+    <span><strong>2</strong> = Low priority</span>
+    <span><strong>3</strong> = Moderate priority</span>
+    <span><strong>4</strong> = High priority</span>
+    <span><strong>5</strong> = Critical / customers asking now</span>
+    <span><strong>Skip</strong> = No opinion / not relevant</span>
+  </div>
+</header>
+
+<main id="main"></main>
+
+<div class="toast" id="toast"></div>
+<footer>
+  Built from Jira epic GS-15687 — vote, download your ballot, send the JSON file to the product team for aggregation.
+</footer>
+
+<!-- Reusable open-in-new-tab SVG icon -->
+<svg style="display:none">
+  <symbol id="extlink" viewBox="0 0 16 16">
+    <path fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"
+          d="M9.5 2h4.5v4.5M14 2l-6.5 6.5M11 9.5V13a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h3.5"/>
+  </symbol>
+</svg>
+
+<script>
+const ITEMS = [{"key": "GS-14870", "friendly": "Improve visibility of Saved Search names", "summary": "WBA - Improve Visibility of Saved Search Names", "why": "Long Saved Search names are currently truncated with no way to see the full name. A tooltip makes them readable and prevents users from picking the wrong one.", "sprint": "WebApp - Sprint 117", "sprintState": "future", "status": "To Do", "statusCategory": "To Do", "priority": "Medium", "requestor": "Andrew Gordon", "url": "https://govspend.atlassian.net/browse/GS-14870", "isNew": false}, {"key": "GS-15407", "friendly": "Standardize export behavior (sales/success request)", "summary": "Standardize Export Behavior", "why": "Sales/Success-raised: exports today don't match what users see on screen (wrong column names, order, or hidden columns included). Inconsistency creates trust issues and support tickets.", "sprint": "WebApp - Sprint 117", "sprintState": "future", "status": "To Do", "statusCategory": "To Do", "priority": "High", "requestor": "Jose Delgado/Baxter Knight/Tiffany Grover", "url": "https://govspend.atlassian.net/browse/GS-15407", "isNew": false}, {"key": "GS-15442", "friendly": "Link Agency records when pushing to HubSpot", "summary": "[WBA] - Implement Agency Record Linking for HubSpot Push", "why": "Mirrors what we built for Salesforce. Lets HubSpot customers correctly associate GovSpend pushes to existing Company records, protecting data integrity in their CRM.", "sprint": "WebApp - Sprint 117", "sprintState": "future", "status": "To Do", "statusCategory": "To Do", "priority": "Medium", "requestor": "Luke DeMichiel", "url": "https://govspend.atlassian.net/browse/GS-15442", "isNew": false}, {"key": "GS-15504", "friendly": "Show 'Similar Bids' on the Bid Details page", "summary": "WBA - Display Similar Bids on Bid Details Page", "why": "Surfaces semantically related bids inside Bid Details so internal users can find adjacent opportunities without leaving the record. Key building block for our AI-driven discovery story.", "sprint": "WebApp - Sprint 117", "sprintState": "future", "status": "To Do", "statusCategory": "To Do", "priority": "High", "requestor": "Internal Feedback", "url": "https://govspend.atlassian.net/browse/GS-15504", "isNew": false}, {"key": "GS-15763", "friendly": "Normalize Salesforce CRM IDs to the 15-character format", "summary": "Normalize Salesforce CRM IDs to 15-character format", "why": "Prevents duplicate organizations when Salesforce sends 18-character vs 15-character CRM IDs. Protects data integrity in trials, org creation, and CRM-driven flows.", "sprint": "WebApp - Sprint 117", "sprintState": "future", "status": "Development", "statusCategory": "In Progress", "priority": "Medium", "requestor": "Ethan Hardin", "url": "https://govspend.atlassian.net/browse/GS-15763", "isNew": false}, {"key": "GS-15834", "friendly": "Restore 'Add to CRM' functionality", "summary": "WBA - Loss of \"Add to CRM\" Functionality", "why": "Restores a CRM push action that was lost. Without it customers can't move records to their CRM directly from the platform.", "sprint": "WebApp - Sprint 117", "sprintState": "future", "status": "Cancelled", "statusCategory": "Done", "priority": "High", "requestor": "Daniel Johnston", "url": "https://govspend.atlassian.net/browse/GS-15834", "isNew": false}, {"key": "GS-13605", "friendly": "Investigate the 'humanScore' user-engagement signal", "summary": "Investigate the humanScore user value", "why": "Several customers have complained about constant reCAPTCHA prompts, which damages perceived quality of the product. We need to understand the root cause before we can fix it.", "sprint": "WebApp - Sprint 118", "sprintState": "future", "status": "To Do", "statusCategory": "To Do", "priority": "Highest", "requestor": "Nicolas Olivares", "url": "https://govspend.atlassian.net/browse/GS-13605", "isNew": false}, {"key": "GS-14065", "friendly": "Fix filter list / checkboxes shifting on selection", "summary": "Filter List/Checkboxes Shift on Selection", "why": "Filters reorder/jump under the cursor while users are selecting. A frustrating, customer-reported bug that breaks the multi-select flow.", "sprint": "WebApp - Sprint 118", "sprintState": "future", "status": "To Do", "statusCategory": "To Do", "priority": "Low", "requestor": "Michelle Vasquez", "url": "https://govspend.atlassian.net/browse/GS-14065", "isNew": false}, {"key": "GS-15505", "friendly": "Link Meeting discussions inside Bid Details", "summary": "Link Meeting Discussions within Bid Details Page", "why": "Connects meeting transcripts to the bid records they relate to, giving customers deeper context on agency needs before they engage.", "sprint": "WebApp - Sprint 118", "sprintState": "future", "status": "To Do", "statusCategory": "To Do", "priority": "Medium", "requestor": "Internal Feedback", "url": "https://govspend.atlassian.net/browse/GS-15505", "isNew": false}, {"key": "GS-15611", "friendly": "Fix inconsistent keyword highlighting", "summary": "Inconsistent Highlighting", "why": "Search terms aren't highlighted in some prod cases. A customer-noticed bug that undermines the perceived accuracy of our search and AI products.", "sprint": "WebApp - Sprint 118", "sprintState": "future", "status": "To Do", "statusCategory": "To Do", "priority": "Medium", "requestor": "Michelle Vasquez", "url": "https://govspend.atlassian.net/browse/GS-15611", "isNew": false}, {"key": "GS-15651", "friendly": "Persist the user's expanded keyword view", "summary": "Persist Expanded Keyword View", "why": "Users actively reference keywords while applying filters. Today the list collapses on every interaction, forcing repeated clicks.", "sprint": "WebApp - Sprint 118", "sprintState": "future", "status": "To Do", "statusCategory": "To Do", "priority": "Low", "requestor": "Michelle Vasquez", "url": "https://govspend.atlassian.net/browse/GS-15651", "isNew": false}, {"key": "GS-12631", "friendly": "Connect a saved search directly from the Agency Search module", "summary": "MAI - Enable Connected saved search from Agency Search Module", "why": "Unlocks a major workflow: customers can define a 'territory' once in Agency Search and reuse it as a connected filter across Bids, Spending, Meetings, and more.", "sprint": "WebApp - Sprint 119", "sprintState": "future", "status": "To Do", "statusCategory": "To Do", "priority": "Medium", "requestor": "Kathryn Sanders", "url": "https://govspend.atlassian.net/browse/GS-12631", "isNew": false}, {"key": "GS-13527", "friendly": "Schedule trial-invite emails based on trial start date", "summary": "Add Ability to Schedule Trial Invite Emails Based on Trial Start Date", "why": "Users get invites before their trial starts, log in to a limited experience, and lose confidence. Aligning send time with trial start avoids that bad first impression.", "sprint": "WebApp - Sprint 119", "sprintState": "future", "status": "To Do", "statusCategory": "To Do", "priority": "Medium", "requestor": "Andrew Gordon/SE's", "url": "https://govspend.atlassian.net/browse/GS-13527", "isNew": false}, {"key": "GS-15107", "friendly": "Let users expand the AI side panel on Bids & Meetings", "summary": "Allow users to expand the AI side panel on bids and meetings", "why": "Customers say long AI responses are hard to read in the narrow side panel. An expand toggle dramatically improves readability of the AI output customers are paying for.", "sprint": "WebApp - Sprint 119", "sprintState": "future", "status": "To Do", "statusCategory": "To Do", "priority": "Low", "requestor": "Andrew Gordon", "url": "https://govspend.atlassian.net/browse/GS-15107", "isNew": false}, {"key": "GS-15553", "friendly": "Tasks: improved counts and layout", "summary": "[WBA] Update UI/UX for Tasks", "why": "Polish for the Tasks view. Fixes count display in the header panel and prevents long descriptions from hiding the task table beneath them.", "sprint": "WebApp - Sprint 119", "sprintState": "future", "status": "To Do", "statusCategory": "To Do", "priority": "Medium", "requestor": "Identified Internally ", "url": "https://govspend.atlassian.net/browse/GS-15553", "isNew": true}, {"key": "GS-15704", "friendly": "Export Bid Overviews to PDF", "summary": "Export Bid Overviews to PDF", "why": "Lets customers download a clean PDF of a bid and its AI overview to share with their team or clients. A key share-out moment that builds champions inside customer orgs.", "sprint": "WebApp - Sprint 119", "sprintState": "future", "status": "To Do", "statusCategory": "To Do", "priority": "Medium", "requestor": "Daniel Johnston", "url": "https://govspend.atlassian.net/browse/GS-15704", "isNew": false}, {"key": "GS-15761", "friendly": "Bulk-select saved searches across Dashboard tabs", "summary": "WBA - Bulk Search Selection for Dashboard Tabs", "why": "Account managers building dashboards add searches one at a time today. Bulk selection turns a 20-click chore into a single action.", "sprint": "WebApp - Sprint 119", "sprintState": "future", "status": "To Do", "statusCategory": "To Do", "priority": "Medium", "requestor": "KC Pagulayan", "url": "https://govspend.atlassian.net/browse/GS-15761", "isNew": false}, {"key": "GS-15613", "friendly": "Suggest keywords during Agency search", "summary": "WBA - Keyword Suggestions for Agency Search", "why": "Predictive type-ahead while searching for agencies. A fast way to reach the right record without typing the full name.", "sprint": "WebApp - Sprint 120", "sprintState": "future", "status": "To Do", "statusCategory": "To Do", "priority": "Medium", "requestor": "Trip Colden", "url": "https://govspend.atlassian.net/browse/GS-15613", "isNew": false}, {"key": "GS-15855", "friendly": "Multi-file support for the Iris integration", "summary": "WBA - Multi-File Support for Iris Integration", "why": "Today every attachment in a bid creates a separate Iris project, cluttering customer accounts. Bundling them into one Multi-File Project Folder keeps Iris tidy and matches how customers think about a bid.", "sprint": "WebApp - Sprint 120", "sprintState": "future", "status": "To Do", "statusCategory": "To Do", "priority": "Medium", "requestor": "Daniel Johnston", "url": "https://govspend.atlassian.net/browse/GS-15855", "isNew": false}, {"key": "GS-10002", "friendly": "Let users regenerate their account verification link", "summary": "Allow users to generate a new verification link", "why": "Today users have to contact Support or their RM for a new verification link. Self-service speeds onboarding and reduces support load.", "sprint": "Backlog", "sprintState": "backlog", "status": "To Do", "statusCategory": "To Do", "priority": "Medium", "requestor": "Anne Halstead", "url": "https://govspend.atlassian.net/browse/GS-10002", "isNew": false}, {"key": "GS-10236", "friendly": "Improve the search results pagination experience", "summary": "Search Results pagination experience", "why": "Customer-raised issue (Government Scientific Source): users land at the bottom of the next page instead of the top, breaking flow when reviewing results.", "sprint": "Backlog", "sprintState": "backlog", "status": "To Do", "statusCategory": "To Do", "priority": "Medium", "requestor": "Deepak Bhat", "url": "https://govspend.atlassian.net/browse/GS-10236", "isNew": false}, {"key": "GS-10285", "friendly": "Show monthly & bulk export limits on the org subscription tab", "summary": "Display monthly exports and bulk exports on the subscription tab of org detail page", "why": "RM-requested. Gives RMs and customers visibility into export usage versus entitlement directly on the org detail page.", "sprint": "Backlog", "sprintState": "backlog", "status": "To Do", "statusCategory": "To Do", "priority": "Medium", "requestor": "Kathryn Sanders", "url": "https://govspend.atlassian.net/browse/GS-10285", "isNew": false}, {"key": "GS-11218", "friendly": "Guard-rails preventing internal users from joining customer orgs", "summary": "Create rail-guards to prevent internal users from subscribing themselves or others to external orgs", "why": "Closes a security/data-integrity gap \u2014 internal users can accidentally subscribe themselves (or others) to external orgs' searches, creating support tickets and trust issues.", "sprint": "Backlog", "sprintState": "backlog", "status": "To Do", "statusCategory": "To Do", "priority": "Highest", "requestor": "Nicolas Olivares", "url": "https://govspend.atlassian.net/browse/GS-11218", "isNew": false}, {"key": "GS-11702", "friendly": "Meeting Intelligence AI: 'Summarize meeting based on my keywords' prompt", "summary": "GAI - Add prompt to Meeting Intelligence AI Drawer: Summarize meeting based on my keywords", "why": "One-click summary tied to a user's own keywords speeds time-to-insight in Meeting Intelligence and reinforces the value of the AI module.", "sprint": "Backlog", "sprintState": "backlog", "status": "To Do", "statusCategory": "To Do", "priority": "Medium", "requestor": "Kathryn Sanders", "url": "https://govspend.atlassian.net/browse/GS-11702", "isNew": false}, {"key": "GS-12628", "friendly": "Show month names (not numbers) for Agency Fiscal Year fields", "summary": "MAI - Update the Agency Fiscal Year Start/end Month fields to show actual month values and not numbers", "why": "Today users see '10' instead of 'October'. A small UX polish that makes Agency fiscal year fields immediately understandable.", "sprint": "Backlog", "sprintState": "backlog", "status": "To Do", "statusCategory": "To Do", "priority": "Medium", "requestor": "Kathryn Sanders", "url": "https://govspend.atlassian.net/browse/GS-12628", "isNew": false}, {"key": "GS-13481", "friendly": "Enable export from Lists", "summary": "Enable Export Functionality for Lists ", "why": "Customers and internal teams need Lists data outside the product (pipeline reviews, sharing). This unblocks that workflow.", "sprint": "Backlog", "sprintState": "backlog", "status": "To Do", "statusCategory": "To Do", "priority": "Medium", "requestor": "Daniel Johnston", "url": "https://govspend.atlassian.net/browse/GS-13481", "isNew": false}, {"key": "GS-13516", "friendly": "Standardize export behavior across all modules", "summary": "Standardize and Streamline Export Functionality Across Modules", "why": "Customers complain that exports look different from what's on screen. Standardizing builds trust and removes a recurring support issue.", "sprint": "Backlog", "sprintState": "backlog", "status": "To Do", "statusCategory": "To Do", "priority": "Medium", "requestor": "Daniel Johnston", "url": "https://govspend.atlassian.net/browse/GS-13516", "isNew": false}, {"key": "GS-13519", "friendly": "Auto-deactivate SSO users when removed from customer AD group", "summary": "Auto Decommission SSO Users Removed from Customer AD group", "why": "Customers must manually deactivate users removed from their AD today. Automating reduces admin burden, security risk, and license waste.", "sprint": "Backlog", "sprintState": "backlog", "status": "To Do", "statusCategory": "To Do", "priority": "Medium", "requestor": "Daniel Johnston", "url": "https://govspend.atlassian.net/browse/GS-13519", "isNew": false}, {"key": "GS-13523", "friendly": "Central tag-management view", "summary": "Centralized View and Management for Tags", "why": "Users have asked us to bring back a single place to view and manage tags. Improves transparency and saves the back-and-forth of hunting tags across the product.", "sprint": "Backlog", "sprintState": "backlog", "status": "To Do", "statusCategory": "To Do", "priority": "Medium", "requestor": "Daniel Johnston", "url": "https://govspend.atlassian.net/browse/GS-13523", "isNew": false}, {"key": "GS-13525", "friendly": "Expand Lists to support Contacts, Meetings, and Federal data", "summary": "Expand Lists to Include Contact, Meeting and Federal Data", "why": "Today Lists are missing contact details and major data types (Meetings, Federal). Limits how customers can use Lists for outreach and pipeline tracking.", "sprint": "Backlog", "sprintState": "backlog", "status": "To Do", "statusCategory": "To Do", "priority": "Medium", "requestor": "Daniel Johnston", "url": "https://govspend.atlassian.net/browse/GS-13525", "isNew": false}, {"key": "GS-13526", "friendly": "In-product nudge so trial users can find Saved Searches", "summary": "Add Banner or In-Product Message to Help Trial Users Locate Saved Searches", "why": "Trial users struggle to find Saved Searches, which hurts engagement during the trial window. A targeted in-product message improves conversion.", "sprint": "Backlog", "sprintState": "backlog", "status": "To Do", "statusCategory": "To Do", "priority": "Medium", "requestor": "Daniel Johnston", "url": "https://govspend.atlassian.net/browse/GS-13526", "isNew": false}, {"key": "GS-13531", "friendly": "Saved Searches: bulk tagging and folder organization", "summary": "Enhance Saved Searches with Bulk Tagging and Folder Organization Capabilities", "why": "Customers managing 20+ Saved Searches tag users one at a time today. Bulk tagging and folders save hours of admin and improve adoption.", "sprint": "Backlog", "sprintState": "backlog", "status": "To Do", "statusCategory": "To Do", "priority": "Medium", "requestor": "Daniel Johnston", "url": "https://govspend.atlassian.net/browse/GS-13531", "isNew": false}, {"key": "GS-13546", "friendly": "Sort the Agency 'State' filter alphabetically", "summary": "Add Alphabetical Sorting Option for Agency State Filter", "why": "Quick UX win. Today the filter is sorted by PO count, but users often know the state they want and need alphabetical order to find it fast.", "sprint": "Backlog", "sprintState": "backlog", "status": "To Do", "statusCategory": "To Do", "priority": "Medium", "requestor": "Daniel Johnston", "url": "https://govspend.atlassian.net/browse/GS-13546", "isNew": false}, {"key": "GS-13556", "friendly": "AI Notebook: prompt user to save search criteria", "summary": "Prompt Users to Save Search Criteria When Creating or Updating AI Notebook Projects", "why": "Lets users keep the criteria behind their AI Notebook project so they can later set alerts, push to CRM, or do follow-up analysis. Closes a workflow gap.", "sprint": "Backlog", "sprintState": "backlog", "status": "To Do", "statusCategory": "To Do", "priority": "Medium", "requestor": "Daniel Johnston", "url": "https://govspend.atlassian.net/browse/GS-13556", "isNew": false}, {"key": "GS-13604", "friendly": "AI Panel: support reading file types beyond PDF", "summary": "Expand AI Panel File Reading Support Beyond PDFs", "why": "Customers regularly need to feed Excel, ZIP, and other formats into the AI panel. Limiting it to PDF caps the value of the AI module in their day-to-day.", "sprint": "Backlog", "sprintState": "backlog", "status": "To Do", "statusCategory": "To Do", "priority": "Medium", "requestor": "Daniel Johnston", "url": "https://govspend.atlassian.net/browse/GS-13604", "isNew": false}, {"key": "GS-13614", "friendly": "Contact upload, matching, and AI outreach workflow", "summary": "Contact Upload, Matching, and AI Outreach Workflow", "why": "Shifts the customer experience from raw data delivery to a guided 'who to call and what to say' workflow. A meaningful differentiator for sales-driven customers.", "sprint": "Backlog", "sprintState": "backlog", "status": "To Do", "statusCategory": "To Do", "priority": "Medium", "requestor": "Daniel Johnston", "url": "https://govspend.atlassian.net/browse/GS-13614", "isNew": false}, {"key": "GS-13647", "friendly": "Add aggregated spend fields to the Agencies dataset (CRM)", "summary": "Add Aggregated Spend Fields to Agencies Dataset for CRM Integration", "why": "Customers integrating to CRM want summary spend per agency, not just transactions. Adding these fields unlocks the integration's value for executive reporting.", "sprint": "Backlog", "sprintState": "backlog", "status": "To Do", "statusCategory": "To Do", "priority": "Medium", "requestor": "Daniel Johnston", "url": "https://govspend.atlassian.net/browse/GS-13647", "isNew": false}, {"key": "GS-13757", "friendly": "Show Fiscal Year Start Date on the new Agency landing page", "summary": "Add Fiscal Year Start Date to New Agency Landing Page", "why": "Analysts need fiscal year context to interpret spend patterns. Keeping this field on the new Agency landing page preserves accuracy.", "sprint": "Backlog", "sprintState": "backlog", "status": "To Do", "statusCategory": "To Do", "priority": "Medium", "requestor": "Daniel Johnston", "url": "https://govspend.atlassian.net/browse/GS-13757", "isNew": false}, {"key": "GS-13823", "friendly": "Include detail links in Federal Spending exports", "summary": "[WBA] [Follow-Up] - Include Detail Links in Federal Exports", "why": "Follow-up to an existing customer-driven change \u2014 federal exports currently lack the deep-link URLs customers use to jump back into the platform.", "sprint": "Backlog", "sprintState": "backlog", "status": "To Do", "statusCategory": "To Do", "priority": "Medium", "requestor": "Henry Thornley", "url": "https://govspend.atlassian.net/browse/GS-13823", "isNew": false}, {"key": "GS-14066", "friendly": "Save user sort preferences in Lists", "summary": "Save Sort Preferences in Lists", "why": "Users currently re-sort Lists every time they log in. Persisting the preference is a small change with daily value.", "sprint": "Backlog", "sprintState": "backlog", "status": "To Do", "statusCategory": "To Do", "priority": "High", "requestor": "Daniel Johnston", "url": "https://govspend.atlassian.net/browse/GS-14066", "isNew": false}, {"key": "GS-14279", "friendly": "Meeting Intelligence: proximity search ('within X seconds')", "summary": "Proximity Search (\"Within\" X Seconds) for Meeting Intelligence", "why": "Heavily requested capability mirroring Clover AI. Lets users find moments where two terms are discussed together (e.g., 'drone' near 'police') instead of all meetings that just mention both.", "sprint": "Backlog", "sprintState": "backlog", "status": "To Do", "statusCategory": "To Do", "priority": "High", "requestor": "Daniel Johnston", "url": "https://govspend.atlassian.net/browse/GS-14279", "isNew": false}, {"key": "GS-14334", "friendly": "Categorize Bids & RFPs by sales stage", "summary": "Categorize Bids & RFPs by Stage", "why": "Most competitors offer Pre-RFP / RFP / Awarded stages. Without this, customers can't prioritize outreach by where a deal sits in the procurement lifecycle.", "sprint": "Backlog", "sprintState": "backlog", "status": "To Do", "statusCategory": "To Do", "priority": "Medium", "requestor": "Daniel Johnston", "url": "https://govspend.atlassian.net/browse/GS-14334", "isNew": false}, {"key": "GS-14364", "friendly": "Add 'Contract URL' to default columns", "summary": "Add \"Contract URL\" to Default Columns", "why": "Customers add this column every session today. Defaulting it on (and persisting) saves clicks and matches the most common use case.", "sprint": "Backlog", "sprintState": "backlog", "status": "To Do", "statusCategory": "To Do", "priority": "High", "requestor": "Daniel Johnston", "url": "https://govspend.atlassian.net/browse/GS-14364", "isNew": false}, {"key": "GS-14365", "friendly": "Default the Heat Map to 'PO Issued Date'", "summary": "Set \"PO Issued Date\" as Default for Heat Map", "why": "The most relevant date type for spending analysis. Making it the default removes a step before users see meaningful data.", "sprint": "Backlog", "sprintState": "backlog", "status": "To Do", "statusCategory": "To Do", "priority": "Medium", "requestor": "Daniel Johnston", "url": "https://govspend.atlassian.net/browse/GS-14365", "isNew": false}, {"key": "GS-14368", "friendly": "Notify users when an export is ready", "summary": "Add Notification Upon Exporting", "why": "Users currently click Export and don't know where their file went. A clear notification points them to the Exports tab and prevents repeated support tickets.", "sprint": "Backlog", "sprintState": "backlog", "status": "To Do", "statusCategory": "To Do", "priority": "Medium", "requestor": "Daniel Johnston", "url": "https://govspend.atlassian.net/browse/GS-14368", "isNew": false}, {"key": "GS-14370", "friendly": "Show help options on empty search results", "summary": "Add Help Options to Empty Search Results", "why": "Today zero-result searches in Contracts > Agency leave users assuming the data doesn't exist. A guided next step (contact Support / RM) keeps them engaged.", "sprint": "Backlog", "sprintState": "backlog", "status": "To Do", "statusCategory": "To Do", "priority": "Medium", "requestor": "Daniel Johnston", "url": "https://govspend.atlassian.net/browse/GS-14370", "isNew": false}, {"key": "GS-14371", "friendly": "Require details on the 'Invite User' form", "summary": "Require Details on \"Invite User\" Form", "why": "Today admins can invite users without First Name, Last Name, or Years of Experience. Leads to incomplete profiles and inaccurate usage reporting.", "sprint": "Backlog", "sprintState": "backlog", "status": "To Do", "statusCategory": "To Do", "priority": "Medium", "requestor": "Daniel Johnston", "url": "https://govspend.atlassian.net/browse/GS-14371", "isNew": false}, {"key": "GS-14372", "friendly": "Add 'Bid Number' as a default column", "summary": "Add \"Bid Number\" as Default Column", "why": "Customers reference bid records by number every day. Defaulting it on the grid removes friction from a daily workflow.", "sprint": "Backlog", "sprintState": "backlog", "status": "To Do", "statusCategory": "To Do", "priority": "Medium", "requestor": "Daniel Johnston", "url": "https://govspend.atlassian.net/browse/GS-14372", "isNew": false}, {"key": "GS-14373", "friendly": "Add 'PO Number' as a default column", "summary": "Add \"PO Number\" as Default Column", "why": "Customers reference POs by number every day. Defaulting it on the grid removes friction from a daily workflow.", "sprint": "Backlog", "sprintState": "backlog", "status": "To Do", "statusCategory": "To Do", "priority": "Medium", "requestor": "Daniel Johnston", "url": "https://govspend.atlassian.net/browse/GS-14373", "isNew": false}, {"key": "GS-14453", "friendly": "Add Agency Fiscal Year fields to Agency & Spending modules", "summary": "Add \"Agency Fiscal Year\" Fields to Agency & Spending Modules", "why": "Surfaces fiscal year as a column and filter in Agency and Spending. Lets users align spend with the correct reporting cycle without clicking into each profile.", "sprint": "Backlog", "sprintState": "backlog", "status": "To Do", "statusCategory": "To Do", "priority": "Medium", "requestor": "Daniel Johnston", "url": "https://govspend.atlassian.net/browse/GS-14453", "isNew": false}, {"key": "GS-14501", "friendly": "AI Notebook: enable by default for all premium users", "summary": "[AI Notebook] Enable Access by Default for All Premium Users", "why": "AI Notebook is now stable enough to ship to all Premium users. Flipping the default expands AI adoption across our highest-revenue segment.", "sprint": "Backlog", "sprintState": "backlog", "status": "To Do", "statusCategory": "To Do", "priority": "Medium", "requestor": "Daniel Johnston", "url": "https://govspend.atlassian.net/browse/GS-14501", "isNew": false}, {"key": "GS-14779", "friendly": "Add Agency ID to default PO Contacts export", "summary": "Add Agency ID to Default PO Contacts Export", "why": "Without Agency ID in the export, customers can't reliably map PO contacts back to the right agency in their CRM or outreach systems.", "sprint": "Backlog", "sprintState": "backlog", "status": "To Do", "statusCategory": "To Do", "priority": "Medium", "requestor": "Daniel Johnston", "url": "https://govspend.atlassian.net/browse/GS-14779", "isNew": false}, {"key": "GS-15770", "friendly": "Modernize the Saved Search alert-email design", "summary": "Update Saved Search Alert Emails to use Opportunity Alert Email Design & Format", "why": "Brings Saved Search alert emails in line with the modern Opportunity alert design. Improves engagement with one of the most common touchpoints customers have with the product.", "sprint": "Backlog", "sprintState": "backlog", "status": "To Do", "statusCategory": "To Do", "priority": "Medium", "requestor": "Paige Mockler", "url": "https://govspend.atlassian.net/browse/GS-15770", "isNew": false}, {"key": "GS-15826", "friendly": "Engineering: 'Similar Bids' retrieval logic", "summary": "[WBA] [ENG] - Similar Bids Retrieval Logic", "why": "Backend foundation for the Similar Bids feature on Bid Details. Required before customers see the user-facing experience.", "sprint": "Backlog", "sprintState": "backlog", "status": "Development", "statusCategory": "In Progress", "priority": "High", "requestor": "Internal Feedback", "url": "https://govspend.atlassian.net/browse/GS-15826", "isNew": false}, {"key": "GS-5645", "friendly": "Show matching keywords in saved-search alert emails (R&D bids)", "summary": "Add Keyword Info to Alert Emails: R&D", "why": "Lets customers see which alerts matter most at a glance, instead of clicking through to figure out which keywords triggered each alert.", "sprint": "Backlog", "sprintState": "backlog", "status": "To Do", "statusCategory": "To Do", "priority": "Medium", "requestor": "Kathryn Sanders", "url": "https://govspend.atlassian.net/browse/GS-5645", "isNew": false}, {"key": "GS-7724", "friendly": "Add a population column to Agency Stats in Spending", "summary": "Add Population Count as a column on the Agency Stats tab in Spending", "why": "Reps use population data to qualify deals; exposing it as a sortable column saves clicks and helps target the right opportunities.", "sprint": "Backlog", "sprintState": "backlog", "status": "To Do", "statusCategory": "To Do", "priority": "Medium", "requestor": "Kathryn Sanders", "url": "https://govspend.atlassian.net/browse/GS-7724", "isNew": false}, {"key": "GS-9060", "friendly": "Refresh the GovSpend invitation email design & content", "summary": "Updates to GovSpend Invitation Email", "why": "First impression for every new user. Modernizing the subject, copy, and visuals improves welcome experience and onboarding engagement.", "sprint": "Backlog", "sprintState": "backlog", "status": "To Do", "statusCategory": "To Do", "priority": "Medium", "requestor": "Bradley Scott", "url": "https://govspend.atlassian.net/browse/GS-9060", "isNew": false}, {"key": "GS-9746", "friendly": "CRM: visual indicator on records already pushed to CRM", "summary": "CRM - Add visual indication for records that have been integrated", "why": "Customers have asked repeatedly to know at a glance which records are already in their CRM, so they don't waste time double-pushing the same record.", "sprint": "Backlog", "sprintState": "backlog", "status": "To Do", "statusCategory": "To Do", "priority": "Medium", "requestor": "Kathryn Sanders", "url": "https://govspend.atlassian.net/browse/GS-9746", "isNew": false}];
+const BASELINE_EXISTS = true;
+const REFRESHED_AT = "2026-05-20 18:41 UTC";
+
+const STORAGE_KEY = "gs15687_ballot_v2";
+let state = loadState();
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch (e) { /* ignore */ }
+  return { voter: "", votes: {} };
+}
+function saveState() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
+}
+
+function bucketFor(item) {
+  if (item.isNew) return "NEW";
+  if (item.sprint && item.sprint !== "Backlog") return "SPRINT";
+  return "BACKLOG";
+}
+
+function renderBuckets() {
+  const main = document.getElementById("main");
+  main.innerHTML = "";
+
+  const groups = {
+    "NEW":     { label: "New items (since last refresh)", sub: "Tickets added to the epic after the previous version of this ballot.", items: [] },
+    "SPRINT":  { label: "In a sprint",                    sub: "Items currently scheduled into a sprint, in sprint order.",          items: [] },
+    "BACKLOG": { label: "Backlog",                        sub: "Items in the epic but not yet scheduled.",                           items: [] },
+  };
+  ITEMS.forEach(it => groups[bucketFor(it)].items.push(it));
+
+  renderBucket(main, groups.NEW, true);
+  renderBucket(main, groups.SPRINT, false);
+  renderBucket(main, groups.BACKLOG, false);
+}
+
+function renderBucket(main, group, isNewBucket) {
+  const wrap = document.createElement("section");
+  wrap.className = "bucket";
+  const h2 = document.createElement("h2");
+  h2.textContent = group.label;
+  const count = document.createElement("span");
+  count.className = "pill " + (isNewBucket ? "new" : "sprint");
+  count.textContent = group.items.length + " item" + (group.items.length === 1 ? "" : "s");
+  h2.appendChild(count);
+  wrap.appendChild(h2);
+
+  const sub = document.createElement("div");
+  sub.className = "bucket-sub";
+  sub.textContent = group.sub;
+  wrap.appendChild(sub);
+
+  if (group.items.length === 0) {
+    const empty = document.createElement("div");
+    empty.className = "empty";
+    if (isNewBucket) {
+      empty.textContent = BASELINE_EXISTS
+        ? "No new items since the last refresh."
+        : "No new items yet — this section will populate on the next refresh whenever tickets are added to the epic.";
+    } else {
+      empty.textContent = "No items.";
+    }
+    wrap.appendChild(empty);
+  } else {
+    group.items.forEach(it => wrap.appendChild(renderItem(it)));
+  }
+  main.appendChild(wrap);
+}
+
+function renderItem(it) {
+  const row = document.createElement("div");
+  row.className = "item" + (it.isNew ? " new" : "") + (it.status === "Cancelled" ? " cancelled-row" : "");
+
+  // Left: details
+  const left = document.createElement("div");
+  const friendly = document.createElement("div");
+  friendly.className = "friendly";
+  friendly.textContent = it.friendly;
+  left.appendChild(friendly);
+
+  const meta = document.createElement("div");
+  meta.className = "meta";
+
+  // "Jira ↗" link (replaces showing the ticket key prominently)
+  const a = document.createElement("a");
+  a.href = it.url;
+  a.target = "_blank";
+  a.rel = "noopener";
+  a.className = "jira-link";
+  a.title = `Open ${it.key} in Jira`;
+  a.innerHTML = `Jira <svg aria-hidden="true"><use href="#extlink"/></svg>`;
+  meta.appendChild(a);
+
+  meta.appendChild(makePill(it.sprint === "Backlog" ? "backlog" : "sprint", it.sprint));
+  if (it.status === "Cancelled") meta.appendChild(makePill("cancelled", "Cancelled"));
+  else meta.appendChild(makePill("status", it.status));
+  const pri = document.createElement("span");
+  pri.className = "pill priority";
+  pri.dataset.pri = it.priority;
+  pri.textContent = "Priority: " + it.priority;
+  meta.appendChild(pri);
+
+  if (it.requestor) {
+    const r = document.createElement("span");
+    r.textContent = "Requestor: " + it.requestor;
+    meta.appendChild(r);
+  }
+
+  const orig = document.createElement("span");
+  orig.className = "orig";
+  orig.textContent = "Original: " + it.summary;
+  meta.appendChild(orig);
+
+  left.appendChild(meta);
+
+  // "Why this matters" — collapsible
+  const why = document.createElement("details");
+  why.className = "why" + (it.why ? "" : " empty");
+  const summary = document.createElement("summary");
+  summary.textContent = it.why ? "Why this matters" : "Why this matters — (no commercial summary available)";
+  why.appendChild(summary);
+  if (it.why) {
+    const body = document.createElement("div");
+    body.className = "why-body";
+    body.textContent = it.why;
+    why.appendChild(body);
+    // Block bubbling so toggling doesn't interfere with vote clicks
+    why.addEventListener("click", e => e.stopPropagation());
+  } else {
+    why.addEventListener("click", e => { e.preventDefault(); e.stopPropagation(); });
+  }
+  left.appendChild(why);
+
+  // Right: voting
+  const vote = document.createElement("div");
+  vote.className = "vote";
+  const lbl = document.createElement("label");
+  lbl.textContent = "Vote:";
+  vote.appendChild(lbl);
+  [1,2,3,4,5].forEach(n => {
+    const b = document.createElement("button");
+    b.textContent = n;
+    b.dataset.value = n;
+    b.title = scaleLabel(n);
+    b.addEventListener("click", () => castVote(it.key, n, row));
+    vote.appendChild(b);
+  });
+  const skip = document.createElement("button");
+  skip.className = "skip";
+  skip.textContent = "Skip";
+  skip.dataset.value = "skip";
+  skip.addEventListener("click", () => castVote(it.key, "skip", row));
+  vote.appendChild(skip);
+
+  row.appendChild(left);
+  row.appendChild(vote);
+
+  applyVoteUI(row, state.votes[it.key]);
+  return row;
+}
+
+function makePill(cls, text) {
+  const s = document.createElement("span");
+  s.className = "pill " + cls;
+  s.textContent = text;
+  return s;
+}
+
+function scaleLabel(n) {
+  return { 1:"Not important", 2:"Low priority", 3:"Moderate priority", 4:"High priority", 5:"Critical" }[n];
+}
+
+function castVote(key, value, row) {
+  state.votes[key] = value;
+  saveState();
+  applyVoteUI(row, value);
+  updateProgress();
+}
+
+function applyVoteUI(row, value) {
+  row.querySelectorAll(".vote button").forEach(b => {
+    b.classList.toggle("selected", String(b.dataset.value) === String(value));
+  });
+}
+
+function updateProgress() {
+  const total = ITEMS.length;
+  const voted = Object.keys(state.votes).length;
+  document.getElementById("progress").textContent = `${voted} of ${total} voted`;
+}
+
+function downloadBallot() {
+  const voter = document.getElementById("voter").value.trim();
+  if (!voter) {
+    showToast("Please enter your name before downloading.");
+    return;
+  }
+  state.voter = voter; saveState();
+  const payload = {
+    epic: "GS-15687",
+    voter: voter,
+    voter_email: "",
+    voted_at: new Date().toISOString(),
+    ballot_refreshed_at: REFRESHED_AT,
+    item_count: ITEMS.length,
+    votes: ITEMS.map(it => ({
+      key: it.key,
+      friendly: it.friendly,
+      sprint: it.sprint,
+      requestor: it.requestor,
+      vote: state.votes[it.key] === undefined ? null : state.votes[it.key],
+    })),
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  const safe = voter.replace(/[^a-z0-9_-]+/gi, "_");
+  link.href = url;
+  link.download = `commercial-vote-${safe}-${new Date().toISOString().slice(0,10)}.json`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+  showToast("Ballot downloaded. Please send the file to the product team.");
+}
+
+function showToast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(() => t.classList.remove("show"), 2800);
+}
+
+function resetVotes() {
+  if (!confirm("Clear all your votes?")) return;
+  state.votes = {};
+  saveState();
+  renderBuckets();
+  updateProgress();
+}
+
+document.getElementById("download").addEventListener("click", downloadBallot);
+document.getElementById("reset").addEventListener("click", resetVotes);
+document.getElementById("voter").value = state.voter || "";
+document.getElementById("voter").addEventListener("input", e => { state.voter = e.target.value; saveState(); });
+
+renderBuckets();
+updateProgress();
+</script>
+</body>
+</html>
