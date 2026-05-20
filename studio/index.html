@@ -957,10 +957,23 @@ const manageError = document.getElementById('manage-error');
 const manageBtn = document.getElementById('manage-btn');
 const votingList = document.getElementById('voting-list');
 
-// Known voting polls. Add new entries here when polls are created.
-const VOTING_POLLS = [
-  { id: 'gs15687', title: '[2026] Commercial Requests', url: '/voting/gs15687/', resultsUrl: '/voting/gs15687/results.html' },
-];
+// Voting polls are loaded from /voting/polls.json (single source of truth).
+let VOTING_POLLS = [];
+async function refreshVotingPolls() {
+  try {
+    const res = await fetch('/voting/polls.json', { cache: 'no-store' });
+    if (!res.ok) throw new Error(`polls.json: ${res.status}`);
+    const data = await res.json();
+    VOTING_POLLS = (data.polls || []).map(p => ({
+      id: p.id,
+      title: p.title,
+      url: `/voting/${p.id}/`,
+      resultsUrl: `/voting/${p.id}/results.html`,
+    }));
+  } catch (e) {
+    VOTING_POLLS = [];
+  }
+}
 
 manageBtn.addEventListener('click', openManage);
 manageClose.addEventListener('click', () => { manageModal.hidden = true; });
@@ -972,7 +985,9 @@ document.querySelectorAll('.mode-tab[data-manage-tab]').forEach(tab => {
     document.getElementById('manage-tab-dashboards').hidden = target !== 'dashboards';
     document.getElementById('manage-tab-voting').hidden = target !== 'voting';
     manageError.hidden = true;
-    if (target === 'voting') renderVotingList();
+    if (target === 'voting') {
+      refreshVotingPolls().then(renderVotingList);
+    }
   });
 });
 

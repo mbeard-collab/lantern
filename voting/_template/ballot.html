@@ -163,8 +163,17 @@
 </svg>
 
 <script>
-const STORAGE_KEY = "gs15687_ballot_v3";
-const POLL_ID = "gs15687";
+const POLL_ID = (window.location.pathname.match(/^\/voting\/([^\/]+)/) || [])[1] || "";
+if (!POLL_ID || POLL_ID === "_template") {
+  document.body.innerHTML = '<div style="padding:40px;text-align:center;font-family:system-ui;color:#6b7280;">No poll specified in URL. Visit <a href="/voting/" style="color:#2563eb;">/voting/</a> to pick a ballot.</div>';
+  throw new Error("missing pollId");
+}
+const STORAGE_KEY = `voting_ballot_${POLL_ID}_v3`;
+// One-time migration from the old per-poll localStorage key (gs15687_ballot_v3 → voting_ballot_gs15687_v3).
+try {
+  const legacy = localStorage.getItem(`${POLL_ID}_ballot_v3`);
+  if (legacy && !localStorage.getItem(STORAGE_KEY)) localStorage.setItem(STORAGE_KEY, legacy);
+} catch (e) {}
 
 let ITEMS = [];
 let META = { refreshed_at: "", epic: "GS-15687", epic_url: "", title: "" };

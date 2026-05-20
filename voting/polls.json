@@ -1,0 +1,11 @@
+{
+  "polls": [
+    {
+      "id": "gs15687",
+      "title": "[2026] Commercial Requests",
+      "description": "Commercial team prioritization ballot for items in Jira epic GS-15687. Votes inform 2026 sprint planning.",
+      "status": "open",
+      "opened_at": "2026-05-20"
+    }
+  ]
+}

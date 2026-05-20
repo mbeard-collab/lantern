@@ -147,7 +147,11 @@
 <div class="toast" id="toast"></div>
 
 <script>
-const POLL_ID = "gs15687";
+const POLL_ID = (window.location.pathname.match(/^\/voting\/([^\/]+)/) || [])[1] || "";
+if (!POLL_ID || POLL_ID === "_template") {
+  document.body.innerHTML = '<div style="padding:40px;text-align:center;font-family:system-ui;color:#6b7280;">No poll specified in URL. Visit <a href="/voting/" style="color:#2563eb;">/voting/</a> to pick a ballot.</div>';
+  throw new Error("missing pollId");
+}
 const ADMIN_STORAGE_KEY = "studio.admin";
 let META = {};
 let ITEMS_BY_KEY = {};

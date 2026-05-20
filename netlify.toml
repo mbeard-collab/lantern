@@ -19,5 +19,17 @@
   to = "/.netlify/functions/voting/:splat"
   status = 200
 
+# Voting ballots use a single template at /voting/_template/ — the URL stays
+# /voting/<pollId>/ so relative fetches (./items.json) resolve per-poll.
+[[redirects]]
+  from = "/voting/:pollId/results.html"
+  to = "/voting/_template/results.html"
+  status = 200
+
+[[redirects]]
+  from = "/voting/:pollId/"
+  to = "/voting/_template/ballot.html"
+  status = 200
+
 [dev]
   framework = "#static"
