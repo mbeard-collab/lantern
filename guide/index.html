@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>User Guide — GovSpend Dashboards</title>
+<style>
+  :root {
+    --bg: #0B0F17;
+    --bg-elev: #121826;
+    --bg-elev-2: #1A2235;
+    --line: #232C42;
+    --line-strong: #2E3A55;
+    --text: #E6EAF2;
+    --text-strong: #FFFFFF;
+    --muted: #8A93A6;
+    --muted-2: #6B7488;
+    --accent: #4DA3FF;
+    --accent-2: #7C5CFF;
+    --green: #39D98A;
+    --amber: #F5B556;
+    --red: #FF6B6B;
+    --gradient: linear-gradient(135deg, #4DA3FF 0%, #7C5CFF 100%);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: -apple-system, "SF Pro Text", "Inter", Segoe UI, system-ui, sans-serif; -webkit-font-smoothing: antialiased; line-height: 1.55; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  body { min-height: 100vh; }
+
+  .nav { position: sticky; top: 0; z-index: 50; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); background: rgba(11,15,23,0.85); border-bottom: 1px solid var(--line); }
+  .nav-inner { max-width: 920px; margin: 0 auto; padding: 14px 32px; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+  .logo { display: flex; align-items: center; gap: 12px; font-weight: 600; font-size: 15px; color: var(--text-strong); }
+  .logo .mark { width: 24px; height: 24px; border-radius: 7px; background: var(--gradient); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: #0B0F17; }
+  .logo .crumb { color: var(--muted); font-weight: 500; }
+  .nav-link { font-size: 13px; color: var(--muted); padding: 6px 12px; border-radius: 8px; }
+  .nav-link:hover { color: var(--text); background: var(--bg-elev); text-decoration: none; }
+
+  .container { max-width: 920px; margin: 0 auto; padding: 48px 32px 80px; }
+  h1 { font-size: 36px; font-weight: 600; letter-spacing: -0.025em; margin: 0 0 8px; color: var(--text-strong); }
+  .lede { font-size: 16px; color: var(--muted); margin: 0 0 32px; max-width: 640px; }
+
+  /* Quick reference */
+  .quick-ref { background: var(--bg-elev); border: 1px solid var(--line); border-radius: 12px; padding: 20px 24px; margin-bottom: 40px; }
+  .quick-ref h3 { margin: 0 0 12px; font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
+  .quick-ref ul { margin: 0; padding: 0; list-style: none; }
+  .quick-ref li { padding: 6px 0; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; font-size: 14px; gap: 16px; }
+  .quick-ref li:last-child { border-bottom: 0; }
+  .quick-ref li .label { color: var(--text); }
+  .quick-ref li .target { color: var(--muted); }
+  .quick-ref li .target code { color: var(--accent); }
+
+  /* Section headers */
+  h2 { font-size: 24px; font-weight: 600; letter-spacing: -0.02em; margin: 56px 0 4px; color: var(--text-strong); display: flex; align-items: center; gap: 12px; }
+  h2 .audience { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; padding: 3px 9px; border-radius: 999px; text-transform: uppercase; }
+  h2 .audience.everyone { background: rgba(57,217,138,0.13); color: var(--green); }
+  h2 .audience.admin { background: rgba(124,92,255,0.13); color: var(--accent-2); }
+  .section-sub { color: var(--muted); font-size: 14px; margin: 6px 0 18px; }
+
+  h3 { font-size: 16px; font-weight: 600; margin: 24px 0 8px; color: var(--text-strong); }
+
+  ol, ul { padding-left: 22px; }
+  ol li, ul li { margin-bottom: 8px; }
+  p { margin: 0 0 12px; }
+
+  code { background: var(--bg-elev); border: 1px solid var(--line); padding: 1px 6px; border-radius: 4px; font-family: "SF Mono", Menlo, Consolas, monospace; font-size: 12px; color: var(--accent); }
+  strong { color: var(--text-strong); font-weight: 600; }
+
+  /* Callouts */
+  .callout { background: var(--bg-elev); border: 1px solid var(--line); border-left: 3px solid var(--accent); border-radius: 10px; padding: 14px 18px; margin: 16px 0; font-size: 14px; }
+  .callout.warn { border-left-color: var(--amber); }
+  .callout.warn::before { content: "⚠ "; color: var(--amber); font-weight: 600; }
+  .callout.tip::before { content: "💡 "; }
+
+  /* Footer */
+  .footer { max-width: 920px; margin: 64px auto 0; padding: 24px 32px; border-top: 1px solid var(--line); font-size: 12px; color: var(--muted-2); text-align: center; }
+
+  /* TOC */
+  .toc { background: var(--bg-elev); border: 1px solid var(--line); border-radius: 12px; padding: 18px 22px; margin-bottom: 28px; }
+  .toc h3 { margin: 0 0 8px; font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
+  .toc ol { margin: 0; padding-left: 18px; columns: 2; column-gap: 30px; }
+  .toc ol li { margin-bottom: 4px; font-size: 13px; }
+  .toc a { color: var(--text); }
+  .toc a:hover { color: var(--accent); }
+
+  @media (max-width: 700px) {
+    .container { padding: 32px 20px 60px; }
+    .nav-inner { padding-left: 20px; padding-right: 20px; }
+    h1 { font-size: 28px; }
+    h2 { font-size: 20px; }
+    .toc ol { columns: 1; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a class="logo" href="/">
+      <span class="mark">G</span>
+      <span>Dashboards <span class="crumb">/ Guide</span></span>
+    </a>
+    <a class="nav-link" href="/">← Back to dashboards</a>
+  </div>
+</nav>
+
+<main class="container">
+  <h1>User Guide</h1>
+  <p class="lede">Everything you can do on this site, in plain English. Sections labelled <span style="color:var(--green);">everyone</span> work for any signed-in user; <span style="color:var(--accent-2);">admin</span> sections require admin sign-in.</p>
+
+  <div class="quick-ref">
+    <h3>Quick reference</h3>
+    <ul>
+      <li><span class="label">See all dashboards</span><span class="target"><code>/</code> (the home page)</span></li>
+      <li><span class="label">Vote on a ballot</span><span class="target"><code>/voting/</code> → pick one</span></li>
+      <li><span class="label">See voting results</span><span class="target">click <strong>View results</strong> on any ballot</span></li>
+      <li><span class="label">Create / update / delete dashboards</span><span class="target"><code>/studio/</code> (admin)</span></li>
+      <li><span class="label">Update a voting ballot's items</span><span class="target">Studio → <strong>Manage</strong> → <strong>Voting</strong> tab (admin)</span></li>
+      <li><span class="label">Add or remove admins</span><span class="target">ask Matt to update <code>STUDIO_ADMINS</code></span></li>
+    </ul>
+  </div>
+
+  <div class="toc">
+    <h3>Sections</h3>
+    <ol>
+      <li><a href="#viewing-dashboards">Viewing dashboards</a></li>
+      <li><a href="#voting">Voting on a ballot</a></li>
+      <li><a href="#viewing-results">Viewing voting results</a></li>
+      <li><a href="#signing-in">Signing in (admin)</a></li>
+      <li><a href="#create-dashboard">Creating a new dashboard</a></li>
+      <li><a href="#update-dashboard">Updating an existing dashboard</a></li>
+      <li><a href="#delete-dashboard">Deleting a dashboard</a></li>
+      <li><a href="#refresh-ballot">Refreshing a voting ballot</a></li>
+      <li><a href="#new-ballot">Adding a brand-new ballot</a></li>
+      <li><a href="#troubleshooting">Troubleshooting</a></li>
+    </ol>
+  </div>
+
+  <!-- ============================================================ -->
+
+  <h2 id="viewing-dashboards">1. Viewing dashboards <span class="audience everyone">everyone</span></h2>
+  <p class="section-sub">The main page (<code>/</code>) is the hub. Every dashboard is a card grouped by section.</p>
+  <ol>
+    <li>Go to <a href="/">the home page</a>.</li>
+    <li>Sections in the top nav: <strong>Technology Ops</strong>, <strong>Operational</strong>, <strong>Intelligence</strong>, <strong>AI &amp; Cost</strong>, <strong>Reference</strong>. Click any to jump.</li>
+    <li>Click any dashboard card to open it in a new tab.</li>
+  </ol>
+
+  <!-- ============================================================ -->
+
+  <h2 id="voting">2. Voting on a ballot <span class="audience everyone">everyone</span></h2>
+  <p class="section-sub">No sign-in required for voting — anyone who can open the site can vote.</p>
+  <ol>
+    <li>Click <strong>Voting</strong> in the top nav (or go to <a href="/voting/">/voting/</a>).</li>
+    <li>Pick a ballot from the list, click <strong>Open ballot</strong>.</li>
+    <li>Type your name and your <strong>@govspend.com</strong> email at the top. Your email is how the system remembers your vote.</li>
+    <li>For each item, click <strong>1</strong> (least important) through <strong>5</strong> (critical), or <strong>Skip</strong> if you have no opinion.</li>
+    <li>When you're done, click <strong>Submit ballot</strong>. You'll see a "Submitted [date]" confirmation in the header.</li>
+  </ol>
+  <div class="callout tip">
+    Want to change your votes later? Just revisit the ballot URL, update your votes, and submit again. The system uses your email as the key, so the latest submission wins. Your previous votes are restored automatically when you re-enter the same email.
+  </div>
+
+  <!-- ============================================================ -->
+
+  <h2 id="viewing-results">3. Viewing voting results <span class="audience everyone">everyone</span></h2>
+  <p class="section-sub">Aggregated results (average score, vote distribution) are visible to everyone. Individual ballots are admin-only.</p>
+  <ol>
+    <li>From <a href="/voting/">/voting/</a>, click <strong>View results</strong> on any ballot.</li>
+    <li>Items are sorted by average score (highest priority on top).</li>
+    <li>The colored bars show how many people voted 1, 2, 3, 4, or 5 on each item.</li>
+    <li>Click <strong>↻ Refresh</strong> to pull the latest numbers without reloading.</li>
+  </ol>
+  <p>To see who voted what, an admin can click <strong>Show individual ballots</strong> and sign in.</p>
+
+  <!-- ============================================================ -->
+
+  <h2 id="signing-in">4. Signing in <span class="audience admin">admin</span></h2>
+  <p class="section-sub">Most admin features (Studio, ballot management, raw votes) ask you to sign in once. The sign-in is remembered on your device until you sign out.</p>
+  <ol>
+    <li>Go to <a href="/studio/">/studio/</a> (or click an admin-only action like "Update items" on a ballot).</li>
+    <li>Enter your <strong>@govspend.com</strong> email and the <strong>admin password</strong> (ask Matt if you don't have it).</li>
+    <li>You'll see your email in a green pill at the top right when you're signed in. Click the <strong>×</strong> next to it to sign out.</li>
+  </ol>
+  <div class="callout warn">
+    The admin password is a single shared secret. Don't paste it into Slack, email, or screenshots.
+  </div>
+
+  <!-- ============================================================ -->
+
+  <h2 id="create-dashboard">5. Creating a new dashboard <span class="audience admin">admin</span></h2>
+  <p class="section-sub">Two flows. Use whichever fits the moment.</p>
+
+  <h3>Option A — Chat with Claude (start from data)</h3>
+  <ol>
+    <li>Go to <a href="/studio/">/studio/</a>, sign in if you haven't.</li>
+    <li>Make sure the <strong>Build with Claude</strong> tab is selected.</li>
+    <li>Drag a data file in: <code>.csv</code>, <code>.xlsx</code>, or <code>.json</code>. Multiple files are fine.</li>
+    <li>Pick a target: <strong>+ New dashboard</strong> (and type a slug like <code>q3-pipeline</code>), or pick an existing dashboard to overwrite.</li>
+    <li>Click <strong>Start →</strong>. The right pane fills in as Claude works.</li>
+    <li>Iterate via the chat: "make the main chart a bar", "drop the second KPI", "use orange for the at-risk pill". Claude regenerates the dashboard each turn.</li>
+    <li>When happy, click <strong>Ship to site →</strong> in the top nav. Confirm. The dashboard is live within ~30 seconds.</li>
+  </ol>
+
+  <h3>Option B — Upload finished HTML</h3>
+  <ol>
+    <li>In Studio, click the <strong>Upload HTML</strong> tab.</li>
+    <li>Drop your <code>.html</code> file. A preview appears below.</li>
+    <li>Pick a target (new or existing dashboard).</li>
+    <li>Click <strong>Ship to site →</strong>. Same confirmation flow.</li>
+  </ol>
+  <div class="callout tip">
+    For new dashboards, Studio asks you a few questions (title, section, owner, cadence) so it can register the dashboard on the landing page. Sections are: <strong>tech-ops</strong>, <strong>operational</strong>, <strong>intelligence</strong>, <strong>ai-cost</strong>, <strong>reference</strong>.
+  </div>
+
+  <!-- ============================================================ -->
+
+  <h2 id="update-dashboard">6. Updating an existing dashboard <span class="audience admin">admin</span></h2>
+  <p class="section-sub">Same flow as creating one — just pick the existing dashboard from the target dropdown.</p>
+  <ol>
+    <li>Go to <a href="/studio/">/studio/</a>.</li>
+    <li>Pick your flow (chat or upload HTML).</li>
+    <li>For target, choose the existing dashboard from the dropdown.</li>
+    <li>Drop your file(s), iterate or preview, click <strong>Ship to site →</strong>.</li>
+  </ol>
+  <p>The existing dashboard is replaced. Its registry entry on the home page stays the same.</p>
+
+  <!-- ============================================================ -->
+
+  <h2 id="delete-dashboard">7. Deleting a dashboard <span class="audience admin">admin</span></h2>
+  <ol>
+    <li>In Studio, click <strong>Manage</strong> in the top nav.</li>
+    <li>The <strong>Dashboards</strong> tab lists every dashboard. Each row has an <strong>Open</strong> link and a red <strong>Delete</strong> button.</li>
+    <li>Click <strong>Delete</strong>. Confirm in the popup.</li>
+  </ol>
+  <p>The dashboard file is removed from the repo, the entry on the home page is removed, and a fresh deploy fires.</p>
+  <div class="callout warn">
+    Deletion is two GitHub commits (one removes the file, one updates the registry). It can't be undone from this UI, but the file history is in GitHub if you ever need to recover one.
+  </div>
+
+  <!-- ============================================================ -->
+
+  <h2 id="refresh-ballot">8. Refreshing a voting ballot <span class="audience admin">admin</span></h2>
+  <p class="section-sub">When the underlying Jira items change — items added, removed, status updated — replace the ballot's <code>items.json</code> with the latest export.</p>
+  <ol>
+    <li>Get a fresh <code>items.json</code> file (from the Jira export script the product team uses).</li>
+    <li>In Studio, click <strong>Manage</strong> → switch to the <strong>Voting</strong> tab.</li>
+    <li>Find the ballot, click <strong>Update items…</strong>.</li>
+    <li>Pick the new <code>items.json</code> file.</li>
+    <li>Confirm. The file is committed and the ballot reflects the change within ~30 seconds.</li>
+  </ol>
+  <p>Existing votes are preserved across refreshes. Voters who already submitted will see "Last submitted [date]" — they can return and re-submit to vote on any new items.</p>
+
+  <!-- ============================================================ -->
+
+  <h2 id="new-ballot">9. Adding a brand-new ballot <span class="audience admin">admin</span></h2>
+  <p class="section-sub">Right now this is a two-step manual action via GitHub. A "+ New ballot" button in Studio is on the roadmap.</p>
+  <ol>
+    <li>In the GitHub repo (<a href="https://github.com/mbeard-collab/lantern" target="_blank" rel="noopener">mbeard-collab/lantern</a>), add a new file at <code>voting/&lt;poll-id&gt;/items.json</code> (e.g. <code>voting/q3-roadmap/items.json</code>). Use <code>voting/gs15687/items.json</code> as a structure reference.</li>
+    <li>Edit <code>voting/polls.json</code> to add an entry for your new poll: <code>{ id, title, description, status, opened_at }</code>.</li>
+    <li>Commit both changes. The ballot is live at <code>/voting/&lt;poll-id&gt;/</code> within ~30 seconds, and it'll show up on the <a href="/voting/">/voting/</a> list page.</li>
+  </ol>
+  <p>If you'd rather Matt do it, send him the Jira export + the title and he can wire it up in 5 minutes.</p>
+
+  <!-- ============================================================ -->
+
+  <h2 id="troubleshooting">10. Troubleshooting</h2>
+
+  <h3>"I clicked Ship and nothing happens" / button is greyed out</h3>
+  <p>Look for a small hint line above the button. Common causes: no data file uploaded yet, no target dashboard picked, slug isn't lowercase/hyphens, or HTML isn't a complete document.</p>
+
+  <h3>"The studio is blank / asks me to sign in every time"</h3>
+  <p>You signed out (or your localStorage was cleared). Just sign in again. If your email isn't on the admin list, ask Matt to add you.</p>
+
+  <h3>"My ballot won't submit"</h3>
+  <p>Make sure both name and email fields are filled in. Email must include <code>@</code>. If it still won't go through, check the small toast at the bottom for the actual error.</p>
+
+  <h3>"Claude generated a broken dashboard"</h3>
+  <p>Tell it in chat — "the chart is empty, can you fix it?" or "make a simpler version with just the KPIs." It'll regenerate. If you're stuck, switch to Upload HTML mode and give it a hand-edited starting point.</p>
+
+  <h3>Anything else</h3>
+  <p>Ping Matt. Mention what you were doing and what you saw — screenshots help.</p>
+</main>
+
+<footer class="footer">
+  Internal use only · GovSpend Dashboards
+</footer>
+
+</body>
+</html>
