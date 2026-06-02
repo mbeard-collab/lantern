@@ -753,18 +753,18 @@ function refreshAll(){
     });
   }
   // Tier conversion (use static rates — monthly decomposition not available per-tier)
-  const tierQual=[33.6,20.3,8.7,4.2];
-  const tierDQ=[61.2,78.4,68.0,60.4];
+  const tierQual=[29.2, 19.2, 0.0, 2.8];
+  const tierDQ=[54.5, 26.6, 0.0, 69.1];
   function convChart(id,labels,qual,dq){
     mkChart(id,'bar',{labels,datasets:[{label:'Qual %',data:qual,backgroundColor:'#1D9E75'},{label:'DQ %',data:dq,backgroundColor:'#E24B4A'}]},{...noLeg,scales:{x:{...TC.x,ticks:{...TC.x.ticks,maxRotation:0,font:{size:10}}},y:{...TC.y,max:85,ticks:{...TC.y.ticks,callback:v=>v+'%'}}}});
   }
   convChart('c_conv_tier',tierShort,tierQual,tierDQ);
-  convChart('c_conv_icp',['Enterprise','Mid-Market','Strategic','Non-ICP'],[30.6,33.2,22.2,14.1],[36.7,53.2,45.9,71.2]);
+  convChart('c_conv_icp',['Enterprise','Mid-Market','Strategic','Non-ICP'],[12.5, 38.8, 18.5, 13.5],[38.4, 46.3, 37.9, 70.0]);
   convChart('c_conv_tier2',tierShort,tierQual,tierDQ);
-  convChart('c_conv_icp2',['Enterprise','Mid-Market','Strategic','Non-ICP'],[30.6,33.2,22.2,14.1],[36.7,53.2,45.9,71.2]);
+  convChart('c_conv_icp2',['Enterprise','Mid-Market','Strategic','Non-ICP'],[12.5, 38.8, 18.5, 13.5],[38.4, 46.3, 37.9, 70.0]);
   mkChart('c_conv_origin','bar',{
     labels:['Web Demo','Champify','Trade Show','High Score','Life Ins.','P&C'],
-    datasets:[{label:'Qual %',data:[33.1,2.8,16.6,8.2,0.0,3.6],backgroundColor:['#378ADD','#7F77DD','#1D9E75','#BA7517','#E24B4A','#888780']}]
+    datasets:[{label:'Qual %',data:[29.2, 2.9, 19.2, 0.0, 0.0, 3.6],backgroundColor:['#378ADD','#7F77DD','#1D9E75','#BA7517','#E24B4A','#888780']}]
   },{...noLeg,scales:{x:{...TC.x,ticks:{...TC.x.ticks,maxRotation:20,font:{size:10}}},y:{...TC.y,max:40,ticks:{...TC.y.ticks,callback:v=>v+'%'}}}});
 
   // DQ chart
