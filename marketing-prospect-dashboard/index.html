@@ -3,30 +3,30 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GovSpend — Prospect Pipeline Dashboard v4.x (Live)</title>
+<title>GovSpend — Prospect Pipeline Dashboard (Brand)</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700;900&display=swap" rel="stylesheet">
 <style>
-:root{--gs-navy:#0B1F3A;--gs-blue:#1A6DC0;--gs-teal:#0D8C72;--gs-sky:#3DAEE9;--gs-amber:#E8970A;--gs-red:#D63B3B;--gs-purple:#6B5FD4;--gs-green:#4A9E3F;--gs-muted:#64748B;--gs-border:#E2E8F0;--gs-bg:#F7F9FC;--gs-surface:#FFFFFF;--gs-text:#0F172A;--gs-text2:#475569;--t1:#378ADD;--t2:#1D9E75;--t3:#BA7517;--t4:#7F77DD;}
+:root{--gs-navy:#303650;--gs-blue:#0076DE;--gs-teal:#1F8F66;--gs-sky:#3399E6;--gs-amber:#E0A21A;--gs-red:#D63B3B;--gs-purple:#5A6080;--gs-green:#2E8B57;--gs-muted:#64748B;--gs-border:#E2E8F0;--gs-bg:#F7F9FC;--gs-surface:#FFFFFF;--gs-text:#0F172A;--gs-text2:#475569;--t1:#0076DE;--t2:#1F8F66;--t3:#B57614;--t4:#5A6080;}
 *{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:'DM Sans',sans-serif;background:var(--gs-bg);color:var(--gs-text);font-size:14px;line-height:1.5;}
+body{font-family:'Lato',sans-serif;background:var(--gs-bg);color:var(--gs-text);font-size:14px;line-height:1.5;}
 .header{background:var(--gs-navy);padding:0 32px;display:flex;align-items:center;justify-content:space-between;height:60px;border-bottom:3px solid var(--gs-blue);}
-.logo-mark{width:36px;height:36px;background:var(--gs-blue);border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-weight:500;font-size:14px;color:#fff;}
-.header-logo{display:flex;align-items:center;gap:12px;}
+.wm{display:flex;align-items:center;font-family:'Lato',sans-serif;font-weight:900;font-size:23px;letter-spacing:-0.5px;line-height:1;}.wm-gov{color:#fff;}.wm-s{display:inline-flex;align-items:center;justify-content:center;width:25px;height:25px;border-radius:50%;background:var(--gs-blue);color:#fff;font-size:17px;font-weight:900;margin:0 1px;}.wm-pend{color:#3399E6;}
+.header-logo{display:flex;align-items:center;gap:14px;}
 .logo-text{font-size:18px;font-weight:600;color:#fff;}
 .logo-text span{color:var(--gs-sky);}
 .header-meta{display:flex;align-items:center;gap:12px;}
-.header-date{font-size:12px;color:rgba(255,255,255,0.7);background:rgba(255,255,255,0.08);padding:4px 10px;border-radius:4px;font-family:'DM Mono',monospace;}
+.header-date{font-size:12px;color:rgba(255,255,255,0.7);background:rgba(255,255,255,0.08);padding:4px 10px;border-radius:4px;font-family:'Lato',monospace;}
 
 /* MONTH FILTER BAR */
-.month-bar{background:#EBF4FF;border-bottom:1px solid #BDD7F5;padding:8px 32px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.month-bar{background:#E5F1FC;border-bottom:1px solid #BBD9F7;padding:8px 32px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
 .month-bar-label{font-size:11px;font-weight:600;color:var(--gs-blue);text-transform:uppercase;letter-spacing:0.07em;margin-right:4px;white-space:nowrap;}
-.month-btn{font-size:12px;padding:4px 10px;border-radius:14px;border:1px solid #BDD7F5;background:#fff;cursor:pointer;color:var(--gs-muted);transition:all 0.12s;font-family:'DM Sans',sans-serif;}
+.month-btn{font-size:12px;padding:4px 10px;border-radius:14px;border:1px solid #BBD9F7;background:#fff;cursor:pointer;color:var(--gs-muted);transition:all 0.12s;font-family:'Lato',sans-serif;}
 .month-btn:hover{border-color:var(--gs-blue);color:var(--gs-blue);}
 .month-btn.active{background:var(--gs-blue);border-color:var(--gs-blue);color:#fff;font-weight:500;}
 .month-btn.preset{background:transparent;border-color:var(--gs-blue);color:var(--gs-blue);font-weight:500;}
 .month-btn.preset.active{background:var(--gs-blue);color:#fff;}
-.month-divider{width:1px;height:20px;background:#BDD7F5;margin:0 4px;}
+.month-divider{width:1px;height:20px;background:#BBD9F7;margin:0 4px;}
 .month-clear{font-size:11px;color:var(--gs-muted);cursor:pointer;text-decoration:underline;padding:2px 4px;}
 .month-clear:hover{color:var(--gs-red);}
 
@@ -44,7 +44,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gs-bg);color:var(--gs-tex
 .filter-banner strong{color:#5A3E00;}
 
 /* EXEC SUMMARY */
-.exec-summary{background:linear-gradient(135deg,var(--gs-navy) 0%,#132A4A 100%);border-radius:12px;padding:24px 28px;margin-bottom:24px;color:#fff;}
+.exec-summary{background:linear-gradient(135deg,var(--gs-navy) 0%,#434A6B 100%);border-radius:12px;padding:24px 28px;margin-bottom:24px;color:#fff;}
 .exec-title{font-size:11px;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:rgba(255,255,255,0.5);margin-bottom:6px;}
 .exec-headline{font-size:18px;font-weight:600;margin-bottom:16px;line-height:1.35;}
 .exec-bullets{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;}
@@ -93,25 +93,25 @@ body{font-family:'DM Sans',sans-serif;background:var(--gs-bg);color:var(--gs-tex
 .data-table tr:last-child td{border-bottom:none;}
 .data-table tr:hover td{background:#F8FAFC;}
 .pill{display:inline-block;font-size:11px;font-weight:500;padding:2px 8px;border-radius:10px;}
-.pill-blue{background:#EBF5FF;color:#1A6DC0;}
-.pill-teal{background:#E6F7F3;color:#0D7A62;}
-.pill-amber{background:#FEF3DC;color:#9A6200;}
-.pill-purple{background:#EFEDFE;color:#5A4FC4;}
+.pill-blue{background:#E5F1FC;color:#0076DE;}
+.pill-teal{background:#E6F7F3;color:#157A52;}
+.pill-amber{background:#FEF3DC;color:#8A6510;}
+.pill-purple{background:#EFEDFE;color:#4A5070;}
 .pill-coral{background:#FEF0EE;color:#B83A2A;}
 .pill-gray{background:#F1F5F9;color:#475569;}
 .mini-bar-bg{display:inline-block;background:#EEF2F7;border-radius:3px;height:5px;width:80px;vertical-align:middle;margin-left:6px;}
 .mini-bar-fill{height:5px;border-radius:3px;display:block;}
 .section-header{font-size:13px;font-weight:600;color:var(--gs-muted);text-transform:uppercase;letter-spacing:0.08em;margin:24px 0 12px;padding-bottom:8px;border-bottom:1px solid var(--gs-border);}
-.callout{background:#EFF6FF;border-left:3px solid var(--gs-blue);border-radius:0 8px 8px 0;padding:11px 16px;margin-bottom:14px;font-size:13px;color:var(--gs-text);}
+.callout{background:#E8F2FD;border-left:3px solid var(--gs-blue);border-radius:0 8px 8px 0;padding:11px 16px;margin-bottom:14px;font-size:13px;color:var(--gs-text);}
 .callout strong{color:var(--gs-blue);}
 .callout-warn{background:#FEF9EC;border-left-color:var(--gs-amber);}
-.callout-warn strong{color:#9A6200;}
+.callout-warn strong{color:#8A6510;}
 .callout-danger{background:#FEF2F2;border-left-color:var(--gs-red);}
 .callout-danger strong{color:var(--gs-red);}
 .callout-success{background:#F0FDF4;border-left-color:var(--gs-teal);}
 .callout-success strong{color:var(--gs-teal);}
 .filter-row{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;align-items:center;}
-.filter-btn{font-size:12px;padding:5px 12px;border-radius:20px;border:1px solid var(--gs-border);background:transparent;cursor:pointer;color:var(--gs-muted);transition:all 0.12s;font-family:'DM Sans',sans-serif;}
+.filter-btn{font-size:12px;padding:5px 12px;border-radius:20px;border:1px solid var(--gs-border);background:transparent;cursor:pointer;color:var(--gs-muted);transition:all 0.12s;font-family:'Lato',sans-serif;}
 .filter-btn:hover{border-color:var(--gs-blue);color:var(--gs-blue);}
 .filter-btn.active{background:var(--gs-blue);border-color:var(--gs-blue);color:#fff;}
 
@@ -131,9 +131,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--gs-bg);color:var(--gs-tex
 .coach-tip{display:flex;gap:10px;margin-bottom:10px;align-items:flex-start;}
 .coach-tip:last-child{margin-bottom:0;}
 .tip-icon{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;margin-top:1px;}
-.tip-icon-warn{background:#FEF3DC;color:#9A6200;}
+.tip-icon-warn{background:#FEF3DC;color:#8A6510;}
 .tip-icon-good{background:#DCFCE7;color:#166534;}
-.tip-icon-info{background:#EFF6FF;color:#1A6DC0;}
+.tip-icon-info{background:#E8F2FD;color:#0076DE;}
 .tip-icon-alert{background:#FEF2F2;color:#991B1B;}
 .tip-text{font-size:12px;color:var(--gs-text2);line-height:1.5;}
 .tip-text strong{color:var(--gs-text);}
@@ -145,11 +145,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--gs-bg);color:var(--gs-tex
 
 <div class="header">
   <div class="header-logo">
-    <div class="logo-mark">GS</div>
-    <div class="logo-text">Gov<span>Spend</span></div>
+    <div class="wm"><span class="wm-gov">gov</span><span class="wm-s">S</span><span class="wm-pend">pend</span></div>
   </div>
   <div class="header-meta">
-    <span style="font-size:12px;color:rgba(255,255,255,0.5);font-family:'DM Mono',monospace">Prospect Pipeline</span>
+    <span style="font-size:12px;color:rgba(255,255,255,0.5);font-family:'Lato',monospace">Prospect Pipeline</span>
     <span class="header-date">Snapshot: 2026-05-13</span>
   </div>
 </div>
@@ -190,18 +189,18 @@ body{font-family:'DM Sans',sans-serif;background:var(--gs-bg);color:var(--gs-tex
 <div class="section active" id="section-overview">
   <div class="exec-summary">
     <div class="exec-title">Executive Summary</div>
-    <div class="exec-headline" id="execHeadline">2,792 YTD prospect records · 434 qualified (15.5%) · $1.27M ACV from 53 Closed Won deals</div>
+    <div class="exec-headline" id="execHeadline">2,953 YTD prospect records · 447 qualified (15.1%) · $1.34M ACV from 58 Closed Won deals</div>
     <div class="exec-bullets">
-      <div class="exec-bullet"><div class="exec-bullet-label">Open Pipeline</div><div class="exec-bullet-val" style="color:#3DAEE9" id="eb-open">692</div><div class="exec-bullet-sub">Active, non-closed prospects</div></div>
-      <div class="exec-bullet"><div class="exec-bullet-label">Qual. Rate</div><div class="exec-bullet-val" style="color:#4CD9A8" id="eb-qual-pct">15.5%</div><div class="exec-bullet-sub">T1 Inbound leads at 33%+</div></div>
-      <div class="exec-bullet"><div class="exec-bullet-label">Speed Improvement</div><div class="exec-bullet-val" style="color:#F6C743">87%</div><div class="exec-bullet-sub">New→Outreach: 186h → 25h (Jan→May)</div></div>
-      <div class="exec-bullet"><div class="exec-bullet-label">Top DQ Reason</div><div class="exec-bullet-val" style="color:#F87171">695</div><div class="exec-bullet-sub">Unresponsive — #1 every month</div></div>
+      <div class="exec-bullet"><div class="exec-bullet-label">Open Pipeline</div><div class="exec-bullet-val" style="color:#3399E6" id="eb-open">806</div><div class="exec-bullet-sub">Active, non-closed prospects</div></div>
+      <div class="exec-bullet"><div class="exec-bullet-label">Qual. Rate</div><div class="exec-bullet-val" style="color:#46C18C" id="eb-qual-pct">15.1%</div><div class="exec-bullet-sub">T1 Inbound leads at 33%+</div></div>
+      <div class="exec-bullet"><div class="exec-bullet-label">Speed Improvement</div><div class="exec-bullet-val" style="color:#FFC44D">87%</div><div class="exec-bullet-sub">New→Outreach: 186h → 25h (Jan→May)</div></div>
+      <div class="exec-bullet"><div class="exec-bullet-label">Top DQ Reason</div><div class="exec-bullet-val" style="color:#E87878">704</div><div class="exec-bullet-sub">Unresponsive — #1 every month</div></div>
     </div>
     <div class="insight-row">
-      <div class="insight-pill"><span class="dot" style="background:#3DAEE9"></span>T1 Inbound 33%+ qual — best bucket by 8x vs T4</div>
-      <div class="insight-pill"><span class="dot" style="background:#F87171"></span>Champify: 2.8% qual on 1,725 records</div>
-      <div class="insight-pill"><span class="dot" style="background:#4CD9A8"></span>Enterprise ICP converts 2x better than Non-ICP</div>
-      <div class="insight-pill"><span class="dot" style="background:#F6C743"></span>"Not Govt Focused" DQs rising since Nov '25</div>
+      <div class="insight-pill"><span class="dot" style="background:#3399E6"></span>T1 Inbound 33%+ qual — best bucket by 8x vs T4</div>
+      <div class="insight-pill"><span class="dot" style="background:#E87878"></span>Champify: 2.8% qual on 1,725 records</div>
+      <div class="insight-pill"><span class="dot" style="background:#46C18C"></span>Enterprise ICP converts 2x better than Non-ICP</div>
+      <div class="insight-pill"><span class="dot" style="background:#FFC44D"></span>"Not Govt Focused" DQs rising since Nov '25</div>
     </div>
   </div>
 
@@ -214,12 +213,12 @@ body{font-family:'DM Sans',sans-serif;background:var(--gs-bg);color:var(--gs-tex
   </div>
 
   <div class="metric-row">
-    <div class="metric-card accent"><div class="metric-label">Total Prospects</div><div class="metric-value" id="m-total">2,792</div><div class="metric-sub">Excl. Evan White records</div></div>
-    <div class="metric-card accent"><div class="metric-label">YTD 2026</div><div class="metric-value" id="m-ytd">2,792</div><div class="metric-sub">Jan – May 5, 2026</div></div>
-    <div class="metric-card green"><div class="metric-label">Open Pipeline</div><div class="metric-value" id="m-open">692</div><div class="metric-sub">Across 5 active stages</div></div>
-    <div class="metric-card green"><div class="metric-label">Closed Qualified</div><div class="metric-value" id="m-qual">434</div><div class="metric-sub" id="m-qual-pct-sub">15.5% conversion</div></div>
-    <div class="metric-card red"><div class="metric-label">Disqualified</div><div class="metric-value" id="m-dq">1,665</div><div class="metric-sub" id="m-dq-pct-sub">59.6% of all</div></div>
-    <div class="metric-card amber"><div class="metric-label">Closed Won ACV</div><div class="metric-value">$1.27M</div><div class="metric-sub">53 deals, $23.9K avg</div></div>
+    <div class="metric-card accent"><div class="metric-label">Total Prospects</div><div class="metric-value" id="m-total">2,953</div><div class="metric-sub">Excl. Evan White records</div></div>
+    <div class="metric-card accent"><div class="metric-label">YTD 2026</div><div class="metric-value" id="m-ytd">2,953</div><div class="metric-sub">Jan – May 5, 2026</div></div>
+    <div class="metric-card green"><div class="metric-label">Open Pipeline</div><div class="metric-value" id="m-open">806</div><div class="metric-sub">Across 5 active stages</div></div>
+    <div class="metric-card green"><div class="metric-label">Closed Qualified</div><div class="metric-value" id="m-qual">447</div><div class="metric-sub" id="m-qual-pct-sub">15.1% conversion</div></div>
+    <div class="metric-card red"><div class="metric-label">Disqualified</div><div class="metric-value" id="m-dq">1,699</div><div class="metric-sub" id="m-dq-pct-sub">57.5% of all</div></div>
+    <div class="metric-card amber"><div class="metric-label">Closed Won ACV</div><div class="metric-value">$1.34M</div><div class="metric-sub">58 deals, $23.2K avg</div></div>
   </div>
 
   <div class="chart-grid chart-grid-2">
@@ -264,11 +263,11 @@ body{font-family:'DM Sans',sans-serif;background:var(--gs-bg);color:var(--gs-tex
 <div class="section" id="section-pipeline">
   <div class="callout"><strong>Open pipeline snapshot.</strong> 701 active prospects across 6 stages. Research is largest (281, 40%); Outreach (189) and New (192) close behind.</div>
   <div class="metric-row">
-    <div class="metric-card accent"><div class="metric-label">Total Open</div><div class="metric-value">692</div><div class="metric-sub">Non-closed prospects</div></div>
-    <div class="metric-card"><div class="metric-label">New</div><div class="metric-value">206</div><div class="metric-sub">Not yet contacted</div></div>
-    <div class="metric-card"><div class="metric-label">Research</div><div class="metric-value">273</div><div class="metric-sub">51% of open pipeline</div></div>
-    <div class="metric-card"><div class="metric-label">Outreach</div><div class="metric-value">158</div><div class="metric-sub">19% of open pipeline</div></div>
-    <div class="metric-card"><div class="metric-label">Discovery</div><div class="metric-value">30</div><div class="metric-sub">Active discovery calls</div></div>
+    <div class="metric-card accent"><div class="metric-label">Total Open</div><div class="metric-value">806</div><div class="metric-sub">Non-closed prospects</div></div>
+    <div class="metric-card"><div class="metric-label">New</div><div class="metric-value">207</div><div class="metric-sub">Not yet contacted</div></div>
+    <div class="metric-card"><div class="metric-label">Research</div><div class="metric-value">371</div><div class="metric-sub">51% of open pipeline</div></div>
+    <div class="metric-card"><div class="metric-label">Outreach</div><div class="metric-value">182</div><div class="metric-sub">19% of open pipeline</div></div>
+    <div class="metric-card"><div class="metric-label">Discovery</div><div class="metric-value">29</div><div class="metric-sub">Active discovery calls</div></div>
     <div class="metric-card amber"><div class="metric-label">On Hold</div><div class="metric-value">6</div><div class="metric-sub">Paused</div></div>
   </div>
   <div class="chart-grid chart-grid-2">
@@ -281,11 +280,11 @@ body{font-family:'DM Sans',sans-serif;background:var(--gs-bg);color:var(--gs-tex
       <div class="chart-card-title">Open pipeline by tier</div>
       <div class="chart-card-sub">Stacked — open stage counts per tier</div>
       <div class="legend">
-        <span class="legend-item"><span class="legend-dot" style="background:#378ADD"></span>New</span>
-        <span class="legend-item"><span class="legend-dot" style="background:#7F77DD"></span>Research</span>
-        <span class="legend-item"><span class="legend-dot" style="background:#1D9E75"></span>Outreach</span>
-        <span class="legend-item"><span class="legend-dot" style="background:#BA7517"></span>Discovery</span>
-        <span class="legend-item"><span class="legend-dot" style="background:#888780"></span>On Hold</span>
+        <span class="legend-item"><span class="legend-dot" style="background:#0076DE"></span>New</span>
+        <span class="legend-item"><span class="legend-dot" style="background:#5A6080"></span>Research</span>
+        <span class="legend-item"><span class="legend-dot" style="background:#1F8F66"></span>Outreach</span>
+        <span class="legend-item"><span class="legend-dot" style="background:#B57614"></span>Discovery</span>
+        <span class="legend-item"><span class="legend-dot" style="background:#9AA0B4"></span>On Hold</span>
       </div>
       <div class="chart-wrap" style="height:200px"><canvas id="c_pipeline_tier" role="img" aria-label="Pipeline by tier">Pipeline tier</canvas></div>
     </div>
@@ -294,13 +293,13 @@ body{font-family:'DM Sans',sans-serif;background:var(--gs-bg);color:var(--gs-tex
   <div class="section-header">Stage Distribution — % of All Records by Prospect Bucket</div>
   <div class="tier-legend">
     <span style="font-size:11px;font-weight:600;color:var(--gs-muted);text-transform:uppercase;letter-spacing:0.07em;margin-right:8px;align-self:center">Stage Legend:</span>
-    <span class="tier-legend-item"><span class="tier-legend-dot" style="background:#378ADD"></span><span class="tier-legend-name">New</span><span class="tier-legend-desc">— Assigned, not yet worked</span></span>
-    <span class="tier-legend-item"><span class="tier-legend-dot" style="background:#7F77DD"></span><span class="tier-legend-name">Research</span><span class="tier-legend-desc">— Being researched before contact</span></span>
-    <span class="tier-legend-item"><span class="tier-legend-dot" style="background:#1D9E75"></span><span class="tier-legend-name">Outreach</span><span class="tier-legend-desc">— Active contact attempts</span></span>
-    <span class="tier-legend-item"><span class="tier-legend-dot" style="background:#BA7517"></span><span class="tier-legend-name">Discovery</span><span class="tier-legend-desc">— Discovery call scheduled/held</span></span>
-    <span class="tier-legend-item"><span class="tier-legend-dot" style="background:#888780"></span><span class="tier-legend-name">On Hold</span><span class="tier-legend-desc">— Temporarily paused</span></span>
-    <span class="tier-legend-item"><span class="tier-legend-dot" style="background:#639922"></span><span class="tier-legend-name">Closed/Qualified</span><span class="tier-legend-desc">— Opp opened</span></span>
-    <span class="tier-legend-item"><span class="tier-legend-dot" style="background:#E24B4A"></span><span class="tier-legend-name">Closed/DQ</span><span class="tier-legend-desc">— Disqualified</span></span>
+    <span class="tier-legend-item"><span class="tier-legend-dot" style="background:#0076DE"></span><span class="tier-legend-name">New</span><span class="tier-legend-desc">— Assigned, not yet worked</span></span>
+    <span class="tier-legend-item"><span class="tier-legend-dot" style="background:#5A6080"></span><span class="tier-legend-name">Research</span><span class="tier-legend-desc">— Being researched before contact</span></span>
+    <span class="tier-legend-item"><span class="tier-legend-dot" style="background:#1F8F66"></span><span class="tier-legend-name">Outreach</span><span class="tier-legend-desc">— Active contact attempts</span></span>
+    <span class="tier-legend-item"><span class="tier-legend-dot" style="background:#B57614"></span><span class="tier-legend-name">Discovery</span><span class="tier-legend-desc">— Discovery call scheduled/held</span></span>
+    <span class="tier-legend-item"><span class="tier-legend-dot" style="background:#9AA0B4"></span><span class="tier-legend-name">On Hold</span><span class="tier-legend-desc">— Temporarily paused</span></span>
+    <span class="tier-legend-item"><span class="tier-legend-dot" style="background:#2E8B57"></span><span class="tier-legend-name">Closed/Qualified</span><span class="tier-legend-desc">— Opp opened</span></span>
+    <span class="tier-legend-item"><span class="tier-legend-dot" style="background:#D63B3B"></span><span class="tier-legend-name">Closed/DQ</span><span class="tier-legend-desc">— Disqualified</span></span>
   </div>
   <div class="chart-grid chart-grid-2">
     <div class="chart-card">
@@ -323,12 +322,12 @@ body{font-family:'DM Sans',sans-serif;background:var(--gs-bg);color:var(--gs-tex
   <div class="chart-grid chart-grid-2">
     <div class="chart-card">
       <div class="chart-card-title">Qual & DQ rate by tier</div>
-      <div class="legend"><span class="legend-item"><span class="legend-dot" style="background:#1D9E75"></span>Qual %</span><span class="legend-item"><span class="legend-dot" style="background:#E24B4A"></span>DQ %</span></div>
+      <div class="legend"><span class="legend-item"><span class="legend-dot" style="background:#1F8F66"></span>Qual %</span><span class="legend-item"><span class="legend-dot" style="background:#D63B3B"></span>DQ %</span></div>
       <div class="chart-wrap" style="height:230px"><canvas id="c_conv_tier2" role="img" aria-label="Conv by tier">Conv tier</canvas></div>
     </div>
     <div class="chart-card">
       <div class="chart-card-title">Qual & DQ rate by ICP</div>
-      <div class="legend"><span class="legend-item"><span class="legend-dot" style="background:#1D9E75"></span>Qual %</span><span class="legend-item"><span class="legend-dot" style="background:#E24B4A"></span>DQ %</span></div>
+      <div class="legend"><span class="legend-item"><span class="legend-dot" style="background:#1F8F66"></span>Qual %</span><span class="legend-item"><span class="legend-dot" style="background:#D63B3B"></span>DQ %</span></div>
       <div class="chart-wrap" style="height:230px"><canvas id="c_conv_icp2" role="img" aria-label="Conv by ICP">Conv ICP</canvas></div>
     </div>
   </div>
@@ -347,17 +346,17 @@ body{font-family:'DM Sans',sans-serif;background:var(--gs-bg);color:var(--gs-tex
 <div class="section" id="section-dq">
   <div class="callout callout-warn"><strong>Unresponsive (614 records YTD) is #1 every month.</strong> Click any reason bucket to drill into individual prospects. Champify-sourced prospects drive most of the Unresponsive DQ volume.</div>
   <div class="metric-row">
-    <div class="metric-card red"><div class="metric-label">Total DQ</div><div class="metric-value" id="dq-total">1,665</div><div class="metric-sub">Across all prospect records</div></div>
-    <div class="metric-card red" style="cursor:pointer" onclick="openDrillDown('Unresponsive')" title="Click to see prospects"><div class="metric-label">Unresponsive <span style="font-size:10px;opacity:0.7">↗</span></div><div class="metric-value">695</div><div class="metric-sub">41.7% of DQs — click to drill in</div></div>
-    <div class="metric-card amber" style="cursor:pointer" onclick="openDrillDown('Not Government Focused')" title="Click to see prospects"><div class="metric-label">Not Govt Focused <span style="font-size:10px;opacity:0.7">↗</span></div><div class="metric-value">236</div><div class="metric-sub">14.2% of DQs — click to drill in</div></div>
-    <div class="metric-card amber" style="cursor:pointer" onclick="openDrillDown('False Lead')" title="Click to see prospects"><div class="metric-label">False Lead <span style="font-size:10px;opacity:0.7">↗</span></div><div class="metric-value">247</div><div class="metric-sub">14.8% of DQs — click to drill in</div></div>
-    <div class="metric-card" style="cursor:pointer" onclick="openDrillDown('Not a Decision Maker')" title="Click to see prospects"><div class="metric-label">Not Decision Maker <span style="font-size:10px;opacity:0.7">↗</span></div><div class="metric-value">67</div><div class="metric-sub">4.0% of DQs — click to drill in</div></div>
+    <div class="metric-card red"><div class="metric-label">Total DQ</div><div class="metric-value" id="dq-total">1,699</div><div class="metric-sub">Across all prospect records</div></div>
+    <div class="metric-card red" style="cursor:pointer" onclick="openDrillDown('Unresponsive')" title="Click to see prospects"><div class="metric-label">Unresponsive <span style="font-size:10px;opacity:0.7">↗</span></div><div class="metric-value">704</div><div class="metric-sub">41.4% of DQs — click to drill in</div></div>
+    <div class="metric-card amber" style="cursor:pointer" onclick="openDrillDown('Not Government Focused')" title="Click to see prospects"><div class="metric-label">Not Govt Focused <span style="font-size:10px;opacity:0.7">↗</span></div><div class="metric-value">244</div><div class="metric-sub">14.4% of DQs — click to drill in</div></div>
+    <div class="metric-card amber" style="cursor:pointer" onclick="openDrillDown('False Lead')" title="Click to see prospects"><div class="metric-label">False Lead <span style="font-size:10px;opacity:0.7">↗</span></div><div class="metric-value">256</div><div class="metric-sub">15.1% of DQs — click to drill in</div></div>
+    <div class="metric-card" style="cursor:pointer" onclick="openDrillDown('Not a Decision Maker')" title="Click to see prospects"><div class="metric-label">Not Decision Maker <span style="font-size:10px;opacity:0.7">↗</span></div><div class="metric-value">70</div><div class="metric-sub">4.1% of DQs — click to drill in</div></div>
     <div class="metric-card" style="cursor:pointer" onclick="openDrillDown('Budget')" title="Click to see prospects"><div class="metric-label">Budget <span style="font-size:10px;opacity:0.7">↗</span></div><div class="metric-value">30</div><div class="metric-sub">1.8% of DQs — click to drill in</div></div>
   </div>
   <div class="chart-grid chart-grid-2">
     <div class="chart-card">
       <div class="chart-card-title">DQ reason distribution</div>
-      <div class="chart-card-sub" style="color:#1A6DC0;font-weight:500">↓ Click a segment to see individual prospects</div>
+      <div class="chart-card-sub" style="color:#0076DE;font-weight:500">↓ Click a segment to see individual prospects</div>
       <div class="chart-wrap" style="height:230px"><canvas id="c_dq_donut" role="img" aria-label="DQ reasons — click to drill in" style="cursor:pointer">DQ reasons</canvas></div>
     </div>
     <div class="chart-card">
@@ -366,14 +365,14 @@ body{font-family:'DM Sans',sans-serif;background:var(--gs-bg);color:var(--gs-tex
       <div class="chart-wrap" style="height:220px"><canvas id="c_dq_mom" role="img" aria-label="DQ MoM" style="cursor:pointer">DQ MoM</canvas></div>
       <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px">
         <span style="font-size:11px;color:var(--gs-muted);align-self:center;margin-right:4px">Drill into:</span>
-        <button onclick="openDrillDown('Unresponsive')" style="font-size:11px;padding:3px 10px;border-radius:12px;border:1.5px solid #E24B4A;background:transparent;color:#E24B4A;cursor:pointer">Unresponsive</button>
-        <button onclick="openDrillDown('Not Government Focused')" style="font-size:11px;padding:3px 10px;border-radius:12px;border:1.5px solid #BA7517;background:transparent;color:#BA7517;cursor:pointer">Not Govt Focused</button>
-        <button onclick="openDrillDown('False Lead')" style="font-size:11px;padding:3px 10px;border-radius:12px;border:1.5px solid #378ADD;background:transparent;color:#378ADD;cursor:pointer">False Lead</button>
-        <button onclick="openDrillDown('Other')" style="font-size:11px;padding:3px 10px;border-radius:12px;border:1.5px solid #888780;background:transparent;color:#64748B;cursor:pointer">Other</button>
-        <button onclick="openDrillDown('Not a Decision Maker')" style="font-size:11px;padding:3px 10px;border-radius:12px;border:1.5px solid #7F77DD;background:transparent;color:#7F77DD;cursor:pointer">Not Decision Maker</button>
-        <button onclick="openDrillDown('Only Bids Focused')" style="font-size:11px;padding:3px 10px;border-radius:12px;border:1.5px solid #1D9E75;background:transparent;color:#1D9E75;cursor:pointer">Only Bids Focused</button>
-        <button onclick="openDrillDown('Budget')" style="font-size:11px;padding:3px 10px;border-radius:12px;border:1.5px solid #97C459;background:transparent;color:#639922;cursor:pointer">Budget</button>
-        <button onclick="openDrillDown('Unsubscribed')" style="font-size:11px;padding:3px 10px;border-radius:12px;border:1.5px solid #D4537E;background:transparent;color:#D4537E;cursor:pointer">Unsubscribed</button>
+        <button onclick="openDrillDown('Unresponsive')" style="font-size:11px;padding:3px 10px;border-radius:12px;border:1.5px solid #D63B3B;background:transparent;color:#D63B3B;cursor:pointer">Unresponsive</button>
+        <button onclick="openDrillDown('Not Government Focused')" style="font-size:11px;padding:3px 10px;border-radius:12px;border:1.5px solid #B57614;background:transparent;color:#B57614;cursor:pointer">Not Govt Focused</button>
+        <button onclick="openDrillDown('False Lead')" style="font-size:11px;padding:3px 10px;border-radius:12px;border:1.5px solid #0076DE;background:transparent;color:#0076DE;cursor:pointer">False Lead</button>
+        <button onclick="openDrillDown('Other')" style="font-size:11px;padding:3px 10px;border-radius:12px;border:1.5px solid #9AA0B4;background:transparent;color:#64748B;cursor:pointer">Other</button>
+        <button onclick="openDrillDown('Not a Decision Maker')" style="font-size:11px;padding:3px 10px;border-radius:12px;border:1.5px solid #5A6080;background:transparent;color:#5A6080;cursor:pointer">Not Decision Maker</button>
+        <button onclick="openDrillDown('Only Bids Focused')" style="font-size:11px;padding:3px 10px;border-radius:12px;border:1.5px solid #1F8F66;background:transparent;color:#1F8F66;cursor:pointer">Only Bids Focused</button>
+        <button onclick="openDrillDown('Budget')" style="font-size:11px;padding:3px 10px;border-radius:12px;border:1.5px solid #6FB57A;background:transparent;color:#2E8B57;cursor:pointer">Budget</button>
+        <button onclick="openDrillDown('Unsubscribed')" style="font-size:11px;padding:3px 10px;border-radius:12px;border:1.5px solid #00529B;background:transparent;color:#00529B;cursor:pointer">Unsubscribed</button>
       </div>
     </div>
   </div>
@@ -498,7 +497,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gs-bg);color:var(--gs-tex
   <div class="chart-grid chart-grid-1">
     <div class="chart-card">
       <div class="chart-card-title">Speed by record type</div>
-      <div class="legend"><span class="legend-item"><span class="legend-dot" style="background:#378ADD"></span>New→Outreach avg</span><span class="legend-item"><span class="legend-dot" style="background:#7F77DD"></span>Outreach duration avg</span></div>
+      <div class="legend"><span class="legend-item"><span class="legend-dot" style="background:#0076DE"></span>New→Outreach avg</span><span class="legend-item"><span class="legend-dot" style="background:#5A6080"></span>Outreach duration avg</span></div>
       <div class="chart-wrap" style="height:210px"><canvas id="c_speed_origin" role="img" aria-label="Speed by origin">Speed origin</canvas></div>
     </div>
   </div>
@@ -537,61 +536,61 @@ body{font-family:'DM Sans',sans-serif;background:var(--gs-bg);color:var(--gs-tex
 const MONTHS_ALL = ["2025-09","2025-10","2025-11","2025-12","2026-01","2026-02","2026-03","2026-04","2026-05"];
 const MONTH_LABELS = {"2025-09":"Sep '25","2025-10":"Oct '25","2025-11":"Nov '25","2025-12":"Dec '25","2026-01":"Jan '26","2026-02":"Feb '26","2026-03":"Mar '26","2026-04":"Apr '26","2026-05":"May '26"};
 
-const MONTHLY_DATA = {"2025-09":{"total":0,"qual":0,"dq":0,"qual_pct":0.0,"dq_pct":0.0,"tiers":{},"icps":{},"dq_reasons":{}},"2025-10":{"total":0,"qual":0,"dq":0,"qual_pct":0.0,"dq_pct":0.0,"tiers":{},"icps":{},"dq_reasons":{}},"2025-11":{"total":0,"qual":0,"dq":0,"qual_pct":0.0,"dq_pct":0.0,"tiers":{},"icps":{},"dq_reasons":{}},"2025-12":{"total":0,"qual":0,"dq":0,"qual_pct":0.0,"dq_pct":0.0,"tiers":{},"icps":{},"dq_reasons":{}},"2026-01":{"total":800,"qual":97,"dq":558,"tiers":{"Tier 1 (Inbound)":264,"Tier 2 (Trade Show)":20,"Tier 4 (Good Fit)":516},"icps":{"Enterprise ICP":88,"Strategic ICP":167,"Mid-Market ICP":25,"Non-ICP":520},"dq_reasons":{"Competitor":4,"Only Bids Focused":8,"Other":116,"Unresponsive":212,"Unsubscribed":11,"False Lead":76,"Unknown":2,"Not Government Focused":84,"Budget":10,"Not a Decision Maker":35},"qual_pct":12.1,"dq_pct":69.8},"2026-02":{"total":818,"qual":86,"dq":576,"tiers":{"Tier 1 (Inbound)":240,"Tier 2 (Trade Show)":20,"Tier 4 (Good Fit)":558},"icps":{"Enterprise ICP":45,"Strategic ICP":162,"Mid-Market ICP":27,"Non-ICP":584},"dq_reasons":{"Budget":8,"Not Government Focused":95,"Not a Decision Maker":17,"Only Bids Focused":4,"Other":100,"Unresponsive":274,"Unsubscribed":4,"False Lead":73,"Competitor":1},"qual_pct":10.5,"dq_pct":70.4},"2026-03":{"total":392,"qual":83,"dq":225,"tiers":{"Tier 1 (Inbound)":238,"Tier 2 (Trade Show)":25,"Tier 4 (Good Fit)":129},"icps":{"Enterprise ICP":34,"Strategic ICP":78,"Mid-Market ICP":24,"Non-ICP":256},"dq_reasons":{"Competitor":1,"Unresponsive":78,"Other":47,"False Lead":34,"Unsubscribed":3,"Budget":6,"Not Government Focused":33,"Only Bids Focused":13,"Not a Decision Maker":10},"qual_pct":21.2,"dq_pct":57.4},"2026-04":{"total":476,"qual":116,"dq":211,"tiers":{"Tier 1 (Inbound)":267,"Tier 2 (Trade Show)":83,"Tier 4 (Good Fit)":126},"icps":{"Enterprise ICP":39,"Strategic ICP":114,"Mid-Market ICP":32,"Non-ICP":290},"dq_reasons":{"False Lead":39,"Not Government Focused":18,"Budget":3,"Competitor":2,"Not a Decision Maker":3,"Only Bids Focused":9,"Other":40,"Unresponsive":96,"Unsubscribed":1},"qual_pct":24.4,"dq_pct":44.3},"2026-05":{"total":296,"qual":52,"dq":94,"tiers":{"Tier 1 (Inbound)":201,"Tier 2 (Trade Show)":55,"Tier 4 (Good Fit)":40},"icps":{"Enterprise ICP":25,"Strategic ICP":63,"Mid-Market ICP":13,"Non-ICP":195},"dq_reasons":{"False Lead":25,"Not Government Focused":6,"Budget":3,"Not a Decision Maker":2,"Only Bids Focused":4,"Other":18,"Unresponsive":35,"Unsubscribed":1},"qual_pct":17.6,"dq_pct":31.8}};
+const MONTHLY_DATA = {"2025-09":{"total":0,"qual":0,"dq":0,"qual_pct":0.0,"dq_pct":0.0,"tiers":{},"icps":{},"dq_reasons":{}},"2025-10":{"total":0,"qual":0,"dq":0,"qual_pct":0.0,"dq_pct":0.0,"tiers":{},"icps":{},"dq_reasons":{}},"2025-11":{"total":0,"qual":0,"dq":0,"qual_pct":0.0,"dq_pct":0.0,"tiers":{},"icps":{},"dq_reasons":{}},"2025-12":{"total":0,"qual":0,"dq":0,"qual_pct":0.0,"dq_pct":0.0,"tiers":{},"icps":{},"dq_reasons":{}},"2026-01":{"total":800,"qual":97,"dq":558,"tiers":{"Tier 1 (Inbound)":264,"Tier 2 (Trade Show)":20,"Tier 4 (Good Fit)":516},"icps":{"Enterprise ICP":88,"Strategic ICP":167,"Mid-Market ICP":25,"Non-ICP":520},"dq_reasons":{"Unknown":2,"Budget":10,"Competitor":4,"False Lead":76,"Not a Decision Maker":35,"Not Government Focused":84,"Only Bids Focused":8,"Other":116,"Unresponsive":212,"Unsubscribed":11},"qual_pct":12.1,"dq_pct":69.8},"2026-02":{"total":819,"qual":86,"dq":577,"tiers":{"Tier 1 (Inbound)":240,"Tier 2 (Trade Show)":20,"Tier 4 (Good Fit)":559},"icps":{"Enterprise ICP":46,"Strategic ICP":161,"Mid-Market ICP":27,"Non-ICP":585},"dq_reasons":{"Budget":8,"Competitor":1,"False Lead":73,"Not a Decision Maker":17,"Not Government Focused":95,"Only Bids Focused":4,"Other":101,"Unresponsive":274,"Unsubscribed":4},"qual_pct":10.5,"dq_pct":70.5},"2026-03":{"total":392,"qual":83,"dq":225,"tiers":{"Tier 1 (Inbound)":238,"Tier 2 (Trade Show)":25,"Tier 4 (Good Fit)":129},"icps":{"Enterprise ICP":34,"Strategic ICP":78,"Mid-Market ICP":24,"Non-ICP":256},"dq_reasons":{"Budget":6,"Competitor":1,"False Lead":34,"Not a Decision Maker":10,"Not Government Focused":33,"Only Bids Focused":13,"Other":47,"Unresponsive":78,"Unsubscribed":3},"qual_pct":21.2,"dq_pct":57.4},"2026-04":{"total":521,"qual":117,"dq":225,"tiers":{"Tier 1 (Inbound)":267,"Tier 2 (Trade Show)":83,"Tier 4 (Good Fit)":171},"icps":{"Enterprise ICP":46,"Strategic ICP":144,"Mid-Market ICP":32,"Non-ICP":298},"dq_reasons":{"Budget":3,"Competitor":2,"False Lead":44,"Not a Decision Maker":6,"Not Government Focused":18,"Only Bids Focused":9,"Other":42,"Unresponsive":100,"Unsubscribed":1},"qual_pct":22.5,"dq_pct":43.2},"2026-05":{"total":387,"qual":57,"dq":112,"tiers":{"Tier 1 (Inbound)":201,"Tier 2 (Trade Show)":55,"Tier 4 (Good Fit)":131},"icps":{"Enterprise ICP":43,"Strategic ICP":81,"Mid-Market ICP":16,"Non-ICP":247},"dq_reasons":{"Budget":3,"False Lead":28,"Not a Decision Maker":2,"Not Government Focused":14,"Only Bids Focused":4,"Other":19,"Unresponsive":40,"Unsubscribed":2},"qual_pct":14.7,"dq_pct":28.9}};
 
-const SPEED_DATA = {"2026-01":{"n2o":185.6,"o2d":177.2},"2026-02":{"n2o":75.1,"o2d":228.1},"2026-03":{"n2o":92.6,"o2d":157.8},"2026-04":{"n2o":68.7,"o2d":135.9},"2026-05":{"n2o":79.7,"o2d":118.1}};
+const SPEED_DATA = {"2026-01":{"n2o":185.6,"o2d":177.2},"2026-02":{"n2o":75.1,"o2d":228.1},"2026-03":{"n2o":92.6,"o2d":157.8},"2026-04":{"n2o":74.0,"o2d":144.5},"2026-05":{"n2o":90.3,"o2d":124.7}};
 
 const REP_DATA = [
-  {name:"Keelan Richer",team:"Mid Market",total:407,qual:52,n2o:75.8,o2d:156.4,dq_top:"Unresponsive",dq_pct:58},
-  {name:"Jake Affeldt",team:"Mid Market",total:349,qual:41,n2o:35.6,o2d:108.8,dq_top:"Unresponsive",dq_pct:55},
-  {name:"Jamie Dolnick",team:"Mid Market",total:207,qual:40,n2o:68.0,o2d:237.9,dq_top:"Unresponsive",dq_pct:54},
-  {name:"Eric Swedler",team:"Mid Market",total:181,qual:19,n2o:93.4,o2d:221.3,dq_top:"Unresponsive",dq_pct:54},
-  {name:"Blake Cornett",team:"Mid Market",total:172,qual:27,n2o:68.8,o2d:203.8,dq_top:"Other",dq_pct:29},
-  {name:"Bryce Gilgallon",team:"Mid Market",total:162,qual:44,n2o:66.6,o2d:334.7,dq_top:"False Lead",dq_pct:42},
-  {name:"Christopher Larson",team:"Mid Market",total:68,qual:4,n2o:249,o2d:0,dq_top:"Other",dq_pct:25},
+  {name:"Keelan Richer",team:"Mid Market",total:412,qual:53,n2o:75.7,o2d:155.5,dq_top:"Unresponsive",dq_pct:58},
+  {name:"Jake Affeldt",team:"Mid Market",total:355,qual:43,n2o:36.2,o2d:107.9,dq_top:"Unresponsive",dq_pct:55},
+  {name:"Jamie Dolnick",team:"Mid Market",total:228,qual:41,n2o:70.9,o2d:237.9,dq_top:"Unresponsive",dq_pct:54},
+  {name:"Eric Swedler",team:"Mid Market",total:196,qual:20,n2o:90.9,o2d:216.4,dq_top:"Unresponsive",dq_pct:51},
+  {name:"Blake Cornett",team:"Mid Market",total:175,qual:27,n2o:69.1,o2d:203.8,dq_top:"Other",dq_pct:29},
+  {name:"Bryce Gilgallon",team:"Mid Market",total:164,qual:45,n2o:66.6,o2d:370.4,dq_top:"False Lead",dq_pct:40},
+  {name:"Christopher Larson",team:"Mid Market",total:73,qual:4,n2o:210.9,o2d:0,dq_top:"Other",dq_pct:25},
   {name:"Gilbert Butler",team:"Mid Market",total:66,qual:19,n2o:39.9,o2d:193.4,dq_top:"Unresponsive",dq_pct:51},
-  {name:"Jordan Sharaf",team:"Mid Market",total:64,qual:4,n2o:173.0,o2d:47.9,dq_top:"Other",dq_pct:55},
+  {name:"Jordan Sharaf",team:"Mid Market",total:65,qual:4,n2o:162.3,o2d:47.9,dq_top:"Other",dq_pct:55},
   {name:"Ryan Levy",team:"Mid Market",total:45,qual:5,n2o:61.6,o2d:96.9,dq_top:"False Lead",dq_pct:75},
-  {name:"Mayra Ramirez",team:"Mid Market",total:43,qual:0,n2o:336.4,o2d:39.0,dq_top:"False Lead",dq_pct:77},
+  {name:"Tyler Owen",team:"Mid Market",total:45,qual:9,n2o:665.5,o2d:0,dq_top:"Other",dq_pct:45},
+  {name:"Mayra Ramirez",team:"Mid Market",total:44,qual:0,n2o:336.4,o2d:39.0,dq_top:"False Lead",dq_pct:77},
   {name:"Connor Molloy",team:"Mid Market",total:43,qual:3,n2o:3.7,o2d:21.1,dq_top:"False Lead",dq_pct:67},
-  {name:"Jonathan Silverstone",team:"Mid Market",total:32,qual:5,n2o:405.9,o2d:6.5,dq_top:"False Lead",dq_pct:100},
-  {name:"Tyler Owen",team:"Mid Market",total:32,qual:6,n2o:956.3,o2d:0,dq_top:"Unresponsive",dq_pct:50},
-  {name:"Baxter Knight",team:"Mid Market",total:27,qual:0,n2o:312.8,o2d:0,dq_top:"False Lead",dq_pct:100},
-  {name:"Mark Owen",team:"Mid Market",total:24,qual:8,n2o:1.2,o2d:105.8,dq_top:"Unresponsive",dq_pct:67},
+  {name:"Mark Owen",team:"Mid Market",total:37,qual:8,n2o:38.9,o2d:105.8,dq_top:"Unresponsive",dq_pct:57},
+  {name:"Jonathan Silverstone",team:"Mid Market",total:33,qual:5,n2o:405.9,o2d:6.5,dq_top:"False Lead",dq_pct:100},
+  {name:"Baxter Knight",team:"Mid Market",total:28,qual:0,n2o:312.8,o2d:0,dq_top:"False Lead",dq_pct:100},
+  {name:"Kyle Latham",team:"Mid Market",total:20,qual:0,n2o:144.7,o2d:0,dq_top:"False Lead",dq_pct:67},
   {name:"Jessica Thompson",team:"Mid Market",total:20,qual:0,n2o:20.7,o2d:0,dq_top:"Other",dq_pct:92},
-  {name:"Kyle Latham",team:"Mid Market",total:20,qual:0,n2o:90.4,o2d:0,dq_top:"Other",dq_pct:50},
   {name:"Nate Van De Graff",team:"Mid Market",total:19,qual:1,n2o:91.8,o2d:163.8,dq_top:"\u2014",dq_pct:0},
-  {name:"Mara Chotiner",team:"Mid Market",total:18,qual:0,n2o:256.4,o2d:0,dq_top:"False Lead",dq_pct:100},
+  {name:"Mara Chotiner",team:"Mid Market",total:19,qual:0,n2o:256.4,o2d:0,dq_top:"False Lead",dq_pct:100},
+  {name:"Sean Williams",team:"Mid Market",total:18,qual:3,n2o:54.1,o2d:363.1,dq_top:"Budget",dq_pct:50},
   {name:"Hayley Lane",team:"Mid Market",total:17,qual:7,n2o:157.3,o2d:26.2,dq_top:"False Lead",dq_pct:80},
-  {name:"Sean Williams",team:"Mid Market",total:16,qual:1,n2o:54.1,o2d:30,dq_top:"Budget",dq_pct:50},
   {name:"Kayla Maldonado",team:"Mid Market",total:16,qual:0,n2o:294.0,o2d:0,dq_top:"False Lead",dq_pct:100},
   {name:"Jace Short",team:"Mid Market",total:15,qual:0,n2o:187.2,o2d:724.5,dq_top:"False Lead",dq_pct:50},
   {name:"Marc Digeronimo",team:"Mid Market",total:14,qual:1,n2o:54.7,o2d:0,dq_top:"\u2014",dq_pct:0},
+  {name:"Stephanie Zuluaga",team:"Mid Market",total:13,qual:0,n2o:3.9,o2d:0,dq_top:"\u2014",dq_pct:0},
   {name:"Tiffany Grover",team:"Mid Market",total:12,qual:3,n2o:78.0,o2d:0,dq_top:"Other",dq_pct:80},
-  {name:"Stephanie Zuluaga",team:"Mid Market",total:12,qual:0,n2o:3.9,o2d:0,dq_top:"\u2014",dq_pct:0},
-  {name:"Erika Flynn",team:"Mid Market",total:11,qual:6,n2o:15.3,o2d:0.1,dq_top:"False Lead",dq_pct:67},
   {name:"Shannon Boudreaux",team:"Mid Market",total:11,qual:0,n2o:0,o2d:0,dq_top:"Unknown",dq_pct:100},
-  {name:"Jaden Trujillo",team:"Mid Market",total:10,qual:0,n2o:116.7,o2d:0,dq_top:"\u2014",dq_pct:0},
-  {name:"Steven Miner",team:"Mid Market",total:9,qual:0,n2o:0,o2d:0,dq_top:"\u2014",dq_pct:0},
-  {name:"Chris Dennis",team:"Mid Market",total:8,qual:3,n2o:125.3,o2d:36.4,dq_top:"False Lead",dq_pct:40},
+  {name:"Jaden Trujillo",team:"Mid Market",total:11,qual:0,n2o:116.7,o2d:0,dq_top:"Unresponsive",dq_pct:100},
+  {name:"Erika Flynn",team:"Mid Market",total:11,qual:6,n2o:15.3,o2d:0.1,dq_top:"False Lead",dq_pct:67},
+  {name:"Steven Miner",team:"Mid Market",total:10,qual:0,n2o:0,o2d:0,dq_top:"\u2014",dq_pct:0},
   {name:"Murphy Allen",team:"Mid Market",total:8,qual:2,n2o:81.3,o2d:312.9,dq_top:"Other",dq_pct:100},
-  {name:"Lori Strauss",team:"Mid Market",total:7,qual:1,n2o:92.2,o2d:66.2,dq_top:"Other",dq_pct:50},
+  {name:"Connor Duddy",team:"Mid Market",total:8,qual:0,n2o:100.7,o2d:0,dq_top:"\u2014",dq_pct:0},
+  {name:"Chris Dennis",team:"Mid Market",total:8,qual:3,n2o:125.3,o2d:36.4,dq_top:"False Lead",dq_pct:40},
   {name:"Brian Mooney",team:"Mid Market",total:7,qual:0,n2o:0,o2d:0,dq_top:"\u2014",dq_pct:0},
+  {name:"Lori Strauss",team:"Mid Market",total:7,qual:1,n2o:92.2,o2d:66.2,dq_top:"Other",dq_pct:50},
   {name:"Jonathan Ross",team:"Mid Market",total:6,qual:1,n2o:113.2,o2d:0,dq_top:"Unresponsive",dq_pct:80},
   {name:"Kelly Weed",team:"Mid Market",total:5,qual:0,n2o:2.9,o2d:168,dq_top:"False Lead",dq_pct:100},
-  {name:"Malia Simpson",team:"Mid Market",total:5,qual:0,n2o:95.8,o2d:191.2,dq_top:"Other",dq_pct:50},
-  {name:"Alexander Oakley",team:"Strategic A",total:52,qual:22,n2o:301.3,o2d:185.9,dq_top:"Other",dq_pct:36},
-  {name:"Cory Kozlin",team:"Strategic A",total:29,qual:6,n2o:187.2,o2d:67.0,dq_top:"False Lead",dq_pct:42},
-  {name:"Kris Hodgen",team:"Strategic A",total:23,qual:10,n2o:74.1,o2d:85.5,dq_top:"False Lead",dq_pct:89},
+  {name:"Cory Kozlin",team:"Strategic A",total:75,qual:6,n2o:140.1,o2d:212.1,dq_top:"False Lead",dq_pct:56},
+  {name:"Alexander Oakley",team:"Strategic A",total:66,qual:22,n2o:241.4,o2d:185.9,dq_top:"Other",dq_pct:36},
+  {name:"Kris Hodgen",team:"Strategic A",total:31,qual:10,n2o:83.4,o2d:85.5,dq_top:"False Lead",dq_pct:89},
   {name:"Dan King",team:"Strategic A",total:20,qual:9,n2o:72.1,o2d:102.0,dq_top:"Other",dq_pct:40},
-  {name:"Jose Delgado",team:"Strategic A",total:18,qual:9,n2o:130.6,o2d:3.2,dq_top:"Not a Decision Maker",dq_pct:50},
-  {name:"Corey Monfordini",team:"Strategic B",total:98,qual:12,n2o:153.7,o2d:293.6,dq_top:"Unresponsive",dq_pct:41},
+  {name:"Jose Delgado",team:"Strategic A",total:13,qual:9,n2o:130.6,o2d:3.2,dq_top:"Not a Decision Maker",dq_pct:50},
+  {name:"Corey Monfordini",team:"Strategic B",total:111,qual:12,n2o:132.8,o2d:284.4,dq_top:"Unresponsive",dq_pct:40},
   {name:"Shawn Young",team:"Strategic B",total:74,qual:21,n2o:80.1,o2d:211.0,dq_top:"Unresponsive",dq_pct:47},
-  {name:"Pedro Hurtado",team:"Strategic B",total:67,qual:10,n2o:138.6,o2d:241.7,dq_top:"Other",dq_pct:52},
-  {name:"James Biesinger",team:"Strategic B",total:65,qual:6,n2o:183.7,o2d:141.0,dq_top:"False Lead",dq_pct:59},
-  {name:"Michael Roxin",team:"Strategic B",total:64,qual:5,n2o:169.4,o2d:212.2,dq_top:"Unresponsive",dq_pct:41},
-  {name:"Lauren Barbour",team:"Strategic B",total:55,qual:5,n2o:18.6,o2d:389.9,dq_top:"Other",dq_pct:30},
-  {name:"Cameron Collins",team:"Strategic B",total:29,qual:15,n2o:42.1,o2d:87.4,dq_top:"False Lead",dq_pct:50}
+  {name:"Michael Roxin",team:"Strategic B",total:73,qual:6,n2o:150.4,o2d:212.2,dq_top:"Unresponsive",dq_pct:40},
+  {name:"Pedro Hurtado",team:"Strategic B",total:68,qual:11,n2o:138.6,o2d:241.7,dq_top:"Other",dq_pct:52},
+  {name:"James Biesinger",team:"Strategic B",total:65,qual:6,n2o:183.7,o2d:141.0,dq_top:"False Lead",dq_pct:56},
+  {name:"Cameron Collins",team:"Strategic B",total:30,qual:15,n2o:42.1,o2d:87.4,dq_top:"False Lead",dq_pct:50},
+  {name:"Lauren Barbour",team:"Strategic B",total:28,qual:5,n2o:18.6,o2d:300.5,dq_top:"Other",dq_pct:30}
 ];
 
 // Benchmarks
@@ -656,7 +655,7 @@ const STAGE_LABEL = {NEW:'New',RES:'Research',OUT:'Outreach',DIS:'Discovery',HLD
 const ORIGIN_LABEL = {Demo:'Web - Demo Request',Champ:'Champify',Trade:'Trade Show',HiScore:'High Lead Score',LifeExp:'Life Insurance Expired',PropExp:'Property Casualty Expired',Manual:'Manually',Other:'Other'};
 const DQ_LABEL = {UR:'Unresponsive',FL:'False Lead',OT:'Other',NG:'Not Government Focused',ND:'Not a Decision Maker',OB:'Only Bids Focused',BG:'Budget',US:'Unsubscribed',CP:'Competitor'};
 const OPP_LABEL = {CW:'Closed Won',CL:'Closed Lost',DM:'Demo/Needs Analysis',OI:'Opportunity Identified',TR:'Trial',PR:'Proposal Sent/Negotiating',FN:'Finalizing Contract',NS:'Not Started'};
-const DQ_REASON_COLORS = {Unresponsive:'#E24B4A','Not Government Focused':'#BA7517','False Lead':'#378ADD',Other:'#888780','Not a Decision Maker':'#7F77DD','Only Bids Focused':'#1D9E75',Unsubscribed:'#D4537E',Budget:'#97C459',Competitor:'#F09595',Unknown:'#B4B2A9'};
+const DQ_REASON_COLORS = {Unresponsive:'#D63B3B','Not Government Focused':'#B57614','False Lead':'#0076DE',Other:'#9AA0B4','Not a Decision Maker':'#5A6080','Only Bids Focused':'#1F8F66',Unsubscribed:'#00529B',Budget:'#6FB57A',Competitor:'#E88A8A',Unknown:'#B9C0D4'};
 
 // ── CHART REGISTRY ──
 const charts = {};
@@ -724,17 +723,17 @@ function refreshAll(){
   });
   mkChart('c_ytd_donut','doughnut',{
     labels:['T1 Inbound','T2 Trade Show','T3 Intent','T4 Good Fit'],
-    datasets:[{data:[ytdT.t1,ytdT.t2,ytdT.t3,ytdT.t4],backgroundColor:['#378ADD','#1D9E75','#BA7517','#7F77DD'],borderWidth:2,borderColor:'#fff'}]
+    datasets:[{data:[ytdT.t1,ytdT.t2,ytdT.t3,ytdT.t4],backgroundColor:['#0076DE','#1F8F66','#B57614','#5A6080'],borderWidth:2,borderColor:'#fff'}]
   },{cutout:'62%',...noLeg,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>{const tot=ytdT.t1+ytdT.t2+ytdT.t3+ytdT.t4;return ' '+c.label+': '+c.raw.toLocaleString()+' ('+(tot?Math.round(c.raw/tot*100):0)+'%)'}}}}});
 
   // Monthly stacked tiers
   mkChart('c_tier_month','bar',{
     labels:months.map(m=>MONTH_LABELS[m]),
     datasets:[
-      {label:'T1',data:months.map(m=>MONTHLY_DATA[m]?.tiers?.['Tier 1 (Inbound)']||0),backgroundColor:'#378ADD',stack:'s'},
-      {label:'T2',data:months.map(m=>MONTHLY_DATA[m]?.tiers?.['Tier 2 (Trade Show)']||0),backgroundColor:'#1D9E75',stack:'s'},
-      {label:'T3',data:months.map(m=>MONTHLY_DATA[m]?.tiers?.['Tier 3 (Intent)']||0),backgroundColor:'#BA7517',stack:'s'},
-      {label:'T4',data:months.map(m=>MONTHLY_DATA[m]?.tiers?.['Tier 4 (Good Fit)']||0),backgroundColor:'#7F77DD',stack:'s'},
+      {label:'T1',data:months.map(m=>MONTHLY_DATA[m]?.tiers?.['Tier 1 (Inbound)']||0),backgroundColor:'#0076DE',stack:'s'},
+      {label:'T2',data:months.map(m=>MONTHLY_DATA[m]?.tiers?.['Tier 2 (Trade Show)']||0),backgroundColor:'#1F8F66',stack:'s'},
+      {label:'T3',data:months.map(m=>MONTHLY_DATA[m]?.tiers?.['Tier 3 (Intent)']||0),backgroundColor:'#B57614',stack:'s'},
+      {label:'T4',data:months.map(m=>MONTHLY_DATA[m]?.tiers?.['Tier 4 (Good Fit)']||0),backgroundColor:'#5A6080',stack:'s'},
     ]
   },{...noLeg,scales:{x:{...TC.x,stacked:true,ticks:{...TC.x.ticks,maxRotation:45,autoSkip:false}},y:{...TC.y,stacked:true}}});
 
@@ -753,23 +752,23 @@ function refreshAll(){
     });
   }
   // Tier conversion (use static rates — monthly decomposition not available per-tier)
-  const tierQual=[29.2, 19.2, 0.0, 2.8];
-  const tierDQ=[54.5, 26.6, 0.0, 69.1];
+  const tierQual=[29.3, 20.7, 0.0, 2.7];
+  const tierDQ=[54.7, 28.6, 0.0, 63.7];
   function convChart(id,labels,qual,dq){
-    mkChart(id,'bar',{labels,datasets:[{label:'Qual %',data:qual,backgroundColor:'#1D9E75'},{label:'DQ %',data:dq,backgroundColor:'#E24B4A'}]},{...noLeg,scales:{x:{...TC.x,ticks:{...TC.x.ticks,maxRotation:0,font:{size:10}}},y:{...TC.y,max:85,ticks:{...TC.y.ticks,callback:v=>v+'%'}}}});
+    mkChart(id,'bar',{labels,datasets:[{label:'Qual %',data:qual,backgroundColor:'#1F8F66'},{label:'DQ %',data:dq,backgroundColor:'#D63B3B'}]},{...noLeg,scales:{x:{...TC.x,ticks:{...TC.x.ticks,maxRotation:0,font:{size:10}}},y:{...TC.y,max:85,ticks:{...TC.y.ticks,callback:v=>v+'%'}}}});
   }
   convChart('c_conv_tier',tierShort,tierQual,tierDQ);
-  convChart('c_conv_icp',['Enterprise','Mid-Market','Strategic','Non-ICP'],[12.5, 38.8, 18.5, 13.5],[38.4, 46.3, 37.9, 70.0]);
+  convChart('c_conv_icp',['Enterprise','Mid-Market','Strategic','Non-ICP'],[11.5, 38.9, 17.0, 13.5],[36.5, 45.2, 35.6, 68.4]);
   convChart('c_conv_tier2',tierShort,tierQual,tierDQ);
-  convChart('c_conv_icp2',['Enterprise','Mid-Market','Strategic','Non-ICP'],[12.5, 38.8, 18.5, 13.5],[38.4, 46.3, 37.9, 70.0]);
+  convChart('c_conv_icp2',['Enterprise','Mid-Market','Strategic','Non-ICP'],[11.5, 38.9, 17.0, 13.5],[36.5, 45.2, 35.6, 68.4]);
   mkChart('c_conv_origin','bar',{
     labels:['Web Demo','Champify','Trade Show','High Score','Life Ins.','P&C'],
-    datasets:[{label:'Qual %',data:[29.2, 2.9, 19.2, 0.0, 0.0, 3.6],backgroundColor:['#378ADD','#7F77DD','#1D9E75','#BA7517','#E24B4A','#888780']}]
+    datasets:[{label:'Qual %',data:[29.3, 2.8, 20.7, 0.0, 0.0, 3.6],backgroundColor:['#0076DE','#5A6080','#1F8F66','#B57614','#D63B3B','#9AA0B4']}]
   },{...noLeg,scales:{x:{...TC.x,ticks:{...TC.x.ticks,maxRotation:20,font:{size:10}}},y:{...TC.y,max:40,ticks:{...TC.y.ticks,callback:v=>v+'%'}}}});
 
   // DQ chart
   const dqReasons=['Unresponsive','Not Government Focused','False Lead','Other','Not a Decision Maker','Only Bids Focused','Unsubscribed','Budget','Competitor'];
-  const dqCols=['#E24B4A','#BA7517','#378ADD','#888780','#7F77DD','#1D9E75','#D4537E','#97C459','#F09595'];
+  const dqCols=['#D63B3B','#B57614','#0076DE','#9AA0B4','#5A6080','#1F8F66','#00529B','#6FB57A','#E88A8A'];
   const dqTotals = dqReasons.map(r=>months.reduce((s,m)=>{
     const v=MONTHLY_DATA[m]?.dq_reasons?.[r]||0;
     return s+(r==='Unresponsive'?(v+(MONTHLY_DATA[m]?.dq_reasons?.['Unresonsive']||0)):v);
@@ -787,35 +786,35 @@ function refreshAll(){
   },{...noLeg,scales:{x:{...TC.x,stacked:true,ticks:{...TC.x.ticks,maxRotation:45,autoSkip:false}},y:{...TC.y,stacked:true}}});
   mkChart('c_dq_unresponsive','line',{
     labels:months.map(m=>MONTH_LABELS[m]),
-    datasets:[{label:'Unresponsive',data:months.map(m=>(MONTHLY_DATA[m]?.dq_reasons?.['Unresponsive']||0)+(MONTHLY_DATA[m]?.dq_reasons?.['Unresonsive']||0)),borderColor:'#E24B4A',backgroundColor:'rgba(226,75,74,0.08)',fill:true,tension:0.3,pointRadius:4,pointBackgroundColor:'#E24B4A'}]
+    datasets:[{label:'Unresponsive',data:months.map(m=>(MONTHLY_DATA[m]?.dq_reasons?.['Unresponsive']||0)+(MONTHLY_DATA[m]?.dq_reasons?.['Unresonsive']||0)),borderColor:'#D63B3B',backgroundColor:'rgba(214,59,59,0.08)',fill:true,tension:0.3,pointRadius:4,pointBackgroundColor:'#D63B3B'}]
   },{...noLeg,scales:{x:{...TC.x,ticks:{...TC.x.ticks,maxRotation:45,autoSkip:false}},y:{...TC.y}}});
 
   // Speed
   mkChart('c_speed_n2o','line',{
     labels:months.map(m=>MONTH_LABELS[m]),
-    datasets:[{label:'Avg hrs',data:months.map(m=>SPEED_DATA[m]?.n2o||null),borderColor:'#378ADD',backgroundColor:'rgba(55,138,221,0.08)',fill:true,tension:0.3,pointRadius:4,pointBackgroundColor:'#378ADD',spanGaps:true}]
+    datasets:[{label:'Avg hrs',data:months.map(m=>SPEED_DATA[m]?.n2o||null),borderColor:'#0076DE',backgroundColor:'rgba(0,118,222,0.08)',fill:true,tension:0.3,pointRadius:4,pointBackgroundColor:'#0076DE',spanGaps:true}]
   },{...noLeg,scales:{x:{...TC.x,ticks:{...TC.x.ticks,maxRotation:45,autoSkip:false}},y:{...TC.y,ticks:{...TC.y.ticks,callback:v=>v+'h'}}}});
   mkChart('c_speed_o2d','line',{
     labels:months.map(m=>MONTH_LABELS[m]),
-    datasets:[{label:'Avg hrs',data:months.map(m=>SPEED_DATA[m]?.o2d||null),borderColor:'#7F77DD',backgroundColor:'rgba(127,119,221,0.08)',fill:true,tension:0.3,pointRadius:4,pointBackgroundColor:'#7F77DD',spanGaps:true}]
+    datasets:[{label:'Avg hrs',data:months.map(m=>SPEED_DATA[m]?.o2d||null),borderColor:'#5A6080',backgroundColor:'rgba(90,96,128,0.10)',fill:true,tension:0.3,pointRadius:4,pointBackgroundColor:'#5A6080',spanGaps:true}]
   },{...noLeg,scales:{x:{...TC.x,ticks:{...TC.x.ticks,maxRotation:45,autoSkip:false}},y:{...TC.y,ticks:{...TC.y.ticks,callback:v=>v+'h'}}}});
 
   // Conversion table
   const cb = document.getElementById('convTableBody');
   const cvData=[
-    {seg:"T1 Inbound",type:"Tier",total:1220,qual:356,qualPct:29.2,dqPct:54.5},
-    {seg:"T2 Trade Show",type:"Tier",total:203,qual:39,qualPct:19.2,dqPct:26.6},
+    {seg:"T1 Inbound",type:"Tier",total:1244,qual:364,qualPct:29.3,dqPct:54.7},
+    {seg:"T2 Trade Show",type:"Tier",total:203,qual:42,qualPct:20.7,dqPct:28.6},
     {seg:"T3 Intent",type:"Tier",total:0,qual:0,qualPct:0.0,dqPct:0.0},
-    {seg:"T4 Good Fit",type:"Tier",total:1369,qual:39,qualPct:2.8,dqPct:69.1},
-    {seg:"Enterprise ICP",type:"ICP",total:232,qual:29,qualPct:12.5,dqPct:38.4},
-    {seg:"Strategic ICP",type:"ICP",total:585,qual:108,qualPct:18.5,dqPct:37.9},
-    {seg:"Mid-Market ICP",type:"ICP",total:121,qual:47,qualPct:38.8,dqPct:46.3},
-    {seg:"Non-ICP",type:"ICP",total:1853,qual:250,qualPct:13.5,dqPct:70.0},
+    {seg:"T4 Good Fit",type:"Tier",total:1506,qual:41,qualPct:2.7,dqPct:63.7},
+    {seg:"Enterprise ICP",type:"ICP",total:260,qual:30,qualPct:11.5,dqPct:36.5},
+    {seg:"Strategic ICP",type:"ICP",total:637,qual:108,qualPct:17.0,dqPct:35.6},
+    {seg:"Mid-Market ICP",type:"ICP",total:126,qual:49,qualPct:38.9,dqPct:45.2},
+    {seg:"Non-ICP",type:"ICP",total:1929,qual:260,qualPct:13.5,dqPct:68.4},
   ];
   cb.innerHTML='';
   cvData.forEach(r=>{
     const dq=Math.round(r.dqPct/100*r.total);
-    cb.innerHTML+=`<tr><td><strong>${r.seg}</strong></td><td><span class="pill ${r.type==='Tier'?'pill-blue':'pill-teal'}">${r.type}</span></td><td>${r.total.toLocaleString()}</td><td>${r.qual.toLocaleString()}</td><td><strong style="color:#0D8C72">${r.qualPct}%</strong></td><td>${dq.toLocaleString()}</td><td style="color:#D63B3B">${r.dqPct}%</td><td style="color:#64748B">${Math.max(0,r.total-r.qual-dq).toLocaleString()}</td></tr>`;
+    cb.innerHTML+=`<tr><td><strong>${r.seg}</strong></td><td><span class="pill ${r.type==='Tier'?'pill-blue':'pill-teal'}">${r.type}</span></td><td>${r.total.toLocaleString()}</td><td>${r.qual.toLocaleString()}</td><td><strong style="color:#1F8F66">${r.qualPct}%</strong></td><td>${dq.toLocaleString()}</td><td style="color:#D63B3B">${r.dqPct}%</td><td style="color:#64748B">${Math.max(0,r.total-r.qual-dq).toLocaleString()}</td></tr>`;
   });
 
   // Rep table
@@ -880,46 +879,46 @@ function refreshAll(){
 // ── STATIC CHARTS (not month-filtered) ──
 function buildStaticCharts() {
   // Pipeline
-  mkChart('c_pipeline_stage','bar',{labels:['New','Research','Outreach','Discovery','On Hold'],datasets:[{label:'Records',data:[206, 273, 158, 30, 6],backgroundColor:['#378ADD','#7F77DD','#1D9E75','#BA7517','#888780']}]},{...noLeg,indexAxis:'y',scales:{x:{...TC.x},y:{...TC.y,ticks:{...TC.y.ticks,font:{size:12}}}}});
+  mkChart('c_pipeline_stage','bar',{labels:['New','Research','Outreach','Discovery','On Hold'],datasets:[{label:'Records',data:[207, 371, 182, 29, 6],backgroundColor:['#0076DE','#5A6080','#1F8F66','#B57614','#9AA0B4']}]},{...noLeg,indexAxis:'y',scales:{x:{...TC.x},y:{...TC.y,ticks:{...TC.y.ticks,font:{size:12}}}}});
   const ptierKeys=['Tier 1 (Inbound)','Tier 2 (Trade Show)','Tier 3 (Intent)','Tier 4 (Good Fit)'];
   const ptierShort=['T1','T2','T3','T4'];
-  const ptierData={"Tier 1 (Inbound)":{"New": 99, "Research": 25, "Outreach": 33, "Discovery": 21, "On Hold": 2},"Tier 2 (Trade Show)":{"New": 71, "Research": 19, "Outreach": 17, "Discovery": 3, "On Hold": 0},"Tier 3 (Intent)":{"New": 0, "Research": 0, "Outreach": 0, "Discovery": 0, "On Hold": 0},"Tier 4 (Good Fit)":{"New": 36, "Research": 229, "Outreach": 108, "Discovery": 6, "On Hold": 4}};
+  const ptierData={"Tier 1 (Inbound)":{"New": 105, "Research": 25, "Outreach": 37, "Discovery": 20, "On Hold": 1},"Tier 2 (Trade Show)":{"New": 66, "Research": 17, "Outreach": 17, "Discovery": 3, "On Hold": 0},"Tier 3 (Intent)":{"New": 0, "Research": 0, "Outreach": 0, "Discovery": 0, "On Hold": 0},"Tier 4 (Good Fit)":{"New": 36, "Research": 329, "Outreach": 128, "Discovery": 6, "On Hold": 5}};
   const stageNames=['New','Research','Outreach','Discovery','On Hold'];
-  const stageCols=['#378ADD','#7F77DD','#1D9E75','#BA7517','#888780'];
+  const stageCols=['#0076DE','#5A6080','#1F8F66','#B57614','#9AA0B4'];
   mkChart('c_pipeline_tier','bar',{labels:ptierShort,datasets:stageNames.map((s,i)=>({label:s,data:ptierKeys.map(t=>ptierData[t][s]||0),backgroundColor:stageCols[i],stack:'s'}))},{...noLeg,scales:{x:{...TC.x,stacked:true},y:{...TC.y,stacked:true}}});
 
   // Stage % by tier
   const allStages=['New','Research','Outreach','Discovery','On Hold','Closed/Qualified','Closed/Disqualified'];
-  const stageColors={'New':'#378ADD','Research':'#7F77DD','Outreach':'#1D9E75','Discovery':'#BA7517','On Hold':'#888780','Closed/Qualified':'#639922','Closed/Disqualified':'#E24B4A'};
-  const stagePctTier={"Tier 1 (Inbound)":{"New": 8.1, "Research": 2.0, "Outreach": 2.7, "Discovery": 1.7, "On Hold": 0.2, "Closed/Qualified": 29.2, "Closed/Disqualified": 54.5},"Tier 2 (Trade Show)":{"New": 35.0, "Research": 9.4, "Outreach": 8.4, "Discovery": 1.5, "On Hold": 0.0, "Closed/Qualified": 19.2, "Closed/Disqualified": 26.6},"Tier 3 (Intent)":{"New": 0.0, "Research": 0.0, "Outreach": 0.0, "Discovery": 0.0, "On Hold": 0.0, "Closed/Qualified": 0.0, "Closed/Disqualified": 0.0},"Tier 4 (Good Fit)":{"New": 2.6, "Research": 16.7, "Outreach": 7.9, "Discovery": 0.4, "On Hold": 0.3, "Closed/Qualified": 2.8, "Closed/Disqualified": 69.1}};
+  const stageColors={'New':'#0076DE','Research':'#5A6080','Outreach':'#1F8F66','Discovery':'#B57614','On Hold':'#9AA0B4','Closed/Qualified':'#2E8B57','Closed/Disqualified':'#D63B3B'};
+  const stagePctTier={"Tier 1 (Inbound)":{"New": 8.4, "Research": 2.0, "Outreach": 3.0, "Discovery": 1.6, "On Hold": 0.1, "Closed/Qualified": 29.3, "Closed/Disqualified": 54.7},"Tier 2 (Trade Show)":{"New": 32.5, "Research": 8.4, "Outreach": 8.4, "Discovery": 1.5, "On Hold": 0.0, "Closed/Qualified": 20.7, "Closed/Disqualified": 28.6},"Tier 3 (Intent)":{"New": 0.0, "Research": 0.0, "Outreach": 0.0, "Discovery": 0.0, "On Hold": 0.0, "Closed/Qualified": 0.0, "Closed/Disqualified": 0.0},"Tier 4 (Good Fit)":{"New": 2.4, "Research": 21.8, "Outreach": 8.5, "Discovery": 0.4, "On Hold": 0.3, "Closed/Qualified": 2.7, "Closed/Disqualified": 63.7}};
   mkChart('c_stage_pct_tier','bar',{labels:['T1','T2','T3','T4'],datasets:allStages.map(s=>({label:s,data:ptierKeys.map(t=>stagePctTier[t]?.[s]||0),backgroundColor:stageColors[s],stack:'s'}))},{...noLeg,scales:{x:{...TC.x,stacked:true},y:{...TC.y,stacked:true,max:100,ticks:{...TC.y.ticks,callback:v=>v+'%'}}}});
-  const stagePctICP={"Enterprise ICP":{"New": 14.2, "Research": 18.5, "Outreach": 11.2, "Discovery": 3.9, "On Hold": 0.9, "Closed/Qualified": 12.5, "Closed/Disqualified": 38.4},"Strategic ICP":{"New": 15.9, "Research": 17.1, "Outreach": 9.7, "Discovery": 0.5, "On Hold": 0.2, "Closed/Qualified": 18.5, "Closed/Disqualified": 37.9},"Mid-Market ICP":{"New": 5.0, "Research": 4.1, "Outreach": 5.8, "Discovery": 0.0, "On Hold": 0.0, "Closed/Qualified": 38.8, "Closed/Disqualified": 46.3},"Non-ICP":{"New": 4.0, "Research": 6.7, "Outreach": 3.7, "Discovery": 1.0, "On Hold": 0.2, "Closed/Qualified": 13.5, "Closed/Disqualified": 70.0}};
+  const stagePctICP={"Enterprise ICP":{"New": 12.7, "Research": 24.6, "Outreach": 11.2, "Discovery": 3.1, "On Hold": 0.4, "Closed/Qualified": 11.5, "Closed/Disqualified": 36.5},"Strategic ICP":{"New": 14.8, "Research": 21.4, "Outreach": 9.9, "Discovery": 0.5, "On Hold": 0.3, "Closed/Qualified": 17.0, "Closed/Disqualified": 35.6},"Mid-Market ICP":{"New": 4.8, "Research": 4.8, "Outreach": 6.3, "Discovery": 0.0, "On Hold": 0.0, "Closed/Qualified": 38.9, "Closed/Disqualified": 45.2},"Non-ICP":{"New": 3.8, "Research": 8.5, "Outreach": 4.3, "Discovery": 0.9, "On Hold": 0.2, "Closed/Qualified": 13.5, "Closed/Disqualified": 68.4}};
   mkChart('c_stage_pct_icp','bar',{labels:['Enterprise','Mid-Market','Strategic','Non-ICP'],datasets:allStages.map(s=>({label:s,data:['Enterprise ICP','Mid-Market ICP','Strategic ICP','Non-ICP'].map(k=>stagePctICP[k]?.[s]||0),backgroundColor:stageColors[s],stack:'s'}))},{...noLeg,scales:{x:{...TC.x,stacked:true},y:{...TC.y,stacked:true,max:100,ticks:{...TC.y.ticks,callback:v=>v+'%'}}}});
 
   // ACV
-  mkChart('c_acv_tier','bar',{labels:['T1 Inbound','T2 Trade Show','T3 Intent','T4 Good Fit'],datasets:[{label:'ACV',data:[1152450, 88000, 0, 25000],backgroundColor:['#378ADD','#1D9E75','#BA7517','#7F77DD']}]},{...noLeg,scales:{x:{...TC.x},y:{...TC.y,ticks:{...TC.y.ticks,callback:v=>'$'+Math.round(v/1000)+'K'}}}});
-  mkChart('c_acv_icp','bar',{labels:['Enterprise ICP','Mid-Market ICP','Non-ICP','Strategic ICP'],datasets:[{label:'ACV',data:[125000, 122250, 569250, 448950],backgroundColor:['#378ADD','#1D9E75','#888780','#7F77DD']}]},{...noLeg,scales:{x:{...TC.x,ticks:{...TC.x.ticks,font:{size:10}}},y:{...TC.y,ticks:{...TC.y.ticks,callback:v=>'$'+Math.round(v/1000)+'K'}}}});
+  mkChart('c_acv_tier','bar',{labels:['T1 Inbound','T2 Trade Show','T3 Intent','T4 Good Fit'],datasets:[{label:'ACV',data:[1230725, 88000, 0, 25000],backgroundColor:['#0076DE','#1F8F66','#B57614','#5A6080']}]},{...noLeg,scales:{x:{...TC.x},y:{...TC.y,ticks:{...TC.y.ticks,callback:v=>'$'+Math.round(v/1000)+'K'}}}});
+  mkChart('c_acv_icp','bar',{labels:['Enterprise ICP','Mid-Market ICP','Non-ICP','Strategic ICP'],datasets:[{label:'ACV',data:[125000, 130750, 617750, 470225],backgroundColor:['#0076DE','#1F8F66','#9AA0B4','#5A6080']}]},{...noLeg,scales:{x:{...TC.x,ticks:{...TC.x.ticks,font:{size:10}}},y:{...TC.y,ticks:{...TC.y.ticks,callback:v=>'$'+Math.round(v/1000)+'K'}}}});
 
   // Speed by origin
-  mkChart('c_speed_origin','bar',{labels:['Web Demo','Champify','Trade Show','High Score','Life Ins.','P&C'],datasets:[{label:'New→Outreach',data:[132.6,331.6,715.3,507.2,84.9,131.2],backgroundColor:'#378ADD'},{label:'Outreach duration',data:[243.5,224.2,772.9,916.2,238.7,151.6],backgroundColor:'#7F77DD'}]},{...noLeg,scales:{x:{...TC.x,ticks:{...TC.x.ticks,font:{size:10},maxRotation:20}},y:{...TC.y,ticks:{...TC.y.ticks,callback:v=>v+'h'}}}});
+  mkChart('c_speed_origin','bar',{labels:['Web Demo','Champify','Trade Show','High Score','Life Ins.','P&C'],datasets:[{label:'New→Outreach',data:[132.6,331.6,715.3,507.2,84.9,131.2],backgroundColor:'#0076DE'},{label:'Outreach duration',data:[243.5,224.2,772.9,916.2,238.7,151.6],backgroundColor:'#5A6080'}]},{...noLeg,scales:{x:{...TC.x,ticks:{...TC.x.ticks,font:{size:10},maxRotation:20}},y:{...TC.y,ticks:{...TC.y.ticks,callback:v=>v+'h'}}}});
 
   // ACV table
   const acvTableData=[
-    {seg:"T1 Inbound",type:"Tier",deals:49,acv:1152450,qualRate:29.2,total:1220},
-    {seg:"T2 Trade Show",type:"Tier",deals:2,acv:88000,qualRate:19.2,total:203},
+    {seg:"T1 Inbound",type:"Tier",deals:54,acv:1230725,qualRate:29.3,total:1244},
+    {seg:"T2 Trade Show",type:"Tier",deals:2,acv:88000,qualRate:20.7,total:203},
     {seg:"T3 Intent",type:"Tier",deals:0,acv:0,qualRate:0.0,total:0},
-    {seg:"T4 Good Fit",type:"Tier",deals:2,acv:25000,qualRate:2.8,total:1369},
-    {seg:"Enterprise ICP",type:"ICP",deals:3,acv:125000,qualRate:12.5,total:232},
-    {seg:"Strategic ICP",type:"ICP",deals:8,acv:448950,qualRate:18.5,total:585},
-    {seg:"Mid-Market ICP",type:"ICP",deals:10,acv:122250,qualRate:38.8,total:121},
-    {seg:"Non-ICP",type:"ICP",deals:32,acv:569250,qualRate:13.5,total:1853},
+    {seg:"T4 Good Fit",type:"Tier",deals:2,acv:25000,qualRate:2.7,total:1506},
+    {seg:"Enterprise ICP",type:"ICP",deals:3,acv:125000,qualRate:11.5,total:260},
+    {seg:"Strategic ICP",type:"ICP",deals:9,acv:470225,qualRate:17.0,total:637},
+    {seg:"Mid-Market ICP",type:"ICP",deals:11,acv:130750,qualRate:38.9,total:126},
+    {seg:"Non-ICP",type:"ICP",deals:35,acv:617750,qualRate:13.5,total:1929},
   ];
   const ab=document.getElementById('acvTableBody');
   ab.innerHTML='';
   acvTableData.forEach(r=>{
     const avg=r.deals?Math.round(r.acv/r.deals):0;
     const eff=r.total?Math.round(r.acv/r.total):0;
-    ab.innerHTML+=`<tr><td><strong>${r.seg}</strong></td><td><span class="pill ${r.type==='Tier'?'pill-blue':'pill-teal'}">${r.type}</span></td><td>${r.deals}</td><td><strong>$${r.acv.toLocaleString()}</strong></td><td>$${avg.toLocaleString()}</td><td style="color:#0D8C72">${r.qualRate}%</td><td style="color:#475569">$${eff}</td></tr>`;
+    ab.innerHTML+=`<tr><td><strong>${r.seg}</strong></td><td><span class="pill ${r.type==='Tier'?'pill-blue':'pill-teal'}">${r.type}</span></td><td>${r.deals}</td><td><strong>$${r.acv.toLocaleString()}</strong></td><td>$${avg.toLocaleString()}</td><td style="color:#1F8F66">${r.qualRate}%</td><td style="color:#475569">$${eff}</td></tr>`;
   });
 
   // ── New: Qualified prospects → Opp Outcome ──
@@ -936,7 +935,7 @@ function buildStaticCharts() {
   })();
   const qOPPLabels = ['Closed Won','Closed Lost','Open opp','No opp linked'];
   const qOPPCounts = [qualOppData.cw.length,qualOppData.cl.length,qualOppData.op.length,qualOppData.no.length];
-  const qOPPColors = ['#0D8C72','#D63B3B','#1A6DC0','#94A3B8'];
+  const qOPPColors = ['#1F8F66','#D63B3B','#0076DE','#94A3B8'];
   const qOPPAcv = [
     qualOppData.cw.reduce((s,r)=>s+(r.am||0),0),
     qualOppData.cl.reduce((s,r)=>s+(r.am||0),0),
@@ -963,7 +962,7 @@ function buildStaticCharts() {
   const tierShort2 = ['T1 Inbound','T2 Trade Show','T3 Intent','T4 Good Fit'];
   const oppGroups = ['CW','CL','OPEN','NONE'];
   const oppGroupLabels = ['Closed Won','Closed Lost','Open opp','No opp linked'];
-  const oppGroupColors = ['#0D8C72','#D63B3B','#1A6DC0','#94A3B8'];
+  const oppGroupColors = ['#1F8F66','#D63B3B','#0076DE','#94A3B8'];
   function isOpenOpp(r){return ['DM','OI','TR','PR','FN','NS'].includes(r.op);}
   const oppByTier = tierKeys2.map(t=>{
     const recs = PROSPECTS_2026.filter(r=>r.s==='CQ'&&r.t===t);
@@ -1051,17 +1050,17 @@ function renderRepTable(){
       <td><span class="pill ${teamPill(r.team)}">${r.team}</span></td>
       <td>${r.total.toLocaleString()}</td>
       <td>${r.qual}</td>
-      <td><strong style="color:${qualPct>=20?'#0D8C72':qualPct>=12?'#9A6200':'#D63B3B'}">${qualPct}%</strong></td>
+      <td><strong style="color:${qualPct>=20?'#1F8F66':qualPct>=12?'#8A6510':'#D63B3B'}">${qualPct}%</strong></td>
       <td>${r.n2o.toFixed(1)}h</td>
-      <td><span class="mini-bar-bg"><span class="mini-bar-fill" style="width:${Math.round(r.n2o/maxN2O*100)}%;background:#378ADD"></span></span></td>
+      <td><span class="mini-bar-bg"><span class="mini-bar-fill" style="width:${Math.round(r.n2o/maxN2O*100)}%;background:#0076DE"></span></span></td>
       <td>${r.o2d.toFixed(1)}h</td>
-      <td><span class="mini-bar-bg"><span class="mini-bar-fill" style="width:${Math.round(r.o2d/maxO2D*100)}%;background:#7F77DD"></span></span></td>
+      <td><span class="mini-bar-bg"><span class="mini-bar-fill" style="width:${Math.round(r.o2d/maxO2D*100)}%;background:#5A6080"></span></span></td>
     </tr>`;
   });
 }
 
 // ── COACHING ──
-const TEAM_COLORS = {'Mid Market':'#1A6DC0','Strategic A':'#0D8C72','Strategic B':'#6B5FD4'};
+const TEAM_COLORS = {'Mid Market':'#0076DE','Strategic A':'#1F8F66','Strategic B':'#5A6080'};
 const TEAM_BENCH_QUAL = {'Mid Market':28,'Strategic A':25,'Strategic B':22};
 
 function generateCoachingTips(rep, months) {
@@ -1121,9 +1120,9 @@ function renderCoachingCards(team) {
         <span class="tip-text">${t.text}</span>
       </div>`).join('') : '<div class="coach-no-data">No specific coaching flags for this period.</div>';
 
-    const qualColor = qualPct>=25?'#0D8C72':qualPct>=15?'#9A6200':'#D63B3B';
-    const n2oColor = rep.n2o<=100?'#0D8C72':rep.n2o<=300?'#9A6200':'#D63B3B';
-    const o2dColor = rep.o2d<=200?'#0D8C72':rep.o2d<=400?'#9A6200':'#D63B3B';
+    const qualColor = qualPct>=25?'#1F8F66':qualPct>=15?'#8A6510':'#D63B3B';
+    const n2oColor = rep.n2o<=100?'#1F8F66':rep.n2o<=300?'#8A6510':'#D63B3B';
+    const o2dColor = rep.o2d<=200?'#1F8F66':rep.o2d<=400?'#8A6510':'#D63B3B';
 
     grid.innerHTML += `
       <div class="coach-card">
@@ -1192,9 +1191,9 @@ function openProspectDrill(filterFn, title, subtitle) {
     + `<span>🤝 With engage: <strong>${withEngage} (${recs.length?Math.round(withEngage/recs.length*100):0}%)</strong></span>`
     + `<span>🕐 Avg age: <strong>${avgAge}h</strong></span>`;
   if(wonCount||lostCount||openCount) {
-    stats += `<span style="color:#0D8C72">🏆 Won: <strong>${wonCount}${wonAcv?' ($'+(wonAcv/1000).toFixed(0)+'K)':''}</strong></span>`
+    stats += `<span style="color:#1F8F66">🏆 Won: <strong>${wonCount}${wonAcv?' ($'+(wonAcv/1000).toFixed(0)+'K)':''}</strong></span>`
       + `<span style="color:#D63B3B">💔 Lost: <strong>${lostCount}</strong></span>`
-      + `<span style="color:#1A6DC0">📈 Open: <strong>${openCount}</strong></span>`;
+      + `<span style="color:#0076DE">📈 Open: <strong>${openCount}</strong></span>`;
   }
   document.getElementById('dqDrillStats').innerHTML = stats;
 
@@ -1223,14 +1222,14 @@ function renderDrillTable() {
   const tierColor = t => t==='T1'?'pill-blue':t==='T2'?'pill-teal':t==='T3'?'pill-amber':'pill-purple';
   const icpColor = i => i==='ENT'?'pill-blue':i==='STR'?'pill-teal':i==='MM'?'pill-purple':'pill-gray';
   const stageColor = s => (s==='CQ')?'pill-teal':(s==='CD')?'pill-coral':'pill-blue';
-  const oppColor = op => op==='CW'?'#0D8C72':op==='CL'?'#D63B3B':op?'#1A6DC0':'#94A3B8';
+  const oppColor = op => op==='CW'?'#1F8F66':op==='CL'?'#D63B3B':op?'#0076DE':'#94A3B8';
 
   const tbody = document.getElementById('dqDrillBody');
   tbody.innerHTML = '';
   slice.forEach(r => {
-    const emailBadge = (r.em||0) > 0 ? `<span style="background:#EFF6FF;color:#1A6DC0;border-radius:10px;padding:2px 7px;font-size:11px;font-weight:500">${r.em}</span>` : '<span style="color:var(--gs-muted)">—</span>';
+    const emailBadge = (r.em||0) > 0 ? `<span style="background:#E8F2FD;color:#0076DE;border-radius:10px;padding:2px 7px;font-size:11px;font-weight:500">${r.em}</span>` : '<span style="color:var(--gs-muted)">—</span>';
     const engBadge = (r.en||0) > 0 ? `<span style="background:#F0FDF4;color:#166534;border-radius:10px;padding:2px 7px;font-size:11px;font-weight:500">${r.en}</span>` : '<span style="color:var(--gs-muted)">—</span>';
-    const ageColor = (r.ag||0) > 300 ? '#D63B3B' : (r.ag||0) > 100 ? '#9A6200' : '#0D8C72';
+    const ageColor = (r.ag||0) > 300 ? '#D63B3B' : (r.ag||0) > 100 ? '#8A6510' : '#1F8F66';
     const oppHtml = r.op ? `<span style="color:${oppColor(r.op)};font-weight:500">${OPP_LABEL[r.op]||r.op}</span>${r.am?` <span style="color:#64748B;font-size:11px">$${(r.am/1000).toFixed(0)}K</span>`:''}` : '<span style="color:var(--gs-muted)">—</span>';
     const dqHtml = r.dq ? (DQ_LABEL[r.dq]||r.dq) : '—';
     tbody.innerHTML += `<tr>
