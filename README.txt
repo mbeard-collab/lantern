@@ -26,6 +26,21 @@ ADDING A NEW DASHBOARD
          cadence: "weekly", updated: "today" }
 4. Drag the dashboards-site folder onto Netlify.
 
+DASHBOARDS WITH A SEPARATE DATA FILE
+------------------------------------
+A dashboard's HTML can reference a sibling data file (e.g. it does
+`fetch('./data.json')`). Because the whole folder is served over HTTP, put
+both files in the dashboard's folder and use a RELATIVE path:
+    <dashboard-name>/index.html
+    <dashboard-name>/data.json   ← referenced as ./data.json from the HTML
+(Opening the HTML directly from disk fails on this — the browser blocks
+file:// fetches. Serving it from the site, as here, is what makes it work.)
+
+Via Studio: in the "Upload existing HTML" mode there's now a "Data files"
+field — attach the .json/.csv the HTML references and Studio commits them
+into the dashboard folder next to index.html. Studio also warns if the HTML
+references a data file you haven't attached.
+
 REMOVING A DASHBOARD
 --------------------
 1. Delete the folder.
