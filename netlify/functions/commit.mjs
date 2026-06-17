@@ -124,12 +124,38 @@ export default async (req) => {
   }
 
   // ---- SHIP action (default) ----------------------------------------------
-  const { html, commitMessage, isNew, updatedIndexHtml } = body;
+  const { html, commitMessage, isNew, updatedIndexHtml, dataFiles } = body;
   if (typeof html !== "string" || !html.includes("<html") || !html.includes("</html>")) {
     return json({ error: "html must be a complete HTML document" }, 400);
   }
   if (isNew && typeof updatedIndexHtml !== "string") {
     return json({ error: "isNew requires updatedIndexHtml" }, 400);
+  }
+
+  // Optional companion data files committed into the dashboard folder alongside
+  // index.html (e.g. a data.json the HTML fetches with a relative path). Text
+  // only — putFile base64-encodes UTF-8, which would corrupt binary formats.
+  const ALLOWED_DATA_EXT = new Set(["json", "csv", "tsv", "txt", "geojson", "svg", "md"]);
+  const cleanDataFiles = [];
+  if (dataFiles != null) {
+    if (!Array.isArray(dataFiles)) {
+      return json({ error: "dataFiles must be an array" }, 400);
+    }
+    for (const f of dataFiles) {
+      const name = String(f?.name || "").trim();
+      // Relative path under the dashboard folder: no leading slash, no traversal.
+      if (!/^[A-Za-z0-9._-]+(\/[A-Za-z0-9._-]+)*$/.test(name) || name.split("/").includes("..")) {
+        return json({ error: `Invalid data file name: ${JSON.stringify(f?.name)}` }, 400);
+      }
+      const ext = name.split(".").pop().toLowerCase();
+      if (!ALLOWED_DATA_EXT.has(ext)) {
+        return json({ error: `Data file "${name}" must end in one of: ${[...ALLOWED_DATA_EXT].join(", ")}` }, 400);
+      }
+      if (typeof f.content !== "string") {
+        return json({ error: `Data file "${name}" content must be a string` }, 400);
+      }
+      cleanDataFiles.push({ name, content: f.content });
+    }
   }
 
   try {
@@ -146,6 +172,20 @@ export default async (req) => {
     const baseMsg = commitMessage || (existingSha ? `Update ${slug} dashboard` : `Add ${slug} dashboard`);
     const dashboardMsg = `${baseMsg} via Studio (by ${email})`;
     const dashRes = await putFile(dashboardPath, html, dashboardMsg, existingSha);
+
+    // Commit each companion data file into the dashboard folder.
+    const dataCommits = [];
+    for (const df of cleanDataFiles) {
+      const dfPath = `${slug}/${df.name}`;
+      const dfSha = await getSha(dfPath);
+      const dfRes = await putFile(
+        dfPath,
+        df.content,
+        `${dfSha ? "Update" : "Add"} ${dfPath} via Studio (by ${email})`,
+        dfSha,
+      );
+      dataCommits.push({ path: dfPath, commitSha: dfRes.commit?.sha || null });
+    }
 
     let indexCommitSha = null;
     if (isNew) {
@@ -164,6 +204,7 @@ export default async (req) => {
       ok: true,
       commitSha: dashRes.commit?.sha || null,
       indexCommitSha,
+      dataFiles: dataCommits,
       deployUrl: `https://govspend-ops-dashboards.netlify.app/${slug}/`,
     });
   } catch (err) {
