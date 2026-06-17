@@ -132,10 +132,12 @@ export default async (req) => {
     return json({ error: "isNew requires updatedIndexHtml" }, 400);
   }
 
-  // Optional companion data files committed into the dashboard folder alongside
-  // index.html (e.g. a data.json the HTML fetches with a relative path). Text
-  // only — putFile base64-encodes UTF-8, which would corrupt binary formats.
-  const ALLOWED_DATA_EXT = new Set(["json", "csv", "tsv", "txt", "geojson", "svg", "md"]);
+  // Optional companion files committed into the dashboard folder alongside
+  // index.html (e.g. a data.json the HTML fetches, or a sibling app.js/styles.css).
+  // Text only — putFile base64-encodes UTF-8, which would corrupt binary formats.
+  const ALLOWED_DATA_EXT = new Set([
+    "json", "csv", "tsv", "txt", "geojson", "svg", "md", "js", "mjs", "css",
+  ]);
   const cleanDataFiles = [];
   if (dataFiles != null) {
     if (!Array.isArray(dataFiles)) {
