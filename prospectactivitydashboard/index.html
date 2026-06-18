@@ -1,0 +1,305 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>2026 YTD Prospects — Full Stage & Activity</title>
+<style>
+:root{color-scheme:light}*{box-sizing:border-box}
+body{margin:0;background:#f6f7f9;color:#1c1f24;font:13px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+.wrap{max-width:1340px;margin:0 auto;padding:20px 16px 60px}
+h1{font-size:20px;margin:0 0 2px}.sub{color:#5b626b;font-size:12px;margin:0 0 14px}
+.kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:9px;margin:0 0 14px}
+.kpi{background:#fff;border:1px solid #e6e8ec;border-radius:10px;padding:11px 12px}
+.kpi .n{font-size:21px;font-weight:650;letter-spacing:-.02em}
+.kpi .l{font-size:10.5px;color:#6b727b;text-transform:uppercase;letter-spacing:.04em;margin-top:2px}
+.panel{background:#fff;border:1px solid #e6e8ec;border-radius:10px;padding:12px 14px;margin:0 0 14px}
+.panel h2{font-size:12px;margin:0 0 9px;text-transform:uppercase;letter-spacing:.04em;color:#6b727b}
+.stagedist{display:grid;grid-template-columns:150px 1fr 40px;gap:5px 10px;align-items:center;font-size:12px}
+.stagedist .bg{background:#eef0f3;border-radius:4px;overflow:hidden;height:9px}.bar{height:9px;border-radius:4px;background:#1565c0}
+.controls{display:flex;flex-wrap:wrap;gap:9px;align-items:center;margin-bottom:10px}
+.controls input,.controls select{font:13px inherit;padding:7px 9px;border:1px solid #d4d8de;border-radius:8px;background:#fff;color:#1c1f24}
+.controls input{min-width:240px}.controls label{font-size:12px;color:#5b626b;display:flex;gap:6px;align-items:center}
+.hint{font-size:11px;color:#9aa0a8}
+.tablewrap{overflow:auto;max-height:74vh;background:#fff;border:1px solid #e6e8ec;border-radius:10px;position:relative}
+table{border-collapse:collapse;width:100%;font-size:12.5px}
+th,td{padding:7px 9px;text-align:left;white-space:nowrap;border-bottom:1px solid #eef0f3}
+th{position:sticky;top:0;z-index:3;background:#f0f2f5;box-shadow:0 1px 0 #d4d8de;font-size:10.5px;text-transform:uppercase;letter-spacing:.03em;color:#6b727b;cursor:pointer;user-select:none}
+.scrollbtns{position:fixed;right:18px;bottom:18px;display:flex;flex-direction:column;gap:8px;z-index:50}
+.scrollbtns button{width:40px;height:40px;border-radius:50%;border:1px solid #d4d8de;background:#fff;color:#1565c0;font-size:18px;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.12)}
+.scrollbtns button:hover{background:#eef2ff}
+.flag{display:inline-block;padding:1px 7px;border-radius:6px;font-size:10.5px;font-weight:600}
+.flag.bad{background:#fdecec;color:#c62828}.flag.warn{background:#fff3e0;color:#a96b00}.flag.good{background:#edf7ee;color:#2e7d32}
+.coach-tbl tr{cursor:pointer}.coach-tbl tbody tr:hover{background:#eef2ff}
+.coachcard{border:1px solid #e1e4e9;border-radius:10px;padding:14px;margin-top:12px;background:#fafbfc}
+.metrics{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;margin:8px 0}
+.metric{background:#fff;border:1px solid #e6e8ec;border-radius:8px;padding:8px 10px}
+.metric .mv{font-size:17px;font-weight:650;letter-spacing:-.02em}.metric .ml{font-size:10px;color:#6b727b;text-transform:uppercase;letter-spacing:.03em;margin-top:2px}
+.fb{background:#fff;border-left:3px solid #1565c0;padding:8px 12px;margin:10px 0;font-size:12.5px}
+.fb ul{margin:6px 0 0;padding-left:18px}.fb li{margin:4px 0;line-height:1.5}
+.gaptbl{width:100%;border-collapse:collapse;font-size:12px}.gaptbl td,.gaptbl th{border-bottom:1px solid #eef0f3;padding:5px 8px;text-align:left}.gaptbl th.num,.gaptbl td.num{text-align:right}
+#repsel{font:13px inherit;padding:6px 9px;border:1px solid #d4d8de;border-radius:8px;background:#fff}
+th.num,td.num{text-align:right}
+tbody tr:hover{background:#f7f9fb}
+.badge{display:inline-block;padding:2px 7px;border-radius:999px;font-size:10.5px;font-weight:600}
+.s-New{background:#eef2ff;color:#3949ab}.s-Research{background:#e8f5e9;color:#2e7d32}
+.s-Outreach{background:#fff8e1;color:#a96b00}.s-Discovery{background:#e3f2fd;color:#1565c0}
+.s-OnHold{background:#fbe9e7;color:#bf360c}.s-Qual{background:#e0f2f1;color:#00695c}
+.s-Disq{background:#f3f4f6;color:#6b727b}.up{color:#a96b00;font-size:10.5px}
+a.sf{color:#1565c0;text-decoration:none}a.sf:hover{text-decoration:underline}a.sf::after{content:"\2197";font-size:9px;color:#9aa0a8;margin-left:2px}
+.note{font-size:12px;color:#5b626b;line-height:1.5}.note code{background:#f1f2f4;padding:1px 5px;border-radius:4px;font-size:11px}
+
+.mtabs{display:flex;gap:6px;margin:0 0 14px;flex-wrap:wrap}
+.mtab{font:12px inherit;padding:6px 15px;border:1px solid #d4d8de;border-radius:999px;background:#fff;color:#5b626b;cursor:pointer}
+.mtab:hover{background:#eef2ff}.mtab.on{background:#1565c0;color:#fff;border-color:#1565c0;font-weight:600}
+.tp{display:inline-block;min-width:18px;padding:1px 6px;border-radius:6px;font-weight:600}
+.tlow{background:#fdecec;color:#c62828}.tok{background:#edf7ee;color:#2e7d32}
+.benchwrap{display:grid;grid-template-columns:repeat(6,1fr);gap:9px;margin:2px 0 12px}
+.benchcard{background:#fff;border:1px solid #e6e8ec;border-radius:10px;padding:10px 12px}
+.benchcard.alert{border-color:#f3c2c2;background:#fff7f7}
+.benchcard .bn{font-size:20px;font-weight:650;letter-spacing:-.02em}.benchcard.alert .bn{color:#c62828}
+.benchcard .bl{font-size:10px;color:#6b727b;text-transform:uppercase;letter-spacing:.04em;margin-top:2px}
+.benchgrid{display:grid;grid-template-columns:1.1fr 2fr;gap:18px;align-items:stretch}
+.histlbl{font-size:11px;font-weight:600;color:#6b727b;text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px}
+.histo{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;align-items:end;height:96px}
+.histo .hb{display:flex;flex-direction:column;justify-content:flex-end;height:100%}
+.histo .hbar{background:#1565c0;border-radius:4px 4px 0 0;min-height:2px;position:relative}
+.histo .hbar.lo{background:#e57373}.histo .hbn{font-size:10px;color:#5b626b;text-align:center;margin-bottom:2px}
+.histcap{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;font-size:10.5px;color:#6b727b;text-align:center;margin-top:4px}
+.histcap .bm{color:#c62828;font-weight:600}
+@media(max-width:760px){.benchgrid{grid-template-columns:1fr}.benchwrap{grid-template-columns:repeat(3,1fr)}}
+</style></head><body><div class="wrap">
+<h1>2026 YTD Prospects — Full Stage &amp; Activity (Jan–Jun, all 3,337)</h1>
+<p class="sub">Live Salesforce snapshot, generated Jun 18 2026. Use the month tabs to scope every panel below. Activity benchmark: <b>4 touch points</b> (emails + calls + meetings) is the median minimum to fairly assess a prospect.</p>
+<div class="mtabs" id="mtabs"><button class="mtab on" data-m="">YTD</button><button class="mtab" data-m="2026-01">Jan</button><button class="mtab" data-m="2026-02">Feb</button><button class="mtab" data-m="2026-03">Mar</button><button class="mtab" data-m="2026-04">Apr</button><button class="mtab" data-m="2026-05">May</button><button class="mtab" data-m="2026-06">Jun</button></div>
+<div class="kpis" id="kpis"></div>
+<div class="panel"><h2>Current stage distribution</h2><div class="stagedist" id="dist"></div></div><div class="panel" id="benchpanel"><h2>Activity benchmark — minimum touch points to qualify or disqualify</h2><p class="note" id="benchintro" style="margin:0 0 10px"></p><div class="benchwrap" id="benchcards"></div><div class="benchgrid"><div><div class="histlbl">Touch-point distribution (this view)</div><div class="histo" id="histo"></div><div class="histcap" id="histcap"></div></div><div class="fb" id="benchnote" style="margin:0"></div></div><div id="benchlisthd" style="font-size:12px;font-weight:600;margin:14px 0 4px"></div><div class="tablewrap" style="max-height:340px"><table class="gaptbl"><thead id="benchlisthead"></thead><tbody id="benchlist"></tbody></table></div></div>
+<div class="panel">
+  <div class="controls">
+    <input type="text" id="q" placeholder="Search company, contact, prospect #, owner…">
+    <select id="rf"><option value="">All reps</option></select>
+    <select id="tf"><option value="">All tiers</option></select>
+    <select id="icf"><option value="">All ICP</option></select>
+    <select id="sf"><option value="">All stages</option></select>
+    <select id="drf"><option value="">All disq. reasons</option></select>
+    <select id="sort">
+      <option value="cr_desc">Newest created</option><option value="cr_asc">Oldest created</option>
+      <option value="ca_desc">Most calls</option><option value="cm_desc">Most call minutes</option>
+      <option value="em_desc">Most emails</option><option value="mc_desc">Most meetings</option>
+      <option value="ah_desc">Longest in current stage</option>
+      <option value="vs_desc">Highest vendor sales</option><option value="tp_asc">Fewest touches</option><option value="tp_desc">Most touches</option>
+    </select>
+    <label><input type="checkbox" id="act"> Only with calls/meetings</label>
+    <span class="hint" id="rc"></span>
+  </div>
+  <div class="tablewrap"><table id="t"><thead><tr>
+    <th data-k="n">Prospect</th><th data-k="co">Company</th><th data-k="ti">Tier</th><th data-k="ic">ICP</th><th class="num" data-k="vs">Vendor $</th><th data-k="ct">Contact</th><th data-k="o">Owner</th>
+    <th data-k="s">Stage</th><th data-k="dr">Disq reason</th><th data-k="cr">Created</th><th data-k="sc">Stage chg</th>
+    <th class="num" data-k="ah">Curr hrs</th><th class="num" data-k="em">Emails</th>
+    <th class="num" data-k="ca">Calls</th><th class="num" data-k="cm">Call min</th><th class="num" data-k="mc">Mtgs</th><th class="num" data-k="tp">Touches</th>
+  </tr></thead><tbody id="tb"></tbody></table></div>
+</div>
+<div class="panel">
+  <h2>Rep coaching — activity vs. account value</h2>
+  <p class="note" style="margin:0 0 10px">Calls + meetings and stage velocity measured against each rep's vendor-sales pipeline, to surface where high-value accounts (≥$100M vendor sales) aren't getting outreach. Click a rep for a deep-dive. Test/internal records excluded.</p>
+  <div class="tablewrap" style="max-height:360px"><table class="coach-tbl" id="lb"><thead><tr>
+    <th>Rep</th><th class="num">Prospects</th><th class="num">Pipeline $</th><th class="num">HV &ge;$100M</th><th class="num">HV covered</th><th class="num">Calls+Mtgs / prospect</th><th class="num">Avg stage hrs</th><th class="num">Prem. DQ</th><th>Focus</th>
+  </tr></thead><tbody id="lbb"></tbody></table></div>
+  <div id="premranks" style="margin-top:12px"></div>
+  <div style="margin:12px 0 0;display:flex;gap:8px;align-items:center"><label style="font-size:12px;color:#5b626b">Rep deep-dive:</label><select id="repsel"></select></div>
+  <div id="coachdetail"></div>
+</div>
+<div class="panel"><h2>Methodology</h2><div class="note">
+<p><b>Scope.</b> All Prospect__c records created Jan 1 – Jun 18 2026 (3,337 rows; includes a few internal test records). Month tabs filter every panel. Sortable by any column; search and stage filters apply live.</p>
+<p><b>Stage hours.</b> "Curr hrs" = hours in the current stage (Salesforce Stage_Age_Hours, verified against stage-change history). Full per-stage breakdown is in the live Cowork dashboard.</p>
+<p><b>Calls &amp; emails.</b> Salesforce Task records on the prospect's contact — calls (subtype Call) with duration from CallDurationInSeconds; emails (subtype Email). Voicemails/no-answers log 0 minutes.</p>
+<p><b>Meetings.</b> Salesforce Event records on the contact, de-duplicated by subject. "Mtgs" counts those already conducted; a <span class="up">+N</span> badge marks upcoming/scheduled.</p>
+<p><b>Rep coaching.</b> Per rep: pipeline = sum of vendor-sales totals; high-value (HV) = accounts with vendor sales &ge;$100M; HV covered = % of HV accounts with &ge;1 call or meeting; outreach rate = (calls + meetings) / prospects, benchmarked against the team median; avg stage hrs = mean hours open prospects have sat in their current stage. Activity gaps = open prospects worth &ge;$10M with zero calls and meetings; stalled = open, untouched, &gt;1 week in current stage. Test/internal records are excluded from coaching.</p>
+</div></div>
+</div>
+<div class="scrollbtns">
+  <button title="Jump to top of list" onclick="document.querySelector('.tablewrap').scrollTo({top:0,behavior:'smooth'})">&#8593;</button>
+  <button title="Jump to bottom of list" onclick="var t=document.querySelector('.tablewrap');t.scrollTo({top:t.scrollHeight,behavior:'smooth'})">&#8595;</button>
+</div>
+<script src="prospects_data.js"></script>
+<script>
+let MONTH="";let DATA=ALL;const SFBASE="https://govspend.lightning.force.com";
+const sc=s=>({"New":"s-New","Research":"s-Research","Outreach":"s-Outreach","Discovery":"s-Discovery","On Hold":"s-OnHold","Closed/Qualified":"s-Qual","Closed/Disqualified":"s-Disq"}[s]||"s-Disq");
+const esc=s=>(s==null?"":""+s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const fd=s=>{if(!s)return"";const x=new Date(s+"T00:00:00");return x.toLocaleDateString("en-US",{month:"short",day:"numeric"});};
+const el=id=>document.getElementById(id);
+const money=v=>{if(v==null)return"—";if(v===0)return"$0";const a=Math.abs(v);if(a>=1e9)return"$"+(v/1e9).toFixed(1)+"B";if(a>=1e6)return"$"+(v/1e6).toFixed(1)+"M";if(a>=1e3)return"$"+Math.round(v/1e3)+"K";return"$"+v;};
+let sortK="cr",sortD=-1,thSort=false;
+function kpis(){
+ const n=DATA.length,em=DATA.reduce((a,r)=>a+r.em,0),ca=DATA.reduce((a,r)=>a+r.ca,0);
+ const cm=Math.round(DATA.reduce((a,r)=>a+r.cm,0)),mc=DATA.reduce((a,r)=>a+r.mc,0),ac=DATA.filter(r=>r.ca||r.mc).length;
+ const cards=[[n,"Prospects"],[em.toLocaleString(),"Emails"],[ca,"Calls"],[cm.toLocaleString(),"Call minutes"],[mc,"Meetings conducted"],[ac,"With call/meeting"]];
+ el("kpis").innerHTML=cards.map(c=>`<div class="kpi"><div class="n">${c[0]}</div><div class="l">${c[1]}</div></div>`).join("");
+}
+function dist(){
+ const c={};DATA.forEach(r=>{c[r.s]=(c[r.s]||0)+1});
+ const ord=["New","Automation Started","Research","Outreach","Discovery","On Hold","Closed/Qualified","Closed/Disqualified","—"];
+ const ks=Object.keys(c).sort((a,b)=>(ord.indexOf(a)<0?99:ord.indexOf(a))-(ord.indexOf(b)<0?99:ord.indexOf(b)));
+ const mx=Math.max(...Object.values(c));
+ el("dist").innerHTML=ks.map(k=>`<div><span class="badge ${sc(k)}">${esc(k)}</span></div><div class="bg"><div class="bar" style="width:${Math.round(c[k]/mx*100)}%"></div></div><div class="num">${c[k]}</div>`).join("");
+ const sf=el("sf");sf.innerHTML='<option value="">All stages</option>'+ks.filter(k=>k!=="—").map(k=>`<option>${esc(k)}</option>`).join("");
+ const drs=[...new Set(ALL.map(r=>r.dr).filter(Boolean))].sort();
+ el("drf").innerHTML='<option value="">All disq. reasons</option>'+drs.map(k=>`<option>${esc(k)}</option>`).join("");
+ const reps=[...new Set(ALL.map(r=>r.o).filter(v=>v&&v!=="—"))].sort();
+ el("rf").innerHTML='<option value="">All reps</option>'+reps.map(k=>`<option>${esc(k)}</option>`).join("");
+ const tiers=[...new Set(ALL.map(r=>r.ti).filter(v=>v&&v!=="—"))].sort();
+ el("tf").innerHTML='<option value="">All tiers</option>'+tiers.map(k=>`<option>${esc(k)}</option>`).join("");
+ const icps=[...new Set(ALL.map(r=>r.ic).filter(v=>v&&v!=="—"))].sort();
+ el("icf").innerHTML='<option value="">All ICP</option>'+icps.map(k=>`<option>${esc(k)}</option>`).join("");
+}
+function list(){
+ const q=el("q").value.trim().toLowerCase(),sf=el("sf").value,drf=el("drf").value,rf=el("rf").value,tf=el("tf").value,icf=el("icf").value,act=el("act").checked;
+ let r=DATA.filter(x=>{
+   if(rf&&x.o!==rf)return false;
+   if(tf&&x.ti!==tf)return false;
+   if(icf&&x.ic!==icf)return false;
+   if(sf&&x.s!==sf)return false;
+   if(drf&&x.dr!==drf)return false;
+   if(act&&!(x.ca||x.mc))return false;
+   if(q){const h=[x.n,x.co,x.ct,x.o,x.dr,x.ti,x.ic].join(" ").toLowerCase();if(!h.includes(q))return false;}
+   return true;});
+ const m={cr_desc:["cr",-1],cr_asc:["cr",1],ca_desc:["ca",-1],cm_desc:["cm",-1],em_desc:["em",-1],mc_desc:["mc",-1],ah_desc:["ah",-1],vs_desc:["vs",-1],tp_asc:["tp",1],tp_desc:["tp",-1]};
+ let k=sortK,d=sortD;const sel=el("sort").value;
+ if(m[sel]&&!thSort){k=m[sel][0];d=m[sel][1];}
+ const numk=(k==="ah"||k==="vs"||k==="tp");r.sort((a,b)=>{let x=a[k],y=b[k];if(x==null)x=numk?-1:"";if(y==null)y=numk?-1:"";if(x<y)return -d;if(x>y)return d;return 0;});
+ return r;
+}
+function render(){
+ kpis();
+ const r=list();
+ el("rc").textContent=`${r.length} of ${DATA.length}`;
+ el("tb").innerHTML=r.map(x=>{
+   const mtg=x.mc+(x.mu?` <span class="up">+${x.mu}</span>`:"");
+   const pcell=x.id?`<a class="sf" href="${SFBASE}/lightning/r/Prospect__c/${x.id}/view" target="_blank" rel="noopener"><b>${esc(x.n)}</b></a>`:`<b>${esc(x.n)}</b>`;
+   return `<tr><td>${pcell}</td><td>${esc(x.co)}</td><td>${esc(x.ti)}</td><td>${esc(x.ic)}</td><td class="num">${money(x.vs)}</td><td>${esc(x.ct)}</td><td>${esc(x.o)}</td>`+
+   `<td><span class="badge ${sc(x.s)}">${esc(x.s)}</span></td><td>${x.dr?esc(x.dr):"—"}</td><td>${fd(x.cr)}</td><td>${fd(x.sc)}</td>`+
+   `<td class="num">${x.ah==null?"—":x.ah}</td><td class="num">${x.em}</td><td class="num">${x.ca}</td><td class="num">${x.cm||0}</td><td class="num">${mtg}</td><td class="num"><span class="tp ${(x.tp||0)<4?'tlow':'tok'}">${x.tp||0}</span></td></tr>`;
+ }).join("")||'<tr><td colspan="17" style="padding:16px;color:#9aa0a8">No matches.</td></tr>';
+}
+["q","rf","tf","icf","sf","drf","act"].forEach(id=>el(id).addEventListener("input",()=>{thSort=false;render();}));
+el("sort").addEventListener("change",()=>{thSort=false;render();});
+document.querySelectorAll("th[data-k]").forEach(th=>th.addEventListener("click",()=>{
+ const k=th.dataset.k;if(sortK===k)sortD*=-1;else{sortK=k;sortD=(["cr","sc","ah","em","ca","cm","mc","vs","tp"].includes(k))?-1:1;}thSort=true;render();}));
+dist();render();
+function coachRender(){
+ const HV=100e6, MID=10e6;
+ const OPEN=x=>!/^Closed/.test(x.s||"");
+ const isTest=x=>/test/i.test((x.n||"")+" "+(x.co||"")+" "+(x.ct||""))||x.co==="GovSpend";
+ const book={};
+ DATA.forEach(x=>{ if(isTest(x))return; const o=x.o||"—"; (book[o]=book[o]||[]).push(x); });
+ const stats=rows=>{
+   const n=rows.length, pipeline=rows.reduce((a,x)=>a+(x.vs||0),0);
+   const calls=rows.reduce((a,x)=>a+x.ca,0), mtgs=rows.reduce((a,x)=>a+x.mc,0), emails=rows.reduce((a,x)=>a+x.em,0);
+   const touches=calls+mtgs, rate=n?touches/n:0;
+   const hv=rows.filter(x=>(x.vs||0)>=HV);
+   const hvCov=hv.length?hv.filter(x=>x.ca||x.mc).length/hv.length:null;
+   const openRows=rows.filter(OPEN);
+   const avgStage=openRows.length?openRows.reduce((a,x)=>a+(x.ah||0),0)/openRows.length:0;
+   const gaps=rows.filter(x=>OPEN(x)&&(x.vs||0)>=MID&&!x.ca&&!x.mc).sort((a,b)=>(b.vs||0)-(a.vs||0));
+   const stalled=rows.filter(x=>OPEN(x)&&!x.ca&&!x.mc&&(x.ah||0)>168);
+   const premDQ=rows.filter(x=>x.s==="Closed/Disqualified"&&x.dr==="Unresponsive"&&(x.tp||0)<4).sort((a,b)=>(b.vs||0)-(a.vs||0));
+   return {n,pipeline,calls,mtgs,emails,touches,rate,hvN:hv.length,hvCov,avgStage,openN:openRows.length,gaps,stalled,premDQ,premVal:premDQ.reduce((a,x)=>a+(x.vs||0),0),hvList:hv.slice().sort((a,b)=>(b.vs||0)-(a.vs||0))};
+ };
+ const reps=Object.keys(book).map(o=>Object.assign({o},stats(book[o]))).sort((a,b)=>b.pipeline-a.pipeline);
+ const med=arr=>{const s=arr.filter(v=>v!=null).slice().sort((a,b)=>a-b);return s.length?s[Math.floor(s.length/2)]:0;};
+ const medRate=med(reps.map(r=>r.rate)), medCov=med(reps.filter(r=>r.hvCov!=null).map(r=>r.hvCov)), medStage=med(reps.map(r=>r.avgStage));
+ const pct=v=>v==null?"—":Math.round(v*100)+"%";
+ const flag=r=>{
+   const uhv=r.gaps.filter(g=>(g.vs||0)>=HV).length;
+   if(uhv) return ["bad",uhv+" HV untouched"];
+   if(r.premDQ.length>=5) return ["bad",r.premDQ.length+" premature DQ"];
+   if(r.hvCov!=null&&r.hvCov<medCov) return ["warn","HV coverage low"];
+   if(r.n>=4&&r.rate<medRate*0.6) return ["warn","low activity"];
+   if(r.stalled.length) return ["warn",r.stalled.length+" stalled"];
+   if(r.premDQ.length) return ["warn",r.premDQ.length+" premature DQ"];
+   return ["good","on track"];
+ };
+ el("lbb").innerHTML=reps.map((r,i)=>{const f=flag(r);const hvc=r.hvN>0?`<td class="num hvcell" style="cursor:pointer;color:#1565c0;text-decoration:underline" title="Show high-value accounts" onclick="event.stopPropagation();window.__hv(${i})">${r.hvN} &#9662;</td>`:`<td class="num">0</td>`;return `<tr id="lbr${i}" onclick="window.__coach('${(r.o||"").replace(/'/g,"\\'")}')"><td>${esc(r.o)}</td><td class="num">${r.n}</td><td class="num">${money(r.pipeline)}</td>${hvc}<td class="num">${pct(r.hvCov)}</td><td class="num">${r.rate.toFixed(1)}</td><td class="num">${Math.round(r.avgStage)}</td><td class="num">${r.premDQ.length?`<span class="tp tlow">${r.premDQ.length}</span>`:0}</td><td><span class="flag ${f[0]}">${f[1]}</span></td></tr>`;}).join("");
+ const pr=reps.filter(r=>r.premDQ.length).slice().sort((a,b)=>b.premDQ.length-a.premDQ.length);el("premranks").innerHTML=pr.length?('<div class="histlbl">Premature Unresponsive DQs by rep (&lt;4 touches)</div><div class="stagedist">'+pr.slice(0,12).map(r=>'<div>'+esc(r.o)+'</div><div class="bg"><div class="bar" style="background:#e57373;width:'+Math.round(r.premDQ.length/pr[0].premDQ.length*100)+'%"></div></div><div class="num">'+r.premDQ.length+'</div>').join("")+'</div>'):"";el("repsel").innerHTML=reps.map(r=>`<option value="${esc(r.o)}">${esc(r.o)}</option>`).join("");
+ const detail=o=>{
+   const r=reps.find(x=>x.o===o); if(!r){el("coachdetail").innerHTML="";return;}
+   const b=[];
+   b.push(`Owns <b>${r.n}</b> prospects · <b>${money(r.pipeline)}</b> vendor-sales pipeline · <b>${r.hvN}</b> high-value (&ge;$100M).`);
+   if(r.hvN>0){
+     const uhv=r.gaps.filter(g=>(g.vs||0)>=HV);
+     if(uhv.length) b.push(`<b>Priority gap:</b> ${uhv.length} of ${r.hvN} high-value accounts have no call or meeting logged — start with ${uhv.slice(0,3).map(g=>esc(g.co)+" ("+money(g.vs)+")").join(", ")}.`);
+     else b.push(`Strong coverage — all ${r.hvN} high-value accounts have outreach logged.`);
+   } else b.push(`No &ge;$100M accounts in book; prioritize mid-value (&ge;$10M) outreach.`);
+   b.push(`Outreach rate <b>${r.rate.toFixed(1)}</b> calls+meetings/prospect vs team median ${medRate.toFixed(1)} — ${r.rate>=medRate?"at/above":"below"} median.`);
+   if(r.stalled.length) b.push(`<b>Stalled:</b> ${r.stalled.length} open prospects sitting &gt;1 week in current stage with zero calls/meetings — re-engage or disposition.`);
+   else if(r.openN>=3&&r.avgStage>medStage*1.3) b.push(`Open prospects average ${Math.round(r.avgStage)} hrs in stage (team median ${Math.round(medStage)}) — tighten follow-up cadence.`);
+   if(r.touches===0&&r.emails>0) b.push(`Book is email-only (${r.emails} emails, 0 calls/meetings) — add live outreach to advance deals.`);
+   if(r.premDQ.length) b.push(`<b style="color:#c62828">Premature DQs:</b> ${r.premDQ.length} closed <b>Unresponsive</b> with &lt;4 touches (${money(r.premVal)} vendor value) — e.g. ${r.premDQ.slice(0,3).map(g=>esc(g.co)+" ("+(g.tp||0)+"t)").join(", ")}. Re-open before disqualifying.`);
+   const gapRows=r.gaps.slice(0,15).map(g=>`<tr><td>${g.id?`<a class="sf" href="${SFBASE}/lightning/r/Prospect__c/${g.id}/view" target="_blank" rel="noopener">${esc(g.n)}</a>`:esc(g.n)}</td><td>${esc(g.co)}</td><td>${esc(g.ic)}</td><td class="num">${money(g.vs)}</td><td><span class="badge ${sc(g.s)}">${esc(g.s)}</span></td><td class="num">${g.ah==null?"—":Math.round(g.ah)}</td><td class="num">${g.em}</td></tr>`).join("");
+   el("coachdetail").innerHTML=`<div class="coachcard"><div style="font-weight:650;margin-bottom:4px">${esc(r.o)}</div>
+     <div class="metrics">
+       <div class="metric"><div class="mv">${r.n}</div><div class="ml">Prospects</div></div>
+       <div class="metric"><div class="mv">${money(r.pipeline)}</div><div class="ml">Pipeline (vendor $)</div></div>
+       <div class="metric"><div class="mv">${r.calls}</div><div class="ml">Calls</div></div>
+       <div class="metric"><div class="mv">${r.mtgs}</div><div class="ml">Meetings</div></div>
+       <div class="metric"><div class="mv">${r.emails}</div><div class="ml">Emails</div></div>
+       <div class="metric"><div class="mv">${pct(r.hvCov)}</div><div class="ml">HV covered</div></div>
+       <div class="metric"><div class="mv">${Math.round(r.avgStage)}</div><div class="ml">Avg stage hrs</div></div><div class="metric"><div class="mv" style="${r.premDQ.length?'color:#c62828':''}">${r.premDQ.length}</div><div class="ml">Premature DQ (&lt;4)</div></div>
+     </div>
+     <div class="fb"><b>Coaching</b><ul>${b.map(s=>`<li>${s}</li>`).join("")}</ul></div>
+     ${r.gaps.length?`<div style="font-size:12px;font-weight:600;margin:6px 0 2px">Priority outreach — high/mid-value, no live touch (${r.gaps.length})</div><div style="overflow:auto;max-height:300px"><table class="gaptbl"><thead><tr><th>Prospect</th><th>Company</th><th>ICP</th><th class="num">Vendor $</th><th>Stage</th><th class="num">Stage hrs</th><th class="num">Emails</th></tr></thead><tbody>${gapRows}</tbody></table></div>`:'<div class="note">No untouched mid/high-value open prospects — good coverage.</div>'}
+   </div>`;
+ };
+ window.__hv=i=>{
+   const ex=document.getElementById("hvrow"+i);
+   if(ex){ex.remove();return;}
+   const r=reps[i];
+   const rows=r.hvList.map(g=>`<tr><td>${g.id?`<a class="sf" href="${SFBASE}/lightning/r/Prospect__c/${g.id}/view" target="_blank" rel="noopener">${esc(g.n)}</a>`:esc(g.n)}</td><td>${esc(g.co)}</td><td class="num">${money(g.vs)}</td><td><span class="badge ${sc(g.s)}">${esc(g.s)}</span></td><td>${(g.ca||g.mc)?'<span class="flag good">touched</span>':'<span class="flag bad">no touch</span>'}</td></tr>`).join("");
+   const tr=document.createElement("tr");
+   tr.id="hvrow"+i;
+   tr.innerHTML=`<td colspan="9" style="background:#f7f9fb;padding:8px 12px"><div style="font-size:11px;font-weight:600;color:#6b727b;margin-bottom:4px">${esc(r.o)} — high-value accounts (&ge;$100M vendor sales)</div><table class="gaptbl"><thead><tr><th>Prospect</th><th>Company</th><th class="num">Vendor $</th><th>Stage</th><th>Outreach</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+   document.getElementById("lbr"+i).after(tr);
+ };
+ window.__coach=o=>{el("repsel").value=o;detail(o);};
+ el("repsel").addEventListener("change",e=>detail(e.target.value));
+ if(reps.length) detail(reps[0].o);
+}
+
+function medv(a){const s=a.slice().sort((p,q)=>p-q);const n=s.length;return n?(n%2?s[(n-1)/2]:(s[n/2-1]+s[n/2])/2):0;}
+function benchRender(){
+  const B=4,D=DATA;
+  const tps=D.map(x=>x.tp||0);
+  const med=medv(tps);
+  const meet=D.filter(x=>(x.tp||0)>=B).length, below=D.length-meet;
+  const unr=D.filter(x=>x.s==="Closed/Disqualified"&&x.dr==="Unresponsive");
+  const unrLow=unr.filter(x=>(x.tp||0)<B).sort((a,b)=>(b.vs||0)-(a.vs||0)||(a.tp||0)-(b.tp||0));
+  const unrMed=unr.length?medv(unr.map(x=>x.tp||0)):0;
+  const pct=(a,b)=>b?Math.round(a/b*100)+"%":"—";
+  el("benchintro").innerHTML='Median assessment threshold = <b>4 touch points</b> (emails + calls + meetings) \u2014 the minimum to fairly judge a prospect\u2019s validity. A prospect below 4 touches is under-assessed; closing one as <b>Unresponsive</b> before 4 touches is a <b>premature disqualification</b> and a re-engagement candidate.';
+  const cards=[
+    [med,"Median touches (view)",false],
+    [meet.toLocaleString()+" ("+pct(meet,D.length)+")","Meet \u22654 benchmark",false],
+    [below.toLocaleString()+" ("+pct(below,D.length)+")","Below benchmark (<4)",false],
+    [unr.length.toLocaleString(),"Unresponsive DQs",false],
+    [unrLow.length.toLocaleString()+" ("+pct(unrLow.length,unr.length)+")","Premature: Unresp. & <4",true],
+    [unrMed,"Median touches \u00b7 Unresp.",false]
+  ];
+  el("benchcards").innerHTML=cards.map(c=>`<div class="benchcard${c[2]?' alert':''}"><div class="bn">${c[0]}</div><div class="bl">${c[1]}</div></div>`).join("");
+  const buckets=[0,0,0,0,0,0];D.forEach(x=>{buckets[Math.min(x.tp||0,5)]++;});
+  const mx=Math.max(1,...buckets);
+  el("histo").innerHTML=buckets.map((v,i)=>`<div class="hb"><div class="hbn">${v}</div><div class="hbar ${i<B?'lo':''}" style="height:${Math.round(v/mx*100)}%"></div></div>`).join("");
+  el("histcap").innerHTML=["0","1","2","3","4","5+"].map((l,i)=>`<div class="${i<B?'bm':''}">${l}</div>`).join("");
+  const lostVal=unrLow.reduce((a,x)=>a+(x.vs||0),0);
+  el("benchnote").innerHTML=`<b>Read-out.</b><ul style="margin:6px 0 0;padding-left:18px">`+
+    `<li><b>${below.toLocaleString()}</b> of <b>${D.length.toLocaleString()}</b> prospects (${pct(below,D.length)}) sit below the 4-touch benchmark in this view.</li>`+
+    `<li>Of <b>${unr.length.toLocaleString()}</b> \u201cUnresponsive\u201d disqualifications, <b style="color:#c62828">${unrLow.length.toLocaleString()}</b> (${pct(unrLow.length,unr.length)}) were closed with fewer than 4 touches \u2014 cut before a fair assessment. Median touches before an Unresponsive DQ is <b>${unrMed}</b>.</li>`+
+    `<li>These premature DQs carry <b>${money(lostVal)}</b> in combined vendor-sales value \u2014 prioritize re-engagement, highest value first.</li>`+
+    `<li><b>Rule of thumb:</b> don\u2019t disqualify as Unresponsive until \u22654 logged touches; a prospect with \u22654 touches and no response is a defensible DQ.</li></ul>`;
+  el("benchlisthd").innerHTML=`Premature \u201cUnresponsive\u201d disqualifications \u2014 &lt;4 touch points (<b>${unrLow.length.toLocaleString()}</b>) \u00b7 sorted by vendor sales`;
+  el("benchlisthead").innerHTML='<tr><th>Prospect</th><th>Company</th><th>Owner</th><th>Stage chg</th><th class="num">Em</th><th class="num">Calls</th><th class="num">Mtgs</th><th class="num">Touches</th><th class="num">Vendor $</th></tr>';
+  el("benchlist").innerHTML=unrLow.map(x=>{
+    const p=x.id?`<a class="sf" href="${SFBASE}/lightning/r/Prospect__c/${x.id}/view" target="_blank" rel="noopener">${esc(x.n)}</a>`:esc(x.n);
+    return `<tr><td>${p}</td><td>${esc(x.co)}</td><td>${esc(x.o)}</td><td>${fd(x.sc)}</td><td class="num">${x.em}</td><td class="num">${x.ca}</td><td class="num">${x.mc}</td><td class="num"><span class="tp tlow">${x.tp||0}</span></td><td class="num">${money(x.vs)}</td></tr>`;
+  }).join("")||'<tr><td colspan="9" style="padding:14px;color:#9aa0a8">No premature Unresponsive DQs in this view.</td></tr>';
+}
+function setMonth(m){MONTH=m;DATA=m?ALL.filter(r=>r.m===m):ALL;document.querySelectorAll(".mtab").forEach(b=>b.classList.toggle("on",b.dataset.m===m));dist();render();coachRender();benchRender();}
+document.querySelectorAll(".mtab").forEach(b=>b.addEventListener("click",()=>setMonth(b.dataset.m)));
+setMonth("");
+</script></body></html>
