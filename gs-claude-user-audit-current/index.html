@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Claude–GovSpend User Audit</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Lato:wght@300;400;600;700;900&display=swap');
+    :root {
+      --deep-space: #303650; --data-blue: #0076DE; --xanthous: #FFC44D;
+      --deep-space-light: #3d4464; --deep-space-dark: #1e2238;
+      --light-bg: #f5f7fa; --card-bg: #ffffff; --border-light: #e2e8f0;
+      --text-primary: #1a1f3a; --text-secondary: #64748b; --text-muted: #94a3b8;
+      --success-green: #22c55e;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Lato', 'Helvetica Neue', Arial, sans-serif; background: var(--light-bg); color: var(--text-primary); min-height: 100vh; }
+    .page { display: none; } .page.active { display: block; }
+
+    .header { background: linear-gradient(135deg, var(--deep-space-dark) 0%, var(--deep-space) 40%, var(--deep-space-light) 100%); padding: 0; position: relative; overflow: hidden; }
+    .header::before { content: ''; position: absolute; top: -60px; right: -60px; width: 300px; height: 300px; background: radial-gradient(circle, rgba(0,118,222,0.25) 0%, transparent 70%); border-radius: 50%; }
+    .header::after { content: ''; position: absolute; bottom: -40px; left: 20%; width: 200px; height: 200px; background: radial-gradient(circle, rgba(255,196,77,0.10) 0%, transparent 70%); border-radius: 50%; }
+    .header-inner { position: relative; z-index: 2; display: flex; align-items: flex-start; justify-content: space-between; padding: 40px 48px 36px; gap: 24px; }
+    .header-left { flex: 1; }
+    .header-logo-row { display: flex; align-items: center; gap: 14px; margin-bottom: 18px; }
+    .govspend-badge { display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.10); border: 1px solid rgba(255,255,255,0.18); border-radius: 6px; padding: 6px 14px; }
+    .govspend-badge .dot { width: 8px; height: 8px; background: var(--xanthous); border-radius: 50%; }
+    .govspend-badge span { color: rgba(255,255,255,0.85); font-size: 11px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; }
+    .claude-badge { display: flex; align-items: center; gap: 8px; background: rgba(0,118,222,0.20); border: 1px solid rgba(0,118,222,0.40); border-radius: 6px; padding: 6px 14px; }
+    .claude-badge span { color: #7ec8ff; font-size: 11px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; }
+    .header-title { color: #fff; font-size: 34px; font-weight: 900; letter-spacing: -0.5px; line-height: 1.1; margin-bottom: 10px; }
+    .header-title span.accent { color: var(--xanthous); }
+    .header-subtitle { color: rgba(255,255,255,0.60); font-size: 14px; font-weight: 400; }
+    .header-right { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; flex-shrink: 0; padding-top: 4px; }
+    .date-stamp { background: rgba(255,196,77,0.15); border: 1px solid rgba(255,196,77,0.35); border-radius: 8px; padding: 12px 20px; text-align: right; }
+    .date-stamp .label { color: var(--xanthous); font-size: 10px; font-weight: 700; letter-spacing: 1.4px; text-transform: uppercase; margin-bottom: 4px; }
+    .date-stamp .date-val { color: #fff; font-size: 16px; font-weight: 700; }
+    .period-stamp { background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.12); border-radius: 8px; padding: 10px 20px; text-align: right; }
+    .period-stamp .label { color: rgba(255,255,255,0.45); font-size: 10px; font-weight: 700; letter-spacing: 1.4px; text-transform: uppercase; margin-bottom: 4px; }
+    .period-stamp .period-val { color: rgba(255,255,255,0.80); font-size: 13px; font-weight: 600; }
+    .accent-bar { height: 4px; background: linear-gradient(90deg, var(--data-blue) 0%, var(--xanthous) 60%, transparent 100%); }
+
+    .page2-nav { background: var(--deep-space); border-bottom: 3px solid var(--data-blue); padding: 0 48px; display: flex; align-items: center; gap: 16px; height: 52px; }
+    .back-btn { display: inline-flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.10); border: 1px solid rgba(255,255,255,0.20); color: rgba(255,255,255,0.85); font-family: 'Lato', sans-serif; font-size: 13px; font-weight: 700; padding: 7px 16px; border-radius: 6px; cursor: pointer; transition: all 0.15s; }
+    .back-btn:hover { background: rgba(255,255,255,0.18); color: #fff; }
+    .nav-label { color: rgba(255,255,255,0.45); font-size: 12px; }
+    .nav-title { color: rgba(255,255,255,0.80); font-size: 13px; font-weight: 700; }
+
+    .main { max-width: 1100px; margin: 0 auto; padding: 40px 32px 60px; }
+
+    .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; margin-bottom: 36px; }
+    .kpi-card { background: var(--card-bg); border-radius: 12px; padding: 24px 22px; box-shadow: var(--shadow-sm); border: 1px solid var(--border-light); position: relative; overflow: hidden; }
+    .kpi-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+    .kpi-card.blue::before { background: var(--data-blue); } .kpi-card.yellow::before { background: var(--xanthous); }
+    .kpi-card.navy::before { background: var(--deep-space); } .kpi-card.green::before { background: var(--success-green); }
+    .kpi-icon { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-bottom: 16px; font-size: 17px; }
+    .kpi-card.blue .kpi-icon { background: #e8f3ff; } .kpi-card.yellow .kpi-icon { background: #fff8e6; }
+    .kpi-card.navy .kpi-icon { background: #edf0f8; } .kpi-card.green .kpi-icon { background: #dcfce7; }
+    .kpi-value { font-size: 32px; font-weight: 900; color: var(--text-primary); line-height: 1; margin-bottom: 6px; }
+    .kpi-label { font-size: 12px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.8px; }
+    .kpi-sub { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+
+    .section-header { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; margin-top: 40px; }
+    .section-dot { width: 10px; height: 10px; border-radius: 50%; }
+    .section-dot.blue { background: var(--data-blue); } .section-dot.yellow { background: var(--xanthous); } .section-dot.navy { background: var(--deep-space); }
+    .section-title { font-size: 16px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.2px; }
+    .section-line { flex: 1; height: 1px; background: var(--border-light); }
+
+    .full-list-btn { display: inline-flex; align-items: center; gap: 9px; background: var(--deep-space); color: #fff; font-family: 'Lato', sans-serif; font-size: 13px; font-weight: 700; padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer; letter-spacing: 0.3px; box-shadow: 0 2px 8px rgba(48,54,80,0.25); transition: all 0.15s; }
+    .full-list-btn:hover { background: var(--deep-space-light); transform: translateY(-1px); }
+    .full-list-btn .btn-count { background: var(--xanthous); color: var(--deep-space-dark); font-size: 11px; font-weight: 900; padding: 2px 7px; border-radius: 10px; }
+
+    .tier-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 36px; }
+    .tier-card { background: var(--card-bg); border-radius: 12px; padding: 28px; box-shadow: var(--shadow-sm); border: 1px solid var(--border-light); }
+    .tier-card.premium { border-top: 4px solid var(--xanthous); background: linear-gradient(135deg, #fffdf5 0%, #fffff9 100%); }
+    .tier-card.standard { border-top: 4px solid var(--data-blue); background: linear-gradient(135deg, #f5f9ff 0%, #f9fbff 100%); }
+    .tier-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+    .tier-badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; }
+    .tier-badge.premium { background: #fff3c4; color: #92640a; border: 1px solid #ffd96a; }
+    .tier-badge.standard { background: #d4e9ff; color: #0055a3; border: 1px solid #93c5fd; }
+    .tier-unit-cost { font-size: 28px; font-weight: 900; color: var(--text-primary); }
+    .tier-unit-cost span { font-size: 13px; font-weight: 400; color: var(--text-muted); }
+    .tier-stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+    .tier-stat { text-align: center; padding: 14px 8px; background: rgba(255,255,255,0.70); border-radius: 8px; border: 1px solid rgba(0,0,0,0.05); }
+    .tier-stat-val { font-size: 22px; font-weight: 900; color: var(--text-primary); }
+    .tier-stat-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text-secondary); margin-top: 3px; }
+
+    .table-wrap { background: var(--card-bg); border-radius: 12px; box-shadow: var(--shadow-sm); border: 1px solid var(--border-light); overflow: hidden; margin-bottom: 36px; }
+    table { width: 100%; border-collapse: collapse; }
+    thead tr { background: var(--deep-space); }
+    thead th { padding: 14px 20px; text-align: left; font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.75); text-transform: uppercase; letter-spacing: 1px; }
+    thead th:not(:first-child) { text-align: right; }
+    tbody tr { border-bottom: 1px solid var(--border-light); }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: #f8faff; }
+    tbody td { padding: 14px 20px; font-size: 13.5px; color: var(--text-primary); }
+    tbody td:not(:first-child) { text-align: right; }
+    .dept-name { display: flex; align-items: center; gap: 10px; font-weight: 700; }
+    .dept-color { width: 8px; height: 28px; border-radius: 3px; }
+    .pill { display: inline-flex; align-items: center; justify-content: center; border-radius: 14px; padding: 3px 11px; font-size: 12px; font-weight: 700; }
+    .pill-premium { background: #fff3c4; color: #92640a; } .pill-standard { background: #dbeafe; color: #1d4ed8; }
+    .cost-cell { font-weight: 700; color: var(--deep-space); }
+    .pct-bar-wrap { display: flex; align-items: center; gap: 8px; justify-content: flex-end; }
+    .pct-bar { height: 6px; border-radius: 3px; background: var(--data-blue); opacity: 0.7; }
+    .pct-text { font-size: 12px; color: var(--text-muted); white-space: nowrap; }
+    tfoot tr { background: linear-gradient(90deg, #f0f4f8 0%, #f5f7fa 100%); border-top: 2px solid var(--border-light); }
+    tfoot td { padding: 16px 20px; font-size: 13.5px; font-weight: 900; color: var(--text-primary); }
+    tfoot td:not(:first-child) { text-align: right; }
+    .total-cost { color: var(--data-blue); font-size: 16px; }
+
+    .data-note { background: #fffbeb; border: 1px solid #fcd34d; border-radius: 8px; padding: 12px 18px; margin-bottom: 28px; font-size: 12px; color: #92400e; display: flex; align-items: flex-start; gap: 10px; }
+    .data-note .note-icon { font-size: 15px; flex-shrink: 0; margin-top: 1px; }
+
+    .page2-main { max-width: 1100px; margin: 0 auto; padding: 36px 32px 60px; }
+    .dept-block { margin-bottom: 32px; }
+    .dept-block-header { display: flex; align-items: center; gap: 12px; padding: 14px 20px; border-radius: 10px 10px 0 0; }
+    .dept-block-header .dept-strip { width: 4px; height: 28px; border-radius: 2px; flex-shrink: 0; }
+    .dept-block-header .dept-block-name { font-size: 15px; font-weight: 900; color: #fff; flex: 1; }
+    .dept-block-header .dept-seat-count { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.25); color: rgba(255,255,255,0.90); font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 12px; }
+    .dept-block-header .dept-cost-badge { background: var(--xanthous); color: var(--deep-space-dark); font-size: 12px; font-weight: 900; padding: 4px 12px; border-radius: 12px; }
+    .user-table-wrap { background: var(--card-bg); border-radius: 0 0 10px 10px; border: 1px solid var(--border-light); border-top: none; overflow: hidden; box-shadow: var(--shadow-sm); }
+    .user-table { width: 100%; border-collapse: collapse; }
+    .user-table thead tr { background: #f4f6fa; }
+    .user-table thead th { padding: 10px 18px; font-size: 10px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.9px; border-bottom: 1px solid var(--border-light); text-align: left; }
+    .user-table thead th:last-child { text-align: right; }
+    .user-table tbody tr { border-bottom: 1px solid #f0f3f7; }
+    .user-table tbody tr:last-child { border-bottom: none; }
+    .user-table tbody tr:hover { background: #f8faff; }
+    .user-table tbody td { padding: 11px 18px; font-size: 13px; color: var(--text-primary); }
+    .user-table tbody td:last-child { text-align: right; }
+    .user-name { font-weight: 700; }
+    .name-missing { font-style: italic; color: var(--text-muted); font-weight: 400; font-size: 11px; }
+    .role-tag { font-size: 11px; color: var(--text-muted); font-style: italic; }
+    .role-admin { color: var(--data-blue); font-weight: 700; font-style: normal; font-size: 11px; }
+    .role-owner { color: var(--deep-space); font-weight: 700; font-style: normal; font-size: 11px; }
+    .role-primary { color: #b45309; font-weight: 700; font-style: normal; font-size: 11px; }
+    .user-cost { font-weight: 700; font-size: 13px; }
+    .user-cost.premium { color: #92640a; } .user-cost.standard { color: var(--text-secondary); }
+
+    .footer { background: var(--deep-space-dark); padding: 24px 48px; display: flex; align-items: center; justify-content: space-between; }
+    .footer-left { color: rgba(255,255,255,0.45); font-size: 11px; line-height: 1.6; }
+    .footer-right { display: flex; align-items: center; gap: 6px; }
+    .footer-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--xanthous); }
+    .footer-brand { color: rgba(255,255,255,0.50); font-size: 11px; font-weight: 700; letter-spacing: 0.8px; }
+  </style>
+</head>
+<body>
+
+<!-- PAGE 1 -->
+<div id="page1" class="page active">
+  <div class="header">
+    <div class="header-inner">
+      <div class="header-left">
+        <div class="header-logo-row">
+          <div class="govspend-badge"><div class="dot"></div><span>GovSpend</span></div>
+          <div class="claude-badge"><span>Claude.ai Team</span></div>
+        </div>
+        <h1 class="header-title">Claude–<span class="accent">GovSpend</span><br/>User Audit</h1>
+        <p class="header-subtitle">Seat allocation, tier classification &amp; monthly cost summary across all departments</p>
+      </div>
+      <div class="header-right">
+        <div class="date-stamp"><div class="label">Audit Date</div><div class="date-val">June 22, 2026</div></div>
+        <div class="period-stamp"><div class="label">Billing Period</div><div class="period-val">June 2026 (Active)</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="accent-bar"></div>
+
+  <div class="main">
+
+    <div class="kpi-grid">
+      <div class="kpi-card blue"><div class="kpi-icon">👥</div><div class="kpi-value">85</div><div class="kpi-label">Total Active Seats</div><div class="kpi-sub">Across 11 departments</div></div>
+      <div class="kpi-card yellow"><div class="kpi-icon">⭐</div><div class="kpi-value">7</div><div class="kpi-label">Premium Seats</div><div class="kpi-sub">$125/seat · 8.2% of total</div></div>
+      <div class="kpi-card navy"><div class="kpi-icon">🪑</div><div class="kpi-value">78</div><div class="kpi-label">Standard Seats</div><div class="kpi-sub">$25/seat · 91.8% of total</div></div>
+      <div class="kpi-card green"><div class="kpi-icon">💰</div><div class="kpi-value">$2,825</div><div class="kpi-label">Monthly Total Cost</div><div class="kpi-sub">All tiers combined</div></div>
+    </div>
+
+    <div class="section-header"><div class="section-dot yellow"></div><div class="section-title">Seat Tier Breakdown</div><div class="section-line"></div></div>
+    <div class="tier-grid">
+      <div class="tier-card premium">
+        <div class="tier-header"><div class="tier-badge premium">⭐ Premium</div><div class="tier-unit-cost">$125 <span>/ seat / mo</span></div></div>
+        <div class="tier-stats">
+          <div class="tier-stat"><div class="tier-stat-val">7</div><div class="tier-stat-label">Seats</div></div>
+          <div class="tier-stat"><div class="tier-stat-val">$875</div><div class="tier-stat-label">Monthly Cost</div></div>
+          <div class="tier-stat"><div class="tier-stat-val">31.0%</div><div class="tier-stat-label">% of Budget</div></div>
+        </div>
+      </div>
+      <div class="tier-card standard">
+        <div class="tier-header"><div class="tier-badge standard">◎ Standard</div><div class="tier-unit-cost">$25 <span>/ seat / mo</span></div></div>
+        <div class="tier-stats">
+          <div class="tier-stat"><div class="tier-stat-val">78</div><div class="tier-stat-label">Seats</div></div>
+          <div class="tier-stat"><div class="tier-stat-val">$1,950</div><div class="tier-stat-label">Monthly Cost</div></div>
+          <div class="tier-stat"><div class="tier-stat-val">69.0%</div><div class="tier-stat-label">% of Budget</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-top:40px; margin-bottom:18px;">
+      <div style="display:flex; align-items:center; gap:10px; flex:1;">
+        <div class="section-dot blue"></div>
+        <div class="section-title">Cost Summary by Department</div>
+        <div class="section-line"></div>
+      </div>
+      <button class="full-list-btn" onclick="showPage2()" style="margin-left:20px; flex-shrink:0;">
+        <span>👤</span> Full User List <span class="btn-count">85</span> <span style="opacity:0.7;">→</span>
+      </button>
+    </div>
+
+    <div class="data-note">
+      <span class="note-icon">⚠️</span>
+      <span><strong>Data note:</strong> 2 users still have blank display names (lpeer@govspend.com in Marketing, achikni@govspend.com in Data). All remaining Sales names have been resolved. See Full User List for details.</span>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Department</th><th>Total Seats</th><th>Premium Seats</th><th>Standard Seats</th><th>Monthly Cost</th><th>% of Budget</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><div class="dept-name"><div class="dept-color" style="background:#6366f1;"></div>CSS</div></td>
+            <td>1</td><td><span class="pill pill-premium">0</span></td><td><span class="pill pill-standard">1</span></td><td class="cost-cell">$25</td>
+            <td><div class="pct-bar-wrap"><div class="pct-bar" style="width:2px;"></div><span class="pct-text">0.9%</span></div></td>
+          </tr>
+          <tr>
+            <td><div class="dept-name"><div class="dept-color" style="background:#303650;"></div>Data</div></td>
+            <td>18</td><td><span class="pill pill-premium">0</span></td><td><span class="pill pill-standard">18</span></td><td class="cost-cell">$450</td>
+            <td><div class="pct-bar-wrap"><div class="pct-bar" style="width:45px;"></div><span class="pct-text">15.9%</span></div></td>
+          </tr>
+          <tr>
+            <td><div class="dept-name"><div class="dept-color" style="background:#FFC44D;"></div>Fulcrum</div></td>
+            <td>9</td><td><span class="pill pill-premium">5</span></td><td><span class="pill pill-standard">4</span></td><td class="cost-cell">$725</td>
+            <td><div class="pct-bar-wrap"><div class="pct-bar" style="width:72px;"></div><span class="pct-text">25.7%</span></div></td>
+          </tr>
+          <tr>
+            <td><div class="dept-name"><div class="dept-color" style="background:#94a3b8;"></div>HR</div></td>
+            <td>1</td><td><span class="pill pill-premium">0</span></td><td><span class="pill pill-standard">1</span></td><td class="cost-cell">$25</td>
+            <td><div class="pct-bar-wrap"><div class="pct-bar" style="width:2px;"></div><span class="pct-text">0.9%</span></div></td>
+          </tr>
+          <tr>
+            <td><div class="dept-name"><div class="dept-color" style="background:#0ea5e9;"></div>IT</div></td>
+            <td>1</td><td><span class="pill pill-premium">0</span></td><td><span class="pill pill-standard">1</span></td><td class="cost-cell">$25</td>
+            <td><div class="pct-bar-wrap"><div class="pct-bar" style="width:2px;"></div><span class="pct-text">0.9%</span></div></td>
+          </tr>
+          <tr>
+            <td><div class="dept-name"><div class="dept-color" style="background:#22c55e;"></div>Marketing</div></td>
+            <td>4</td><td><span class="pill pill-premium">0</span></td><td><span class="pill pill-standard">4</span></td><td class="cost-cell">$100</td>
+            <td><div class="pct-bar-wrap"><div class="pct-bar" style="width:10px;"></div><span class="pct-text">3.5%</span></div></td>
+          </tr>
+          <tr>
+            <td><div class="dept-name"><div class="dept-color" style="background:#a855f7;"></div>Product</div></td>
+            <td>7</td><td><span class="pill pill-premium">1</span></td><td><span class="pill pill-standard">6</span></td><td class="cost-cell">$275</td>
+            <td><div class="pct-bar-wrap"><div class="pct-bar" style="width:27px;"></div><span class="pct-text">9.7%</span></div></td>
+          </tr>
+          <tr>
+            <td><div class="dept-name"><div class="dept-color" style="background:#14b8a6;"></div>Relationship Management</div></td>
+            <td>7</td><td><span class="pill pill-premium">0</span></td><td><span class="pill pill-standard">7</span></td><td class="cost-cell">$175</td>
+            <td><div class="pct-bar-wrap"><div class="pct-bar" style="width:17px;"></div><span class="pct-text">6.2%</span></div></td>
+          </tr>
+          <tr>
+            <td><div class="dept-name"><div class="dept-color" style="background:#f97316;"></div>RevOPS</div></td>
+            <td>3</td><td><span class="pill pill-premium">0</span></td><td><span class="pill pill-standard">3</span></td><td class="cost-cell">$75</td>
+            <td><div class="pct-bar-wrap"><div class="pct-bar" style="width:7px;"></div><span class="pct-text">2.7%</span></div></td>
+          </tr>
+          <tr>
+            <td><div class="dept-name"><div class="dept-color" style="background:#0076DE;"></div>Sales</div></td>
+            <td>21</td><td><span class="pill pill-premium">0</span></td><td><span class="pill pill-standard">21</span></td><td class="cost-cell">$525</td>
+            <td><div class="pct-bar-wrap"><div class="pct-bar" style="width:52px;"></div><span class="pct-text">18.6%</span></div></td>
+          </tr>
+          <tr>
+            <td><div class="dept-name"><div class="dept-color" style="background:#f43f5e;"></div>Technology</div></td>
+            <td>13</td><td><span class="pill pill-premium">1</span></td><td><span class="pill pill-standard">12</span></td><td class="cost-cell">$425</td>
+            <td><div class="pct-bar-wrap"><div class="pct-bar" style="width:42px;"></div><span class="pct-text">15.0%</span></div></td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr><td><strong>TOTAL</strong></td><td><strong>85</strong></td><td><strong>7</strong></td><td><strong>78</strong></td><td class="total-cost"><strong>$2,825</strong></td><td><strong>100%</strong></td></tr>
+        </tfoot>
+      </table>
+    </div>
+
+  </div>
+
+  <div class="footer">
+    <div class="footer-left">Claude–GovSpend User Audit &nbsp;·&nbsp; Generated June 22, 2026 &nbsp;·&nbsp; Confidential — Internal Use Only<br/>Data source: claude.ai Team Admin Export &nbsp;·&nbsp; 85 active seats across 11 departments</div>
+    <div class="footer-right"><div class="footer-dot"></div><div class="footer-brand">GOVSPEND INC.</div></div>
+  </div>
+</div>
+
+
+<!-- PAGE 2 -->
+<div id="page2" class="page">
+  <div class="header">
+    <div class="header-inner">
+      <div class="header-left">
+        <div class="header-logo-row">
+          <div class="govspend-badge"><div class="dot"></div><span>GovSpend</span></div>
+          <div class="claude-badge"><span>Claude.ai Team</span></div>
+        </div>
+        <h1 class="header-title">Claude–<span class="accent">GovSpend</span><br/>User Audit</h1>
+        <p class="header-subtitle">Complete seat roster sorted by department — 85 active users</p>
+      </div>
+      <div class="header-right">
+        <div class="date-stamp"><div class="label">Audit Date</div><div class="date-val">June 22, 2026</div></div>
+        <div class="period-stamp"><div class="label">View</div><div class="period-val">Full User List</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="accent-bar"></div>
+  <div class="page2-nav">
+    <button class="back-btn" onclick="showPage1()"><span>←</span> Back to Summary</button>
+    <span class="nav-label">You are viewing:</span>
+    <span class="nav-title">Full User Roster · All 11 Departments · 85 Seats</span>
+  </div>
+
+  <div class="page2-main">
+
+    <!-- CSS -->
+    <div class="dept-block">
+      <div class="dept-block-header" style="background:linear-gradient(90deg,#4338ca,#6366f1);">
+        <div class="dept-strip" style="background:rgba(255,255,255,0.5);"></div>
+        <div class="dept-block-name">CSS</div><div class="dept-seat-count">1 seat</div><div class="dept-cost-badge">$25 / mo</div>
+      </div>
+      <div class="user-table-wrap"><table class="user-table">
+        <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Seat Tier</th><th>Monthly Cost</th></tr></thead>
+        <tbody>
+          <tr><td><div class="user-name">Kate</div></td><td>kkiernan@govspend.com</td><td><span class="role-tag">User</span></td><td><span class="pill pill-standard">Standard</span></td><td><span class="user-cost standard">$25</span></td></tr>
+        </tbody>
+      </table></div>
+    </div>
+
+    <!-- DATA (18) -->
+    <div class="dept-block">
+      <div class="dept-block-header" style="background:linear-gradient(90deg,#1e2238,#303650);">
+        <div class="dept-strip" style="background:rgba(255,196,77,0.7);"></div>
+        <div class="dept-block-name">Data</div><div class="dept-seat-count">18 seats</div><div class="dept-cost-badge">$450 / mo</div>
+      </div>
+      <div class="user-table-wrap"><table class="user-table">
+        <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Seat Tier</th><th>Monthly Cost</th></tr></thead>
+        <tbody>
+          <tr><td><div class="user-name">Divya</div></td><td>dprasad@govspend.com</td><td><span class="role-tag">User</span></td><td><span class="pill pill-standard">Standard</span></td><td><span class="user-cost standard">$25</span></td></tr>
+          <tr><td><div class="user-name">Gargi</div></td><td>gpancholi@govspend.com</td><td><span class="role-tag">User</span></td><td><span class="pill pill-standard">Standard</span></td><td><span class="user-cost standard">$25</span></td></tr>
+          <tr><td><div class="user-name">Harsh</div></td><td>hshah@govspend.com</td><td><span class="role-tag">User</span></td><td><span class="pill pill-standard">Standard</span></td><td><span class="user-cost standard">$25</span></td></tr>
+          <tr><td><div class="user-name">Joel S</div></td><td>jshroades@govspend.com</td><td><span class="role-tag">User</span></td><td><span class="pill pill-standard">Standard</span></td><td><span class="user-cost standard">$25</span></td></tr>
+          <tr><td><div class="user-name">Kartik</div></td><td>knagaraj@govspend.com</td><td><span class="role-tag">User</span></td><td><span class="pill pill-standard">Standard</span></td><td><span class="user-cost standard">$25</span></td></tr>
+          <tr><td><div class="user-name">Parth</div></td><td>pukani@govspend.com</td><td><span class="role-tag">User</span></td><td><span class="pill pill-standard">Standard</span></td><td><span class="user-cost standard">$25</span></td></tr>
+          <tr><td><div class="user-name">Peter Lis</div></td><td>plis@govspend.com</td><td><span class="role-tag">User</span></td><td><span class="pill pill-standard">Standard</span></td><td><span class="user-cost standard">$25</span></td></tr>
+          <tr><td><div class="user-name">Pranita</div></td><td>pbhadviya@govspend.com</td><td><span class="role-tag">User</span></td><td><span class="pill pill-standard">Standard</span></td><td><span class="user-cost standard">$25</span></td></tr>
+          <tr><td><div class="user-name">Ron Bjornsson</div></td><td>rbjornsson@govspend.com</td><td><span class="role-tag">User</span></td><td><span class="pill pill-standard">Standard</span></td><td><span class="user-cost standard">$25</span></td></tr>
+          <tr><td><div class="user-name">Ronak</div></td><td>rparekh@govspend.com</td><td><span class="role-admin">Membership Admin</span></td><td><span class="pill pill-standard">Standard</span></td><td><span class="user-cost standard">$25</span></td></tr>
+          <tr><td><div class="user-name">SG</div></td><td>sgovindaraju@govspend.com</td><td><span class="role-tag">User</span></td><td><span class="pill pill-standard">Standard</span></td><td><span class="user-cost standard">$25</span></td></tr>
+          <tr><td><div class="user-name">Sabey</div></td><td>sdubey@govspend.com</td><td><span class="role-tag">User</span></td><td><span class="pill pill-standard">Standard</span></td><td><span class="user-cost standard">$25</span></td></tr>
+          <tr><td><div class="user-name">Sarang</div></td><td>sbhatt@govspend.com</td><td><span class="role-tag">User</span></td><td><span class="pill pill-standard">Standard</span></td><td><span class="user-cost standard">$25</span></td></tr>
+          <tr><td><div class="user-name">Shraddha</div></td><td>ssoni@govspend.com</td><td><span class="role-tag">User</span></td><td><span class="pill pill-standard">Standard</span></td><td><span class="user-cost standard">$25</span></td></tr>
+          <tr><td><div class="user-name">Stark</div></td><td>mvasaya@govspend.com</td><td><span class="role-tag">User</span></td><td><span class="pill pill-standard">Standard</span></td><td><span class="user-cost standard">$25</span></td></tr>
+          <tr><td><div class="user-name">Urmik Mehta</div></td><td>umehta@govspend.com</td><td><span class="role-tag">User</span></td><td><span class="pill pill-standard">Standard</span></td><td><span class="user-cost standard">$25</span></td></tr>
+          <tr><td><div class="user-name">Veer</div></td><td>vjayswal@govspend.com</td><td><span class="role-tag">User</span></td><td><span class="pill pill-standard">Standard</span></td><td><span class="user-cost standard">$25</span></td></tr>
+          <tr><td><div class="name-missing">⚠ Name not set</div></td><td>achikni@govspend.com</td><td><span class="role-tag">User</span></td><td><span class="pill pill-standard">Standard</span></td><td><span class="user-cost standard">$25</span></td></tr>
+        </tbody>
+      </table></div>
+    </div>
+
+    <!-- FULCRUM (9) -->
+    <div class="dept-block">
+      <div class="dept-block-header" style="background:linear-gradient(90deg,#b8860b,#d4a010);">
+        <div class="dept-strip" style="background:rgba(255,255,255,0.5);"></div>
+        <div class="dept-block-name">Fulcrum</div><div class="dept-seat-count">9 seats</div><div class="dept-cost-badge">$725 / mo</div>
+      </div>
+      <div class="user-table-wrap"><table class="user-table">
+        <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Seat Tier</th><th>Monthly Cost</th></tr></thead>
+        <tbody>
+          <tr><td><div class="user-name">Beard</div></td><td>mbeard@govspend.com</td><td><span class="role-owner">Owner</span></td><td><span class="pill pill-standard">Standard</span></td><td><span class="user-cost standard">$25</span></td></tr>
+          <tr><td><div class="user-name">Brian Dunnam</div></td><td>bdunnam@govspend.com</td><td><span class="role-tag">User</span></td><td><span class="pill pill-standard">Standard</span></td><td><span class="user-cost standard">$25</span></td></tr>
+          <tr><td><div class="user-name">Evan</div></td><td>ewhite@govspend.com</td><td><span class="role-owner">Owner</span></td><td><span class="pill pill-premium">Premium</span></td><td><span class="user-cost premium">$125</span></td></tr>
+          <tr><td><div class="user-name">Luke</div></td><td>ldemichiel@govspend.com</td><td><span class="role-owner">Owner</span></td><td><span class="pill pill-premium">Premium</span></td><td><span class="user-cost premium">$125</span></td></tr>
+          <tr><td><div class="user-name">Marc DiGeronimo</div></td><td>mdigeronimo@govspend.com</td><td><span class="role-admin">Membership Admin</span></td><td><span class="pill pill-premium">Premium</span></td><td><span class="user-cost premium">$125</span></td></tr>
+          <tr><td><div class="user-name">Octavio Diaz</div></td><td>odiaz@govspend.com</td><td><span class="role-primary">Primary Owner</span></td><td><span class="pill pill-premium">Premium</span></td><td><span class="user-cost premium">$125</span></td></tr>
+          <tr><td><div class="user-name">RK</div></td><td>rkamdar@govspend.com</td><td><span class="role-tag">User</span></td><td><span class="pill pill-standard">Standard</span></td><td><span class="user-cost standard">$25</span></td></tr>
+          <tr><td><div class="user-name">Seth</div></td><td>smorrison@govspend.com</td><td><span class="role-tag">User</span></td><td><span class="pill pill-premium">Premium</span></td><td><span class="user-cost premium">$125</span></td></tr>
+          <tr><td><div class="user-name">Trip</div></td><td>tcolden@govspend.com</td><td><span class="role-owner">Owner</span></td><td><span class="pill pill-standard">Standard</span></td><td><span class="user-cost standard">$25</span></td></tr>
+        </tbody>
+      </table></div>
+    </div>
+
+    <!-- HR -->
+    <div class="dept-block">
+      <div class="dept-block-header" style="background:linear-gradient(90deg,#475569,#64748b);">
+        <div class="dept-strip" style="background:rgba(255,255,255,0.5);"></div>
+        <div class="dept-block-name">HR</div><div class="dept-seat-count">1 seat</div><div class="dept-cost-badge">$25 / mo</div>
+      </div>
+      <div class="user-table-wrap"><table class="user-table">
+        <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Seat Tier</th><th>Monthly Cost</th></tr></thead>
+        <tbody>
+          <tr><td><div class="user-name">Kristen</div></td><td>kross@govspend.com</td><td><span class="role-tag">User</span></td><td><span class="pill pill-standard">Standard</span></td><td><span class="user-cost standard">$25</span></td></tr>
+        </tbody>
+      </table></div>
+    </div>
+
+    <!-- IT -->
+    <div class="dept-block">
+      <div class="dept-block-header" style="background:linear-gradient(90deg,#0369a1,#0ea5e9);">
+        <div class="dept-strip" style="background:rgba(255,255,255,0.5);"></div>
+        <div class="dept-block-name">IT</div><div class="dept-seat-count">1 seat</div><div class="dept-cost-badge">$25 / mo</div>
+      </div>
+      <div class="user-table-wrap"><table class="user-table">
+        <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Seat Tier</th><th>Monthly Cost</th></tr></thead>
+        <tbody>
+          <tr><td><div class="user-name">Jeremy</div></td><td>jdemetrius@govspend.com</td><td><span class="role-tag">User</span></td><td><span class="pill pill-standard">Standard</span></td><td><span class="user-cost standard">$25</span></td></tr>
+        </tbody>
+      </table></div>
+    </div>
+
+    <!-- MARKETING (4) -->
+    <div class="dept-block">
+      <div class="dept-block-header" style="background:linear-gradient(90deg,#15803d,#22c55e);">
+        <div class="dept-strip" style="background:rgba(255,255,255,0.5);"></div>
+        <div class="dept-block-name">Marketing</div><div class="dept-seat-count">4 seats</div><div class="dept-cost-badge">$100 / mo</div>
+      </div>
+      <div class="user-table-wrap"><table class="user-table">
+        <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Seat Tier</th><th>Monthly Cost</th></tr></thead>
+        <tbody>
+          <tr><td><div class="user-name">Anne</div></td><td>ahalstead@govspend.com</td><td><span class="role-tag">User</span></td><td><span class="pill pill-standard">Standard</span></td><td><span class="user-cost standard">$25</span></td></tr>
+          <tr><td><div class="name-missing">⚠ Name not set</div></td><td>lpeer@govspend.com</td><td><span class="role-tag">User</span></td><td><span class="pill pill-standard">Standard</span></td><td><span class="user-cost standard">$25</span></td></tr>
+          <tr><td><div class="user-name">Meghan</div></td><td>mmiranda@govspend.com</td><td><span class="role-tag">User</span></td><td><span class="pill pill-standard">Standard</span></td><td><span class="user-cost standard">$25</span></td></tr>
+          <tr><td><div class="user-name">Pam</div></td><td>panderson@govspend.com</td><td><span class="role-tag">User</span></td><td><span class="pill pill-standard">Standard</span></td><td><span class="user-cost standard">$25</span></td></tr>
+        </tbody>
+      </table></div>
+    </div>
+
+    <!-- PRODUCT (7) -->
+    <div class="dept-block">
+      <div class="dept-block-header" style="background:linear-gradient(90deg,#6b21a8,#a855f7);">
+        <div class="dept-strip" style="background:rgba(255,255,255,0.5);"></div>
+        <div class="dept-block-name">Product</div><div class="dept-seat-count">7 seats</div><div class="dept-cost-badge">$275 / mo</div>
+      </div>
+      <div class="user-table-wrap"><table class="user-table">
+        <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Seat Tier</th><th>Monthly Cost</th></tr></thead>
+        <tbody>
+          <tr><td><div class="user-name">Amir</div></td><td>aimam@govspend.com</td><td><span class="role-tag">User</span></td><td><span class="pill pill-standard">Standard</span></td><td><span class="user-cost standard">$25</span></td></tr>
+          <tr><td><div class="user-name">Daniel Johnston</div></td><td>djohnston@govspend.com</td><td><span class="role-tag">User</span></td><td><span class="pill pill-standard">Standard</span></td><td><span class="user-cost standard">$25</span></td></tr>
+          <tr><td><div class="user-name">Deepak</div></td><td>dbhat@govspend.com</td><td><span class="role-tag">User</span></td><td><span class="pill pill-standard">Standard</span></td><td><span class="user-cost standard">$25</span></td></tr>
+          <tr><td><div class="user-name">Kathryn</div></td><td>ksanders@govspend.com</td><td><span class="role-owner">Owner</span></td><td><span class="pill pill-standard">Standard</span></td><td><span class="user-cost standard">$25</span></td></tr>
+          <tr><td><div class="user-name">Muthuraman S</div></td><td>msundharam@govspend.com</td><td><span class="role-tag">User</span></td><td><span class="pill pill-standard">Standard</span></td><td><span class="user-cost standard">$25</span></td></tr>
+          <tr><td><div class="user-name">Nico</div></td><td>nolivares@govspend.com</td><td><span class="role-tag">User</span></td><td><span class="pill pill-standard">Standard</span></td><td><span class="user-cost standard">$25</span></td></tr>
+          <tr><td><div class="user-name">Rob</div></td><td>rmoyston@govspend.com</td><td><span class="role-tag">User</span></td><td><span class="pill pill-premium">Premium</span></td><td><span class="user-cost premium">$125</span></td></tr>
+        </tbody>
+      </table></div>
+    </div>
+
+    <!-- RELATIONSHIP MANAGEMENT (7) -->
+    <div class="dept-block">
+      <div class="dept-block-header" style="background:linear-gradient(90deg,#0f766e,#14b8a6);">
+        <div class="dept-strip" style="background:rgba(255,255,255,0.5);"></div>
+        <div class="dept-block-name">Relationship Management</div><div class="dept-seat-count">7 seats</div><div class="dept-cost-badge">$175 / mo</div>
+      </div>
+      <div class="user-table-wrap"><table class="user-table">
+        <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Seat Tier</th><th>Monthly Cost</th></tr></thead>
+        <tbody>
+          <tr><td><div class="user-name">J.B.</div></td><td>jmilnor@govspend.com</td><td><span class="role-tag">User</span></td><td><span class="pill pill-standard">Standard</span></td><td><span class="user-cost standard">$25</span></td></tr>
+          <tr><td><div class="user-name">Jaden Trujillo</div></td><td>jtrujillo@govspend.com</td><td><span class="role-tag">User</span></td><td><span class="pill pill-standard">Standard</span></td><td><span class="user-cost standard">$25</span></td></tr>
+          <tr><td><div class="user-name">Jonathan</div></td><td>jsilverstone@govspend.com</td><td><span class="role-tag">User</span></td><td><span class="pill pill-standard">Standard</span></td><td><span class="user-cost standard">$25</span></td></tr>
+          <tr><td><div class="user-name">Lisa</div></td><td>lfisher@govspend.com</td><td><span class="role-tag">User</span></td><td><span class="pill pill-standard">Standard</span></td><td><span class="user-cost standard">$25</span></td></tr>
+          <tr><td><div class="user-name">Maggie</div></td><td>mcambria@govspend.com</td><td><span class="role-tag">User</span></td><td><span class="pill pill-standard">Standard</span></td><td><span class="user-cost standard">$25</span></td></tr>
+          <tr><td><div class="user-name">Paige</div></td><td>pmockler@govspend.com</td><td><span class="role-tag">User</span></td><td><span class="pill pill-standard">Standard</span></td><td><span class="user-cost standard">$25</span></td></tr>
+          <tr><td><div class="user-name">Tiffany Grover</div></td><td>tgrover@govspend.com</td><td><span class="role-tag">User</span></td><td><span class="pill pill-standard">Standard</span></td><td><span class="user-cost standard">$25</span></td></tr>
+        </tbody>
+      </table></div>
+    </div>
+
+    <!-- REVOPS (3) -->
+    <div class="dept-block">
+      <div class="dept-block-header" style="background:linear-gradient(90deg,#c2410c,#f97316);">
+        <div class="dept-strip" style="background:rgba(255,255,255,0.5);"></div>
+        <div class="dept-block-name">RevOPS</div><div class="dept-seat-count">3 seats</div><div class="dept-cost-badge">$75 / mo</div>
+      </div>
+      <div class="user-table-wrap"><table class="user-table">
+        <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Seat Tier</th><th>Monthly Cost</th></tr></thead>
+        <tbody>
+          <tr><td><div class="user-name">E</div></td><td>ehardin@govspend.com</td><td><span class="role-tag">User</span></td><td><span class="pill pill-standard">Standard</span></td><td><span class="user-cost standard">$25</span></td></tr>
+          <tr><td><div class="user-name">Marc</div></td><td>mpowell@govspend.com</td><td><span class="role-tag">User</span></td><td><span class="pill pill-standard">Standard</span></td><td><span class="user-cost standard">$25</span></td></tr>
+          <tr><td><div class="user-name">Teja Anna</div></td><td>tanna@govspend.com</td><td><span class="role-tag">User</span></td><td><span class="pill pill-standard">Standard</span></td><td><span class="user-cost standard">$25</span></td></tr>
+        </tbody>
+      </table></div>
+    </div>
+
+    <!-- SALES (21) -->
+    <div class="dept-block">
+      <div class="dept-block-header" style="background:linear-gradient(90deg,#0055a3,#0076DE);">
+        <div class="dept-strip" style="background:rgba(255,255,255,0.5);"></div>
+        <div class="dept-block-name">Sales</div><div class="dept-seat-count">21 seats</div><div class="dept-cost-badge">$525 / mo</div>
+      </div>
+      <div class="user-table-wrap"><table class="user-table">
+        <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Seat Tier</th><th>Monthly Cost</th></tr></thead>
+        <tbody>
+          <tr><td><div class="user-name">Adam</div></td><td>afehd@govspend.com</td><td><span class="role-tag">User</span></td><td><span class="pill pill-standard">Standard</span></td><td><span class="user-cost standard">$25</span></td></tr>
+          <tr><td><div class="user-name">Andrew Gordon</div></td><td>agordon@govspend.com</td><td><span class="role-tag">User</span></td><td><span class="pill pill-standard">Standard</span></td><td><span class="user-cost standard">$25</span></td></tr>
+          <tr><td><div class="user-name">Cameron</div></td><td>ccollins@govspend.com</td><td><span class="role-tag">User</span></td><td><span class="pill pill-standard">Standard</span></td><td><span class="user-cost standard">$25</span></td></tr>
+          <tr><td><div class="user-name">Casey Monfordini</div></td><td>cmonfordini@govspend.com</td><td><span class="role-tag">User</span></td><td><span class="pill pill-standard">Standard</span></td><td><span class="user-cost standard">$25</span></td></tr>
+          <tr><td><div class="user-name">CJ Larson</div></td><td>clarson@govspend.com</td><td><span class="role-tag">User</span></td><td><span class="pill pill-standard">Standard</span></td><td><span class="user-cost standard">$25</span></td></tr>
+          <tr><td><div class="user-name">Cory Kozlin</div></td><td>ckozlin@govspend.com</td><td><span class="role-tag">User</span></td><td><span class="pill pill-standard">Standard</span></td><td><span class="user-cost standard">$25</span></td></tr>
+          <tr><td><div class="user-name">Gray</div></td><td>goakley@govspend.com</td><td><span class="role-tag">User</span></td><td><span class="pill pill-standard">Standard</span></td><td><span class="user-cost standard">$25</span></td></tr>
+          <tr><td><div class="user-name">J</div></td><td>jdelgado@govspend.com</td><td><span class="role-tag">User</span></td><td><span class="pill pill-standard">Standard</span></td><td><span class="user-cost standard">$25</span></td></tr>
+          <tr><td><div class="user-name">Jacob Carrillo</div></td><td>jcarrillo@govspend.com</td><td><span class="role-tag">User</span></td><td><span class="pill pill-standard">Standard</span></td><td><span class="user-cost standard">$25</span></td></tr>
+          <tr><td><div class="user-name">James</div></td><td>jbiesinger@govspend.com</td><td><span class="role-tag">User</span></td><td><span class="pill pill-standard">Standard</span></td><td><span class="user-cost standard">$25</span></td></tr>
+          <tr><td><div class="user-name">John</div></td><td>jwilkinson@govspend.com</td><td><span class="role-tag">User</span></td><td><span class="pill pill-standard">Standard</span></td><td><span class="user-cost standard">$25</span></td></tr>
+          <tr><td><div class="user-name">Jordan Sharaf</div></td><td>jsharaf@govspend.com</td><td><span class="role-tag">User</span></td><td><span class="pill pill-standard">Standard</span></td><td><span class="user-cost standard">$25</span></td></tr>
+          <tr><td><div class="user-name">Kris</div></td><td>khodgen@govspend.com</td><td><span class="role-tag">User</span></td><td><span class="pill pill-standard">Standard</span></td><td><span class="user-cost standard">$25</span></td></tr>
+          <tr><td><div class="user-name">Mark</div></td><td>mowen@govspend.com</td><td><span class="role-tag">User</span></td><td><span class="pill pill-standard">Standard</span></td><td><span class="user-cost standard">$25</span></td></tr>
+          <tr><td><div class="user-name">Michael Roxin</div></td><td>mroxin@govspend.com</td><td><span class="role-tag">User</span></td><td><span class="pill pill-standard">Standard</span></td><td><span class="user-cost standard">$25</span></td></tr>
+          <tr><td><div class="user-name">Murphy</div></td><td>mallen@govspend.com</td><td><span class="role-tag">User</span></td><td><span class="pill pill-standard">Standard</span></td><td><span class="user-cost standard">$25</span></td></tr>
+          <tr><td><div class="user-name">Pedro Hurtado</div></td><td>phurtado@govspend.com</td><td><span class="role-tag">User</span></td><td><span class="pill pill-standard">Standard</span></td><td><span class="user-cost standard">$25</span></td></tr>
+          <tr><td><div class="user-name">Ryan</div></td><td>Rlevy@govspend.com</td><td><span class="role-tag">User</span></td><td><span class="pill pill-standard">Standard</span></td><td><span class="user-cost standard">$25</span></td></tr>
+          <tr><td><div class="user-name">Ryan Jackson</div></td><td>rjackson@govspend.com</td><td><span class="role-tag">User</span></td><td><span class="pill pill-standard">Standard</span></td><td><span class="user-cost standard">$25</span></td></tr>
+          <tr><td><div class="user-name">Shannon</div></td><td>sboudreaux@govspend.com</td><td><span class="role-tag">User</span></td><td><span class="pill pill-standard">Standard</span></td><td><span class="user-cost standard">$25</span></td></tr>
+          <tr><td><div class="user-name">Shea</div></td><td>smeadow@govspend.com</td><td><span class="role-tag">User</span></td><td><span class="pill pill-standard">Standard</span></td><td><span class="user-cost standard">$25</span></td></tr>
+        </tbody>
+      </table></div>
+    </div>
+
+    <!-- TECHNOLOGY (13) -->
+    <div class="dept-block">
+      <div class="dept-block-header" style="background:linear-gradient(90deg,#be123c,#f43f5e);">
+        <div class="dept-strip" style="background:rgba(255,255,255,0.5);"></div>
+        <div class="dept-block-name">Technology</div><div class="dept-seat-count">13 seats</div><div class="dept-cost-badge">$425 / mo</div>
+      </div>
+      <div class="user-table-wrap"><table class="user-table">
+        <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Seat Tier</th><th>Monthly Cost</th></tr></thead>
+        <tbody>
+          <tr><td><div class="user-name">Alejandro</div></td><td>ahernandez@govspend.com</td><td><span class="role-tag">User</span></td><td><span class="pill pill-standard">Standard</span></td><td><span class="user-cost standard">$25</span></td></tr>
+          <tr><td><div class="user-name">C Escudero</div></td><td>cescudero@govspend.com</td><td><span class="role-tag">User</span></td><td><span class="pill pill-standard">Standard</span></td><td><span class="user-cost standard">$25</span></td></tr>
+          <tr><td><div class="user-name">Caden</div></td><td>calbaugh@govspend.com</td><td><span class="role-tag">User</span></td><td><span class="pill pill-standard">Standard</span></td><td><span class="user-cost standard">$25</span></td></tr>
+          <tr><td><div class="user-name">Dave</div></td><td>dyarwood@govspend.com</td><td><span class="role-tag">User</span></td><td><span class="pill pill-standard">Standard</span></td><td><span class="user-cost standard">$25</span></td></tr>
+          <tr><td><div class="user-name">David Sargeant</div></td><td>dsargeant@govspend.com</td><td><span class="role-tag">User</span></td><td><span class="pill pill-standard">Standard</span></td><td><span class="user-cost standard">$25</span></td></tr>
+          <tr><td><div class="user-name">Dimitar</div></td><td>dshishkov@govspend.com</td><td><span class="role-tag">User</span></td><td><span class="pill pill-standard">Standard</span></td><td><span class="user-cost standard">$25</span></td></tr>
+          <tr><td><div class="user-name">Emre</div></td><td>ecelenli@govspend.com</td><td><span class="role-tag">User</span></td><td><span class="pill pill-standard">Standard</span></td><td><span class="user-cost standard">$25</span></td></tr>
+          <tr><td><div class="user-name">Geovanny Fajardo</div></td><td>gfajardo@govspend.com</td><td><span class="role-tag">User</span></td><td><span class="pill pill-standard">Standard</span></td><td><span class="user-cost standard">$25</span></td></tr>
+          <tr><td><div class="user-name">José Bezerra</div></td><td>jbezerra@govspend.com</td><td><span class="role-tag">User</span></td><td><span class="pill pill-standard">Standard</span></td><td><span class="user-cost standard">$25</span></td></tr>
+          <tr><td><div class="user-name">KP</div></td><td>kpasqualini@govspend.com</td><td><span class="role-tag">User</span></td><td><span class="pill pill-premium">Premium</span></td><td><span class="user-cost premium">$125</span></td></tr>
+          <tr><td><div class="user-name">Matias</div></td><td>mperez@govspend.com</td><td><span class="role-tag">User</span></td><td><span class="pill pill-standard">Standard</span></td><td><span class="user-cost standard">$25</span></td></tr>
+          <tr><td><div class="user-name">Nimo</div></td><td>nvegad@govspend.com</td><td><span class="role-tag">User</span></td><td><span class="pill pill-standard">Standard</span></td><td><span class="user-cost standard">$25</span></td></tr>
+          <tr><td><div class="user-name">William</div></td><td>wsaraiva@govspend.com</td><td><span class="role-tag">User</span></td><td><span class="pill pill-standard">Standard</span></td><td><span class="user-cost standard">$25</span></td></tr>
+        </tbody>
+      </table></div>
+    </div>
+
+  </div>
+
+  <div class="footer">
+    <div class="footer-left">Claude–GovSpend User Audit &nbsp;·&nbsp; Full User Roster &nbsp;·&nbsp; Generated June 22, 2026 &nbsp;·&nbsp; Confidential — Internal Use Only<br/>85 active seats · 11 departments · $2,825/mo total</div>
+    <div class="footer-right"><div class="footer-dot"></div><div class="footer-brand">GOVSPEND INC.</div></div>
+  </div>
+</div>
+
+<script>
+  function showPage2() { document.getElementById('page1').classList.remove('active'); document.getElementById('page2').classList.add('active'); window.scrollTo({top:0,behavior:'smooth'}); }
+  function showPage1() { document.getElementById('page2').classList.remove('active'); document.getElementById('page1').classList.add('active'); window.scrollTo({top:0,behavior:'smooth'}); }
+</script>
+</body>
+</html>
