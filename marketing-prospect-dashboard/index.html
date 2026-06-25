@@ -227,12 +227,12 @@ table.data tr:hover td{background:var(--db-100);}
     </div>
     <div class="metric-row" id="overviewKPIs"><div class="metric-card blue"><div class="metric-label">Total Prospects</div><div class="metric-value">4,402</div><div class="metric-sub">In current view</div></div><div class="metric-card blue"><div class="metric-label">YTD 2026</div><div class="metric-value">2,849</div><div class="metric-sub">Created in 2026</div></div><div class="metric-card gold"><div class="metric-label">Open Pipeline</div><div class="metric-value">712</div><div class="metric-sub">Active stages</div></div><div class="metric-card blue"><div class="metric-label">Closed Qualified</div><div class="metric-value">899</div><div class="metric-sub">20.4% conversion</div></div><div class="metric-card dark"><div class="metric-label">Disqualified</div><div class="metric-value">2,790</div><div class="metric-sub">63.4% of all</div></div><div class="metric-card gold"><div class="metric-label">Closed-Won ACV</div><div class="metric-value">$1.62M</div><div class="metric-sub">109 deals</div></div></div>
     <div class="chart-grid chart-grid-2">
-      <div class="chart-card"><div class="chart-card-title">Prospect volume by created month</div><div class="chart-card-sub">Qualified · Disqualified · Still open</div><div class="chart-wrap"><canvas id="chMonthly" width="694" height="308" style="display: block; box-sizing: border-box; height: 280px; width: 631px;"></canvas></div></div>
-      <div class="chart-card"><div class="chart-card-title">Qualification rate by month</div><div class="chart-card-sub">Closed/Qualified ÷ prospects created that month</div><div class="chart-wrap"><canvas id="chQualRate" width="694" height="308" style="display: block; box-sizing: border-box; height: 280px; width: 631px;"></canvas></div></div>
+      <div class="chart-card"><div class="chart-card-title">Prospect volume by created month</div><div class="chart-card-sub">Qualified · Disqualified · Still open</div><div class="chart-wrap"><canvas id="chMonthly" style="box-sizing: border-box; display: block; height: 280px; width: 631px;" width="694" height="308"></canvas></div></div>
+      <div class="chart-card"><div class="chart-card-title">Qualification rate by month</div><div class="chart-card-sub">Closed/Qualified ÷ prospects created that month</div><div class="chart-wrap"><canvas id="chQualRate" style="box-sizing: border-box; display: block; height: 280px; width: 631px;" width="694" height="308"></canvas></div></div>
     </div>
     <div class="chart-grid chart-grid-2">
-      <div class="chart-card"><div class="chart-card-title">Tier mix</div><div class="chart-card-sub">Share of prospects by bucket</div><div class="chart-wrap"><canvas id="chTier" width="694" height="308" style="display: block; box-sizing: border-box; height: 280px; width: 631px;"></canvas></div></div>
-      <div class="chart-card"><div class="chart-card-title">ICP mix</div><div class="chart-card-sub">Account fit profile</div><div class="chart-wrap"><canvas id="chIcp" width="694" height="308" style="display: block; box-sizing: border-box; height: 280px; width: 631px;"></canvas></div></div>
+      <div class="chart-card"><div class="chart-card-title">Tier mix</div><div class="chart-card-sub">Share of prospects by bucket</div><div class="chart-wrap"><canvas id="chTier" style="box-sizing: border-box; display: block; height: 280px; width: 631px;" width="694" height="308"></canvas></div></div>
+      <div class="chart-card"><div class="chart-card-title">ICP mix</div><div class="chart-card-sub">Account fit profile</div><div class="chart-wrap"><canvas id="chIcp" style="box-sizing: border-box; display: block; height: 280px; width: 631px;" width="694" height="308"></canvas></div></div>
     </div>
   </div>
 
@@ -241,11 +241,11 @@ table.data tr:hover td{background:var(--db-100);}
     <div class="section-title">Current pipeline stage</div>
     <div class="metric-row" id="funnelKPIs"><div class="metric-card gold"><div class="metric-label">New</div><div class="metric-value">154</div><div class="metric-sub"></div></div><div class="metric-card gold"><div class="metric-label">Research</div><div class="metric-value">334</div><div class="metric-sub"></div></div><div class="metric-card gold"><div class="metric-label">Outreach</div><div class="metric-value">187</div><div class="metric-sub"></div></div><div class="metric-card gold"><div class="metric-label">Discovery</div><div class="metric-value">32</div><div class="metric-sub"></div></div><div class="metric-card gold"><div class="metric-label">On Hold</div><div class="metric-value">5</div><div class="metric-sub"></div></div><div class="metric-card blue"><div class="metric-label">Closed/Qualified</div><div class="metric-value">899</div><div class="metric-sub"></div></div></div>
     <div class="chart-grid chart-grid-2">
-      <div class="chart-card"><div class="chart-card-title">Where prospects sit today</div><div class="chart-card-sub">Count by current stage</div><div class="chart-wrap"><canvas id="chStage" height="0" style="display: block; box-sizing: border-box; height: 0px; width: 0px;" width="0"></canvas></div></div>
-      <div class="chart-card"><div class="chart-card-title">Tier mix by created month</div><div class="chart-card-sub">Stacked volume</div><div class="chart-wrap"><canvas id="chTierMonth" height="0" style="display: block; box-sizing: border-box; height: 0px; width: 0px;" width="0"></canvas></div></div>
+      <div class="chart-card"><div class="chart-card-title">Where prospects sit today</div><div class="chart-card-sub">Count by current stage</div><div class="chart-wrap"><canvas id="chStage" style="box-sizing: border-box; display: block; height: 0px; width: 0px;" width="0" height="0"></canvas></div></div>
+      <div class="chart-card"><div class="chart-card-title">Tier mix by created month</div><div class="chart-card-sub">Stacked volume</div><div class="chart-wrap"><canvas id="chTierMonth" style="box-sizing: border-box; display: block; height: 0px; width: 0px;" width="0" height="0"></canvas></div></div>
     </div>
     <div class="chart-grid chart-grid-1">
-      <div class="chart-card"><div class="chart-card-title">Qualification &amp; disqualification rate by tier</div><div class="chart-card-sub">% of each tier closing qualified vs disqualified</div><div class="chart-wrap"><canvas id="chTierRates" height="0" style="display: block; box-sizing: border-box; height: 0px; width: 0px;" width="0"></canvas></div></div>
+      <div class="chart-card"><div class="chart-card-title">Qualification &amp; disqualification rate by tier</div><div class="chart-card-sub">% of each tier closing qualified vs disqualified</div><div class="chart-wrap"><canvas id="chTierRates" style="box-sizing: border-box; display: block; height: 0px; width: 0px;" width="0" height="0"></canvas></div></div>
     </div>
   </div>
 
@@ -254,8 +254,8 @@ table.data tr:hover td{background:var(--db-100);}
     <div class="section-title">Disqualification analysis</div>
     <div class="metric-row" id="dqKPIs"><div class="metric-card dark"><div class="metric-label">Total Disqualified</div><div class="metric-value">2,790</div><div class="metric-sub">63.4% of view</div></div><div class="metric-card dark"><div class="metric-label">Top Reason</div><div class="metric-value">1,215</div><div class="metric-sub">Unresponsive</div></div><div class="metric-card gold"><div class="metric-label">Unresponsive</div><div class="metric-value">1,215</div><div class="metric-sub">incl. merged misspelling</div></div><div class="metric-card blue"><div class="metric-label">Distinct Reasons</div><div class="metric-value">11</div><div class="metric-sub">categories</div></div></div>
     <div class="chart-grid chart-grid-2">
-      <div class="chart-card"><div class="chart-card-title">Disqualification reasons</div><div class="chart-card-sub">“Unresonsive” misspelling merged into Unresponsive</div><div class="chart-wrap tall"><canvas id="chDqReasons" height="0" style="display: block; box-sizing: border-box; height: 0px; width: 0px;" width="0"></canvas></div></div>
-      <div class="chart-card"><div class="chart-card-title">DQ reasons by month</div><div class="chart-card-sub">Stacked, by created month</div><div class="chart-wrap tall"><canvas id="chDqMonth" height="0" style="display: block; box-sizing: border-box; height: 0px; width: 0px;" width="0"></canvas></div></div>
+      <div class="chart-card"><div class="chart-card-title">Disqualification reasons</div><div class="chart-card-sub">“Unresonsive” misspelling merged into Unresponsive</div><div class="chart-wrap tall"><canvas id="chDqReasons" style="box-sizing: border-box; display: block; height: 0px; width: 0px;" width="0" height="0"></canvas></div></div>
+      <div class="chart-card"><div class="chart-card-title">DQ reasons by month</div><div class="chart-card-sub">Stacked, by created month</div><div class="chart-wrap tall"><canvas id="chDqMonth" style="box-sizing: border-box; display: block; height: 0px; width: 0px;" width="0" height="0"></canvas></div></div>
     </div>
     <div class="section-title" style="margin-top:8px">Disqualified prospect drill-down</div>
     <div class="tbl-wrap" id="drillWrap">
@@ -430,12 +430,12 @@ table.data tr:hover td{background:var(--db-100);}
     <div class="note-inline" id="oppNote" style="display: flex;"><span>ℹ️</span><span>Opportunities are shown across <strong>all close dates</strong> (independent of the created-month filter above). <strong>635</strong> of 674 are joined to a pipeline prospect, enabling the tier breakdown.</span></div>
     <div class="metric-row" id="oppKPIs"><div class="metric-card blue"><div class="metric-label">Total Opportunities</div><div class="metric-value">674</div><div class="metric-sub">All from qualified prospects</div></div><div class="metric-card gold"><div class="metric-label">Closed-Won ACV</div><div class="metric-value">$1.62M</div><div class="metric-sub">109 deals</div></div><div class="metric-card gold"><div class="metric-label">Avg Won Deal</div><div class="metric-value">$14.8K</div><div class="metric-sub">annual contract value</div></div><div class="metric-card blue"><div class="metric-label">Win Rate</div><div class="metric-value">24%</div><div class="metric-sub">109 won / 344 lost</div></div><div class="metric-card dark"><div class="metric-label">Open Opps</div><div class="metric-value">221</div><div class="metric-sub">$744.6K in pipeline</div></div></div>
     <div class="chart-grid chart-grid-2">
-      <div class="chart-card"><div class="chart-card-title">Opportunity stage funnel</div><div class="chart-card-sub">Count of opportunities by current stage</div><div class="chart-wrap tall"><canvas id="chOppStage" height="0" style="display: block; box-sizing: border-box; height: 0px; width: 0px;" width="0"></canvas></div></div>
-      <div class="chart-card"><div class="chart-card-title">ACV by stage</div><div class="chart-card-sub">Annual contract value in pipeline, by stage</div><div class="chart-wrap tall"><canvas id="chOppAcv" height="0" style="display: block; box-sizing: border-box; height: 0px; width: 0px;" width="0"></canvas></div></div>
+      <div class="chart-card"><div class="chart-card-title">Opportunity stage funnel</div><div class="chart-card-sub">Count of opportunities by current stage</div><div class="chart-wrap tall"><canvas id="chOppStage" style="box-sizing: border-box; display: block; height: 0px; width: 0px;" width="0" height="0"></canvas></div></div>
+      <div class="chart-card"><div class="chart-card-title">ACV by stage</div><div class="chart-card-sub">Annual contract value in pipeline, by stage</div><div class="chart-wrap tall"><canvas id="chOppAcv" style="box-sizing: border-box; display: block; height: 0px; width: 0px;" width="0" height="0"></canvas></div></div>
     </div>
     <div class="chart-grid chart-grid-2">
-      <div class="chart-card"><div class="chart-card-title">Closed-Won ACV by close month</div><div class="chart-card-sub">Booked annual contract value</div><div class="chart-wrap"><canvas id="chWonTrend" height="0" style="display: block; box-sizing: border-box; height: 0px; width: 0px;" width="0"></canvas></div></div>
-      <div class="chart-card"><div class="chart-card-title">Closed-Won ACV by tier</div><div class="chart-card-sub">For opportunities linked to a pipeline prospect</div><div class="chart-wrap"><canvas id="chWonTier" height="0" style="display: block; box-sizing: border-box; height: 0px; width: 0px;" width="0"></canvas></div></div>
+      <div class="chart-card"><div class="chart-card-title">Closed-Won ACV by close month</div><div class="chart-card-sub">Booked annual contract value</div><div class="chart-wrap"><canvas id="chWonTrend" style="box-sizing: border-box; display: block; height: 0px; width: 0px;" width="0" height="0"></canvas></div></div>
+      <div class="chart-card"><div class="chart-card-title">Closed-Won ACV by tier</div><div class="chart-card-sub">For opportunities linked to a pipeline prospect</div><div class="chart-wrap"><canvas id="chWonTier" style="box-sizing: border-box; display: block; height: 0px; width: 0px;" width="0" height="0"></canvas></div></div>
     </div>
   </div>
 
@@ -444,8 +444,8 @@ table.data tr:hover td{background:var(--db-100);}
     <div class="section-title">Speed to lead</div>
     <div class="metric-row" id="speedKPIs"><div class="metric-card gold"><div class="metric-label">Avg New→Outreach</div><div class="metric-value">224h</div><div class="metric-sub">Target &lt; 100h</div></div><div class="metric-card gold"><div class="metric-label">Avg Outreach→Disc</div><div class="metric-value">296h</div><div class="metric-sub">Target &lt; 200h</div></div><div class="metric-card blue"><div class="metric-label">Months tracked</div><div class="metric-value">10</div><div class="metric-sub">In current view</div></div></div>
     <div class="chart-grid chart-grid-2">
-      <div class="chart-card"><div class="chart-card-title">New → Outreach (avg hrs)</div><div class="chart-card-sub">Average Total Time - New, by created month</div><div class="chart-wrap"><canvas id="chN2O" height="0" style="display: block; box-sizing: border-box; height: 0px; width: 0px;" width="0"></canvas></div></div>
-      <div class="chart-card"><div class="chart-card-title">Outreach → Discovery (avg hrs)</div><div class="chart-card-sub">Average Total Time - Outreach, by created month</div><div class="chart-wrap"><canvas id="chO2D" height="0" style="display: block; box-sizing: border-box; height: 0px; width: 0px;" width="0"></canvas></div></div>
+      <div class="chart-card"><div class="chart-card-title">New → Outreach (avg hrs)</div><div class="chart-card-sub">Average Total Time - New, by created month</div><div class="chart-wrap"><canvas id="chN2O" style="box-sizing: border-box; display: block; height: 0px; width: 0px;" width="0" height="0"></canvas></div></div>
+      <div class="chart-card"><div class="chart-card-title">Outreach → Discovery (avg hrs)</div><div class="chart-card-sub">Average Total Time - Outreach, by created month</div><div class="chart-wrap"><canvas id="chO2D" style="box-sizing: border-box; display: block; height: 0px; width: 0px;" width="0" height="0"></canvas></div></div>
     </div>
   </div>
 
@@ -461,7 +461,7 @@ table.data tr:hover td{background:var(--db-100);}
     </div>
   </div>
 
-  <div class="footer-note" id="footerNote">GovSpend Prospect &amp; Opportunity Dashboard v6 · built 6/25/2026, 11:18:48 AM · 4,402 prospects, 674 opportunities</div>
+  <div class="footer-note" id="footerNote">GovSpend Prospect &amp; Opportunity Dashboard v6 · built 6/25/2026, 6:01:19 PM · 4,402 prospects, 674 opportunities</div>
 </div>
 
 <!-- ══ UPLOAD MODAL ══ -->
