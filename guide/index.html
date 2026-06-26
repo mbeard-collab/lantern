@@ -108,6 +108,26 @@
   <h1>User Guide</h1>
   <p class="lede">Everything you can do on this site, in plain English. Sections labelled <span style="color:var(--green);">everyone</span> work for any signed-in user; <span style="color:var(--accent-2);">admin</span> sections require admin sign-in.</p>
 
+  <div class="quick-ref" style="border-left: 3px solid var(--green);">
+    <h3>Quick start — create or update a dashboard</h3>
+    <ol style="margin: 4px 0 0; padding-left: 20px;">
+      <li>Go to <a href="/studio/">/studio/</a> and sign in with your <strong>@govspend.com</strong> email and the <strong>shared admin password</strong> <span style="color:var(--muted-2);">(ask Matt for it)</span>.</li>
+      <li><strong>Have data?</strong> Stay on the <strong>Build with Claude</strong> tab and drop your <code>.csv</code>/<code>.xlsx</code>/<code>.json</code>. <strong>Already have a finished page?</strong> Switch to <strong>Upload HTML</strong> and drop the <code>.html</code> (plus any data files it loads).</li>
+      <li>For <strong>Target</strong>: pick the existing dashboard to update it, or <strong>+ New dashboard</strong> and type a <strong>slug</strong> (see below).</li>
+      <li>Click <strong>Ship to site →</strong> and confirm. It's live in about 30 seconds.</li>
+    </ol>
+  </div>
+
+  <div class="callout">
+    <strong>The slug is the dashboard's URL name — it must be "kebab-case."</strong> Lowercase letters, numbers, and hyphens only; no spaces, capitals, or symbols.<br>
+    ✅ <code>q3-pipeline</code> &nbsp; <code>ai-spend-2026</code> &nbsp; <code>renewals</code><br>
+    ✗ <code>Q3 Pipeline</code> &nbsp; <code>ai_spend</code> &nbsp; <code>Renewals!</code>
+  </div>
+
+  <div class="callout warn">
+    The admin password is one <strong>shared</strong> secret for all admins. Don't paste it into Slack, email, or screenshots.
+  </div>
+
   <div class="quick-ref">
     <h3>Quick reference</h3>
     <ul>
