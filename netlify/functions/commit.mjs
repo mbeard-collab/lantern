@@ -85,38 +85,90 @@ export default async (req) => {
     return res.json();
   }
 
+  async function getFileText(path) {
+    const res = await fetch(`${ghBase}/${path}?ref=main`, { headers });
+    if (res.status === 404) return { sha: null, text: null };
+    if (!res.ok) throw new Error(`GET ${path} → ${res.status}: ${await res.text()}`);
+    const j = await res.json();
+    const text = j.content ? Buffer.from(j.content, "base64").toString("utf-8") : "";
+    return { sha: j.sha, text };
+  }
+
+  // Upsert (patch != null) or remove (patch == null) a slug in the private
+  // registry JSON, server-side, so the gated file never has to be read by the
+  // browser. Returns the commit sha.
+  async function writePrivateRegistry(slug, patch, email) {
+    const path = "private/dashboards.json";
+    const { sha, text } = await getFileText(path);
+    let list = [];
+    if (text) {
+      try { list = JSON.parse(text); } catch { list = []; }
+    }
+    if (!Array.isArray(list)) list = [];
+    const existing = list.find((d) => d && d.slug === slug) || {};
+    let next = list.filter((d) => d && d.slug !== slug);
+    if (patch !== null) {
+      next.push({
+        slug,
+        title: (patch.title && patch.title.trim()) || existing.title || slug,
+        description: (patch.description && patch.description.trim()) || existing.description || "",
+        updated: new Date().toISOString().slice(0, 10),
+      });
+    }
+    next.sort((a, b) => String(a.title || a.slug).localeCompare(String(b.title || b.slug)));
+    const res = await putFile(
+      path,
+      JSON.stringify(next, null, 2) + "\n",
+      `${patch ? "Register" : "Unregister"} ${slug} in private registry (by ${email})`,
+      sha,
+    );
+    return res.commit?.sha || null;
+  }
+
   // ---- Validate slug (used by both ship and delete) ------------------------
   const slug = body.slug;
   if (typeof slug !== "string" || !/^[a-z0-9][a-z0-9-]*$/.test(slug)) {
     return json({ error: "slug must be kebab-case (a-z, 0-9, hyphens)" }, 400);
   }
 
+  // Private space: dashboards live under private/<slug>/ and are listed in
+  // private/dashboards.json (a JSON registry) instead of the public landing
+  // page. `prefix` is a constant derived from a boolean — no traversal risk.
+  const isPrivate = body.private === true;
+  const prefix = isPrivate ? "private/" : "";
+
   // ---- DELETE action -------------------------------------------------------
   if (action === "delete") {
-    if (typeof body.updatedIndexHtml !== "string") {
+    if (!isPrivate && typeof body.updatedIndexHtml !== "string") {
       return json({ error: "delete requires updatedIndexHtml (registry entry removed)" }, 400);
     }
     try {
-      const dashboardPath = `${slug}/index.html`;
+      const dashboardPath = `${prefix}${slug}/index.html`;
       const dashSha = await getSha(dashboardPath);
       if (!dashSha) return json({ error: `Dashboard "${slug}" does not exist on main` }, 404);
 
-      const delMsg = `Delete ${slug} dashboard via Studio (by ${email})`;
+      const delMsg = `Delete ${isPrivate ? "private " : ""}${slug} dashboard via Studio (by ${email})`;
       const delRes = await deleteFile(dashboardPath, delMsg, dashSha);
 
-      const indexSha = await getSha("index.html");
-      if (!indexSha) throw new Error("Root index.html not found");
-      const indexRes = await putFile(
-        "index.html",
-        body.updatedIndexHtml,
-        `Unregister ${slug} from DASHBOARDS (by ${email})`,
-        indexSha,
-      );
+      let indexCommitSha = null;
+      if (isPrivate) {
+        indexCommitSha = await writePrivateRegistry(slug, null, email);
+      } else {
+        const indexSha = await getSha("index.html");
+        if (!indexSha) throw new Error("Root index.html not found");
+        const indexRes = await putFile(
+          "index.html",
+          body.updatedIndexHtml,
+          `Unregister ${slug} from DASHBOARDS (by ${email})`,
+          indexSha,
+        );
+        indexCommitSha = indexRes.commit?.sha || null;
+      }
 
       return json({
         ok: true,
         deletedCommitSha: delRes.commit?.sha || null,
-        indexCommitSha: indexRes.commit?.sha || null,
+        indexCommitSha,
       });
     } catch (err) {
       return json({ error: err.message }, 500);
@@ -128,7 +180,7 @@ export default async (req) => {
   if (typeof html !== "string" || !html.includes("<html") || !html.includes("</html>")) {
     return json({ error: "html must be a complete HTML document" }, 400);
   }
-  if (isNew && typeof updatedIndexHtml !== "string") {
+  if (!isPrivate && isNew && typeof updatedIndexHtml !== "string") {
     return json({ error: "isNew requires updatedIndexHtml" }, 400);
   }
 
@@ -161,7 +213,7 @@ export default async (req) => {
   }
 
   try {
-    const dashboardPath = `${slug}/index.html`;
+    const dashboardPath = `${prefix}${slug}/index.html`;
     const existingSha = await getSha(dashboardPath);
 
     if (isNew && existingSha) {
@@ -172,13 +224,13 @@ export default async (req) => {
     }
 
     const baseMsg = commitMessage || (existingSha ? `Update ${slug} dashboard` : `Add ${slug} dashboard`);
-    const dashboardMsg = `${baseMsg} via Studio (by ${email})`;
+    const dashboardMsg = `${baseMsg}${isPrivate ? " (private)" : ""} via Studio (by ${email})`;
     const dashRes = await putFile(dashboardPath, html, dashboardMsg, existingSha);
 
     // Commit each companion data file into the dashboard folder.
     const dataCommits = [];
     for (const df of cleanDataFiles) {
-      const dfPath = `${slug}/${df.name}`;
+      const dfPath = `${prefix}${slug}/${df.name}`;
       const dfSha = await getSha(dfPath);
       const dfRes = await putFile(
         dfPath,
@@ -189,8 +241,12 @@ export default async (req) => {
       dataCommits.push({ path: dfPath, commitSha: dfRes.commit?.sha || null });
     }
 
+    // Register the dashboard: private ones in the JSON registry (server-side),
+    // public ones in the landing-page HTML the client computed.
     let indexCommitSha = null;
-    if (isNew) {
+    if (isPrivate) {
+      indexCommitSha = await writePrivateRegistry(slug, body.registryEntry || {}, email);
+    } else if (isNew) {
       const indexSha = await getSha("index.html");
       if (!indexSha) throw new Error("Root index.html not found — cannot register dashboard");
       const indexRes = await putFile(
@@ -207,7 +263,7 @@ export default async (req) => {
       commitSha: dashRes.commit?.sha || null,
       indexCommitSha,
       dataFiles: dataCommits,
-      deployUrl: `https://govspend-ops-dashboards.netlify.app/${slug}/`,
+      deployUrl: `https://govspend-ops-dashboards.netlify.app/${prefix}${slug}/`,
     });
   } catch (err) {
     return json({ error: err.message }, 500);

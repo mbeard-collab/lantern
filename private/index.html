@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Private · GovSpend Dashboards</title>
+<style>
+  :root { --bg:#0B0F17; --elev:#121826; --elev-2:#1A2235; --line:#232C42; --line-strong:#2E3A55; --text:#E6EAF2; --text-strong:#fff; --muted:#8A93A6; --muted-2:#6B7488; --accent:#4DA3FF; --accent-2:#7C5CFF; }
+  * { box-sizing:border-box; }
+  html, body { margin:0; padding:0; background:var(--bg); color:var(--text); font-family:-apple-system,"SF Pro Text","Inter",Segoe UI,system-ui,sans-serif; -webkit-font-smoothing:antialiased; line-height:1.55; }
+  a { color:var(--accent); text-decoration:none; }
+  .nav { position:sticky; top:0; z-index:50; backdrop-filter:blur(12px); background:rgba(11,15,23,0.85); border-bottom:1px solid var(--line); }
+  .nav-inner { max-width:920px; margin:0 auto; padding:14px 32px; display:flex; align-items:center; justify-content:space-between; gap:24px; }
+  .logo { display:flex; align-items:center; gap:12px; font-weight:600; font-size:15px; color:var(--text-strong); }
+  .logo .mark { width:24px; height:24px; border-radius:7px; background:linear-gradient(135deg,#4DA3FF,#7C5CFF); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; color:#0B0F17; }
+  .logo .crumb { color:var(--muted); font-weight:500; }
+  .nav-link { font-size:13px; color:var(--muted); padding:6px 12px; border-radius:8px; }
+  .nav-link:hover { color:var(--text); background:var(--elev); }
+  .container { max-width:920px; margin:0 auto; padding:48px 32px 80px; }
+  h1 { font-size:32px; font-weight:600; letter-spacing:-0.025em; margin:0 0 8px; color:var(--text-strong); }
+  .lede { font-size:15px; color:var(--muted); margin:0 0 36px; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:16px; }
+  .card { display:block; background:var(--elev); border:1px solid var(--line); border-radius:12px; padding:20px; transition:border-color .15s, transform .15s; }
+  .card:hover { border-color:var(--line-strong); transform:translateY(-2px); }
+  .card h3 { margin:0 0 6px; font-size:16px; color:var(--text-strong); }
+  .card p { margin:0 0 10px; font-size:13px; color:var(--muted); }
+  .card .updated { font-size:11px; color:var(--muted-2); }
+  .empty { background:var(--elev); border:1px dashed var(--line-strong); border-radius:12px; padding:40px; text-align:center; color:var(--muted); }
+  .footer { max-width:920px; margin:64px auto 0; padding:24px 32px; border-top:1px solid var(--line); font-size:12px; color:var(--muted-2); text-align:center; }
+  @media (max-width:700px){ .container{padding:32px 20px 60px;} .nav-inner{padding-left:20px;padding-right:20px;} }
+</style>
+</head>
+<body>
+<nav class="nav">
+  <div class="nav-inner">
+    <a class="logo" href="/private/">
+      <span class="mark">G</span>
+      <span>Dashboards <span class="crumb">/ Private</span></span>
+    </a>
+    <a class="nav-link" href="/private/?logout=1">Sign out of private →</a>
+  </div>
+</nav>
+
+<main class="container">
+  <h1>Private space</h1>
+  <p class="lede">Password-protected dashboards. Only people with the private password can see this page.</p>
+  <div id="grid" class="grid"></div>
+</main>
+
+<div class="footer">GovSpend · Lantern — private space</div>
+
+<script>
+(async function () {
+  const grid = document.getElementById('grid');
+  let list = [];
+  try {
+    const res = await fetch('./dashboards.json', { cache: 'no-store' });
+    if (res.ok) list = await res.json();
+  } catch (e) { /* fall through to empty state */ }
+  if (!Array.isArray(list) || list.length === 0) {
+    grid.outerHTML = '<div class="empty">No private dashboards yet. Ship one from Studio with the <strong>Private space</strong> option turned on.</div>';
+    return;
+  }
+  const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  grid.innerHTML = list.map((d) => `
+    <a class="card" href="/private/${esc(d.slug)}/">
+      <h3>${esc(d.title || d.slug)}</h3>
+      <p>${esc(d.description || '')}</p>
+      ${d.updated ? `<div class="updated">Updated ${esc(d.updated)}</div>` : ''}
+    </a>
+  `).join('');
+})();
+</script>
+</body>
+</html>

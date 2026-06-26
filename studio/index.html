@@ -240,6 +240,10 @@
     <div id="new-slug-wrap" class="new-slug" hidden>
       <input type="text" id="new-slug" placeholder="new-dashboard-slug (kebab-case)" />
     </div>
+    <label class="priv-toggle" style="display:flex; align-items:center; gap:8px; margin-top:12px; font-size:13px; color:var(--muted); cursor:pointer;">
+      <input type="checkbox" id="private-toggle" style="width:auto; margin:0;" />
+      <span>Private space — store under <code>/private/</code> (separate password, hidden from the main site)</span>
+    </label>
   </div>
 
   <!-- Upload-mode inline preview -->
@@ -383,6 +387,7 @@ const state = {
   uploadedHtml: null, // for upload mode
   uploadedFileName: null,
   uploadedDataFiles: [], // [{ name, content }] companion files committed alongside (upload mode)
+  isPrivate: false,   // ship into the password-gated /private/ space
 };
 
 const ADMIN_STORAGE_KEY = 'studio.admin';
@@ -570,7 +575,23 @@ targetSelect.addEventListener('change', () => {
 });
 newSlugInput.addEventListener('input', refreshActionButtons);
 
+const privateToggle = document.getElementById('private-toggle');
+privateToggle.addEventListener('change', () => {
+  state.isPrivate = privateToggle.checked;
+  // In private mode you always type a slug; the public target dropdown doesn't apply.
+  targetSelect.disabled = state.isPrivate;
+  targetSelect.style.opacity = state.isPrivate ? '0.5' : '';
+  newSlugWrap.hidden = !state.isPrivate && targetSelect.value !== '__new__';
+  newSlugInput.placeholder = state.isPrivate
+    ? 'private-dashboard-slug (kebab-case)'
+    : 'new-dashboard-slug (kebab-case)';
+  refreshActionButtons();
+});
+
 function hasValidTarget() {
+  if (state.isPrivate) {
+    return /^[a-z0-9][a-z0-9-]*$/.test(newSlugInput.value.trim());
+  }
   if (targetSelect.value === '__new__') {
     return /^[a-z0-9][a-z0-9-]*$/.test(newSlugInput.value.trim());
   }
@@ -586,15 +607,18 @@ function refreshActionButtons() {
   // Hint text explaining why the primary button is disabled.
   const hintEl = document.getElementById('action-hint');
   let hint = '';
+  const slugHint = state.isPrivate
+    ? 'Type a slug for the private dashboard (lowercase letters, digits, hyphens).'
+    : 'Type a slug for the new dashboard (lowercase letters, digits, hyphens).';
   if (state.uploadMode === 'chat' && startBtn.disabled) {
     if (!state.files.length) hint = 'Upload at least one data file to continue.';
-    else if (!hasValidTarget()) hint = targetSelect.value === '__new__'
-      ? 'Type a slug for the new dashboard (lowercase letters, digits, hyphens).'
+    else if (!hasValidTarget()) hint = (state.isPrivate || targetSelect.value === '__new__')
+      ? slugHint
       : 'Pick a target dashboard.';
   } else if (state.uploadMode === 'upload' && uploadShipBtn.disabled) {
     if (!state.uploadedHtml) hint = 'Drop a complete HTML file (must contain <html>…</html>).';
-    else if (!hasValidTarget()) hint = targetSelect.value === '__new__'
-      ? 'Type a slug for the new dashboard (lowercase letters, digits, hyphens).'
+    else if (!hasValidTarget()) hint = (state.isPrivate || targetSelect.value === '__new__')
+      ? slugHint
       : 'Pick a target dashboard.';
   }
   if (hint) {
@@ -612,7 +636,7 @@ function updateStartButton() { refreshActionButtons(); }
    START → MODE 2
    ========================================================== */
 startBtn.addEventListener('click', () => {
-  if (targetSelect.value === '__new__') {
+  if (state.isPrivate || targetSelect.value === '__new__') {
     state.targetSlug = newSlugInput.value.trim();
     state.isNew = true;
     state.targetMeta = null;
@@ -1198,14 +1222,19 @@ const successModal = document.getElementById('success-modal');
 
 function openShipModal() {
   if (!state.currentHtml) return;
-  document.getElementById('ship-path').textContent = `${state.targetSlug}/index.html`;
+  const prefix = state.isPrivate ? 'private/' : '';
+  document.getElementById('ship-path').textContent = `${prefix}${state.targetSlug}/index.html`;
   document.getElementById('commit-message').value = state.isNew
     ? `Add ${state.targetSlug} dashboard via Studio`
     : `Update ${state.targetSlug} dashboard via Studio`;
   const shipDataEl = document.getElementById('ship-data-files');
-  const willCommitData = state.uploadMode === 'upload' && state.uploadedDataFiles.length;
-  if (willCommitData) {
-    shipDataEl.innerHTML = `Also committing: ${state.uploadedDataFiles.map(f => `<code>${escapeHtml(state.targetSlug)}/${escapeHtml(f.name)}</code>`).join(', ')}`;
+  const parts = [];
+  if (state.isPrivate) parts.push('Shipping to the <strong>private</strong> space.');
+  if (state.uploadMode === 'upload' && state.uploadedDataFiles.length) {
+    parts.push(`Also committing: ${state.uploadedDataFiles.map(f => `<code>${escapeHtml(prefix)}${escapeHtml(state.targetSlug)}/${escapeHtml(f.name)}</code>`).join(', ')}`);
+  }
+  if (parts.length) {
+    shipDataEl.innerHTML = parts.join('<br>');
     shipDataEl.hidden = false;
   } else {
     shipDataEl.hidden = true;
@@ -1380,7 +1409,7 @@ function renderDataFileHint() {
 
 uploadShipBtn.addEventListener('click', () => {
   if (!state.uploadedHtml || !hasValidTarget()) return;
-  if (targetSelect.value === '__new__') {
+  if (state.isPrivate || targetSelect.value === '__new__') {
     state.targetSlug = newSlugInput.value.trim();
     state.isNew = true;
     state.targetMeta = null;
@@ -1424,11 +1453,14 @@ async function shipNow() {
       slug: state.targetSlug,
       html: state.currentHtml,
       commitMessage,
-      isNew: state.isNew,
+      isNew: state.isPrivate ? false : state.isNew, // private always upserts
       auth: admin,
     };
 
-    if (state.isNew) {
+    if (state.isPrivate) {
+      payload.private = true;
+      payload.registryEntry = await collectPrivateEntry(state.targetSlug);
+    } else if (state.isNew) {
       const entry = await collectRegistryEntry();
       const updated = insertRegistryEntry(state.rawIndexHtml, entry);
       payload.updatedIndexHtml = updated;
@@ -1463,6 +1495,20 @@ async function shipNow() {
     btn.disabled = false;
     btn.textContent = 'Ship';
   }
+}
+
+// Private dashboards use a lighter registry (just title + description). We
+// can't read the gated private registry from the browser, so prompt; leaving
+// a field blank keeps whatever's already stored for that slug.
+async function collectPrivateEntry(slug) {
+  const ask = (label, fallback) => {
+    const v = window.prompt(label, fallback || '');
+    if (v === null) throw new Error('Cancelled');
+    return v.trim();
+  };
+  const title = ask('Title for this private dashboard (shown on the private page):', slug);
+  const description = ask('One-line description (optional):', '');
+  return { title, description };
 }
 
 async function collectRegistryEntry() {
@@ -1558,6 +1604,7 @@ document.getElementById('success-new').addEventListener('click', () => {
   state.uploadedHtml = null;
   state.uploadedFileName = null;
   state.uploadedDataFiles = [];
+  state.isPrivate = false;
   fileListEl.innerHTML = '';
   messagesEl.innerHTML = '';
   htmlSummary.innerHTML = '';
@@ -1574,7 +1621,11 @@ document.getElementById('success-new').addEventListener('click', () => {
   previewMeta.textContent = 'No draft yet';
   shipBtn.disabled = true;
   newSlugInput.value = '';
+  newSlugInput.placeholder = 'new-dashboard-slug (kebab-case)';
   targetSelect.value = '__new__';
+  targetSelect.disabled = false;
+  targetSelect.style.opacity = '';
+  privateToggle.checked = false;
   newSlugWrap.hidden = false;
   switchSetupMode('chat');
   loadIndexAndConventions(); // re-fetch in case registry changed
