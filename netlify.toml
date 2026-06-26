@@ -9,6 +9,16 @@
   function = "generate"
   path = "/api/generate"
 
+# Password gate for the private dashboard space (PRIVATE_PASSWORD env var).
+[[edge_functions]]
+  function = "private-gate"
+  path = "/private/*"
+
+[[redirects]]
+  from = "/private"
+  to = "/private/"
+  status = 301
+
 [[redirects]]
   from = "/api/commit"
   to = "/.netlify/functions/commit"
