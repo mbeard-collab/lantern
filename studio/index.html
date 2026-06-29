@@ -366,6 +366,51 @@
   </div>
 </div>
 
+<!-- ============ EDIT META MODAL ============ -->
+<div id="edit-modal" class="modal-bg" hidden>
+  <div class="modal">
+    <h3>Edit details</h3>
+    <p>Updates the registry entry on the landing page. The dashboard HTML itself is not changed.</p>
+    <input type="hidden" id="edit-slug" />
+    <div class="field">
+      <label>Title</label>
+      <input type="text" id="edit-title" />
+    </div>
+    <div class="field">
+      <label>Description</label>
+      <textarea id="edit-description" rows="2"></textarea>
+    </div>
+    <div class="field">
+      <label>Section</label>
+      <select id="edit-section">
+        <option value="tech-ops">tech-ops</option>
+        <option value="operational">operational</option>
+        <option value="intelligence">intelligence</option>
+        <option value="ai-cost">ai-cost</option>
+        <option value="reference">reference</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Owner</label>
+      <input type="text" id="edit-owner" />
+    </div>
+    <div class="field" style="margin-bottom: 0;">
+      <label>Cadence</label>
+      <select id="edit-cadence">
+        <option value="daily">daily</option>
+        <option value="weekly">weekly</option>
+        <option value="ondemand">ondemand</option>
+        <option value="realtime">realtime</option>
+      </select>
+    </div>
+    <div id="edit-error" class="err" hidden></div>
+    <div class="row">
+      <button id="edit-cancel" class="btn btn-ghost">Cancel</button>
+      <button id="edit-save" class="btn btn-primary">Save</button>
+    </div>
+  </div>
+</div>
+
 <script>
 /* ==========================================================
    STATE
@@ -1121,10 +1166,14 @@ function renderManageList() {
       </div>
       <div class="actions">
         <a class="btn" href="${escapeHtml(d.href)}" target="_blank" rel="noopener">Open</a>
+        <button class="btn" data-edit="${escapeHtml(d.id)}">Edit</button>
         <button class="btn btn-danger" data-slug="${escapeHtml(d.id)}" data-title="${escapeHtml(d.title)}">Delete</button>
       </div>
     </div>
   `).join('');
+  manageList.querySelectorAll('button[data-edit]').forEach(btn => {
+    btn.addEventListener('click', () => openEditModal(btn.dataset.edit));
+  });
   manageList.querySelectorAll('button.btn-danger').forEach(btn => {
     btn.addEventListener('click', () => deleteDashboard(btn.dataset.slug, btn.dataset.title));
   });
@@ -1213,6 +1262,86 @@ function removeRegistryEntry(indexHtml, slug) {
 
   return indexHtml.slice(0, trimStart) + indexHtml.slice(closeEnd);
 }
+
+/* ==========================================================
+   EDIT META
+   ========================================================== */
+const editModal = document.getElementById('edit-modal');
+const editSlugInput = document.getElementById('edit-slug');
+const editTitleInput = document.getElementById('edit-title');
+const editDescInput = document.getElementById('edit-description');
+const editSectionSel = document.getElementById('edit-section');
+const editOwnerInput = document.getElementById('edit-owner');
+const editCadenceSel = document.getElementById('edit-cadence');
+const editError = document.getElementById('edit-error');
+const editSaveBtn = document.getElementById('edit-save');
+const editCancelBtn = document.getElementById('edit-cancel');
+
+editCancelBtn.addEventListener('click', () => {
+  editModal.hidden = true;
+  manageModal.hidden = false;
+});
+
+function openEditModal(slug) {
+  const entry = state.registry.find(d => d.id === slug);
+  if (!entry) return;
+  editSlugInput.value = slug;
+  editTitleInput.value = entry.title || '';
+  editDescInput.value = entry.description || '';
+  editSectionSel.value = entry.section || 'operational';
+  editOwnerInput.value = entry.owner || '';
+  editCadenceSel.value = entry.cadence || 'weekly';
+  editError.hidden = true;
+  manageModal.hidden = true;
+  editModal.hidden = false;
+  setTimeout(() => editTitleInput.focus(), 30);
+}
+
+editSaveBtn.addEventListener('click', async () => {
+  const slug = editSlugInput.value;
+  const patch = {
+    title: editTitleInput.value.trim(),
+    description: editDescInput.value.trim(),
+    section: editSectionSel.value,
+    owner: editOwnerInput.value.trim(),
+    cadence: editCadenceSel.value,
+    updated: 'today',
+  };
+  editError.hidden = true;
+
+  let admin;
+  try { admin = await ensureAdmin(); } catch { return; }
+
+  editSaveBtn.disabled = true;
+  editSaveBtn.textContent = 'Saving…';
+  try {
+    const res = await fetch('/api/commit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'edit-meta', slug, patch, auth: admin }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (res.status === 401) { clearAdmin(); editError.textContent = 'Session expired — sign in again.'; editError.hidden = false; return; }
+    if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+
+    editModal.hidden = true;
+    // Re-fetch registry so local state reflects the change
+    try {
+      const idx = await fetch('/index.html').then(r => r.text());
+      state.rawIndexHtml = idx;
+      state.registry = parseDashboardsArray(idx);
+    } catch { /* fall back */ }
+    renderManageList();
+    populateTargetSelect();
+    manageModal.hidden = false;
+  } catch (err) {
+    editError.textContent = err.message;
+    editError.hidden = false;
+  } finally {
+    editSaveBtn.disabled = false;
+    editSaveBtn.textContent = 'Save';
+  }
+});
 
 /* ==========================================================
    SHIP

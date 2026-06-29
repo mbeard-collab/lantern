@@ -175,6 +175,33 @@ export default async (req) => {
     }
   }
 
+  // ---- EDIT META action ---------------------------------------------------
+  if (action === 'edit-meta') {
+    const patch = body.patch;
+    if (!patch || typeof patch !== 'object' || Array.isArray(patch)) {
+      return json({ error: 'edit-meta requires a patch object' }, 400);
+    }
+    try {
+      if (isPrivate) {
+        const commitSha = await writePrivateRegistry(slug, patch, email);
+        return json({ ok: true, commitSha });
+      }
+      const { sha, text } = await getFileText('index.html');
+      if (!sha) throw new Error('Root index.html not found');
+      const updated = patchRegistryEntry(text, slug, patch);
+      if (!updated) return json({ error: `Dashboard "${slug}" not found in DASHBOARDS` }, 404);
+      const res = await putFile(
+        'index.html',
+        updated,
+        `Update ${slug} metadata (by ${email})`,
+        sha,
+      );
+      return json({ ok: true, commitSha: res.commit?.sha || null });
+    } catch (err) {
+      return json({ error: err.message }, 500);
+    }
+  }
+
   // ---- SHIP action (default) ----------------------------------------------
   const { html, commitMessage, isNew, updatedIndexHtml, dataFiles } = body;
   if (typeof html !== "string" || !html.includes("<html") || !html.includes("</html>")) {
@@ -269,6 +296,52 @@ export default async (req) => {
     return json({ error: err.message }, 500);
   }
 };
+
+function patchRegistryEntry(indexHtml, slug, patch) {
+  const escaped = slug.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const idPattern = new RegExp(`id:\\s*["']${escaped}["']`);
+  const idxOfId = indexHtml.search(idPattern);
+  if (idxOfId === -1) return null;
+
+  let openIdx = indexHtml.lastIndexOf('{', idxOfId);
+  if (openIdx === -1) return null;
+
+  let depth = 0, i = openIdx, inString = false, stringChar = '';
+  for (; i < indexHtml.length; i++) {
+    const ch = indexHtml[i];
+    if (inString) {
+      if (ch === '\\') { i++; continue; }
+      if (ch === stringChar) inString = false;
+      continue;
+    }
+    if (ch === '"' || ch === "'") { inString = true; stringChar = ch; continue; }
+    if (ch === '{') depth++;
+    else if (ch === '}') { depth--; if (depth === 0) { i++; break; } }
+  }
+  const closeEnd = i;
+
+  let current;
+  try {
+    // eslint-disable-next-line no-new-func
+    current = new Function(`return ${indexHtml.slice(openIdx, closeEnd)};`)();
+  } catch {
+    return null;
+  }
+
+  const merged = Object.assign({}, current, patch);
+  const block = `{\n` +
+    `    id: ${JSON.stringify(String(merged.id || slug))},\n` +
+    `    title: ${JSON.stringify(String(merged.title || slug))},\n` +
+    `    description: ${JSON.stringify(String(merged.description || ''))},\n` +
+    `    section: ${JSON.stringify(String(merged.section || 'operational'))},\n` +
+    `    href: ${JSON.stringify(String(merged.href || `/${slug}/`))},\n` +
+    `    owner: ${JSON.stringify(String(merged.owner || ''))},\n` +
+    `    cadence: ${JSON.stringify(String(merged.cadence || 'weekly'))},\n` +
+    `    updated: ${JSON.stringify(String(merged.updated || 'today'))},\n` +
+    `  }`;
+
+  return indexHtml.slice(0, openIdx) + block + indexHtml.slice(closeEnd);
+}
 
 function utf8ToBase64(str) {
   return Buffer.from(str, "utf-8").toString("base64");
