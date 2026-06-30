@@ -10,398 +10,375 @@
 
 <!--
   ============================================================================
-  GOVSPEND GTM TRACKER  —  STATE SCHEMA (for whoever updates this next)
+  GOVSPEND GTM TRACKER  v2  —  STATE SCHEMA & UPDATE RULES
   ============================================================================
-  The full dashboard state lives in the <script id="gtm-state"> JSON block below.
-  To update from a meeting transcript: read that JSON, apply the changes the
-  transcript implies (new/edited/removed tasks, owners, due dates, artifact
-  links, status, readiness slider values, notes), and regenerate this file with
-  the updated JSON baked back into the same #gtm-state block.
+  The whole dashboard lives in the <script id="gtm-state"> JSON block below.
+
+  >>> SOURCE OF TRUTH <<<
+  This DOWNLOADED FILE is now the single source of truth. Do NOT rebuild from
+  the original Google running-doc again. To update after a meeting:
+    1. Luke serves the most-recent downloaded file (with his manual edits) +
+       the new meeting transcript.
+    2. Read this file's #gtm-state JSON, apply deltas, regenerate the file with
+       the updated JSON in the same block. Manual edits are preserved because
+       you edit THIS state, never start over.
+
+  >>> TASK CAPTURE RULES <<<
+  - Only tasks with BOTH an owner AND a target date go into a product tab.
+  - Owner-only / date-less ideas ("suggestive") do NOT become tracked tasks.
+    They go in the matching week's recap under "suggestive".
+  - Decisions / rationale are NOT tasks — fold them into product "notes".
+  - Completed tasks STAY (history): set status "Done", completedDate, completedBy.
+  - Tag tasks created in a given meeting with addedWeek = that meeting date so
+    the Weekly tab can list them.
 
   Shape:
   {
     "meetingDate": "YYYY-MM-DD",
-    "products": [
-      {
-        "id": "mcp",
-        "name": "MCP",
-        "priority": true,                 // shows the PRIORITY flag
-        "targetDate": "Jun 16",           // free text, shown as target release
-        "readiness": 82,                  // 0-100, drives the red->green slider
-        "notes": "free text shown under the slider",
-        "tasks": [
-          {
-            "task": "...",
-            "owner": "...",
-            "due": "Jun 12",
-            "link": "https://...",        // artifact URL, optional ("" if none)
-            "status": "Not started" | "In progress" | "Blocked" | "Done"
-          }
-        ]
-      }
-    ]
+    "products": [{
+      "id","name","priority",
+      "targetDate": "free text shown as the launch target",
+      "launch":   0-100,   // launch readiness slider (red->green = shipped)
+      "adoption": 0-100,   // post-launch adoption slider (red->green = adopted)
+      "notes": "headline status / decisions / context",
+      "tasks": [{
+        "task","owner",
+        "due": "target date (free text ok: 'Jun 18','EOW','Ongoing')",
+        "link": "artifact URL ('' if none)",
+        "status": "Not started|On track|At risk|Off track|Blocked|Done",
+        "notes": "ongoing running notes until complete",
+        "completedDate": "set when Done",
+        "completedBy": "set when Done",
+        "addedWeek": "meeting date this task was added (optional)"
+      }]
+    }],
+    "weeklies": [{               // newest first
+      "date": "Jun 16, 2026",
+      "summary": "meeting summary",
+      "added":   [{"task","product"}],   // tasks added to tracker this week
+      "suggestive": ["idea without owner+date", ...]
+    }]
   }
-  Readiness bands: 0-24 Not started (red) / 25-49 Early (orange) /
-  50-74 In progress (amber) / 75-94 Nearly ready (lime) / 95-100 Ready (green).
+  Slider bands (both sliders): 0-24 red / 25-49 orange / 50-74 amber /
+  75-94 lime / 95-100 green.
   ============================================================================
 -->
 
 <style>
   :root{
-    --data-blue:#0076DE;
-    --data-blue-dk:#005bb0;
-    --deep-space:#303650;
-    --deep-space-2:#272c43;
+    --data-blue:#0076DE; --data-blue-dk:#005bb0;
+    --deep-space:#303650; --deep-space-2:#272c43;
     --xanthous:#FFC44D;
-    --ink:#1d2235;
-    --paper:#f3f5f9;
-    --card:#ffffff;
-    --line:#e2e7f0;
-    --line-strong:#cdd5e3;
-    --muted:#6b7488;
-    --muted-soft:#929bb0;
-
-    --red:#e2483d;
-    --orange:#f0823c;
-    --amber:#f5b324;
-    --lime:#7cc24a;
-    --green:#2faa57;
-
+    --ink:#1d2235; --paper:#f3f5f9; --card:#fff;
+    --line:#e2e7f0; --line-strong:#cdd5e3; --muted:#6b7488; --muted-soft:#929bb0;
+    --red:#e2483d; --orange:#f0823c; --amber:#f5b324; --lime:#7cc24a; --green:#2faa57;
     --shadow:0 1px 2px rgba(34,40,64,.06),0 8px 26px rgba(34,40,64,.07);
-    --radius:14px;
-    --radius-sm:9px;
+    --radius:14px; --radius-sm:9px;
   }
-
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
-  body{
-    font-family:'Lato',-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;
-    background:var(--paper);
-    color:var(--ink);
-    -webkit-font-smoothing:antialiased;
-    line-height:1.45;
-  }
-  .wrap{max-width:1120px;margin:0 auto;padding:0 26px 80px;}
+  body{font-family:'Lato',-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;
+    background:var(--paper);color:var(--ink);-webkit-font-smoothing:antialiased;line-height:1.45;}
+  .wrap{max-width:1140px;margin:0 auto;padding:0 26px 80px;}
 
-  /* ---------- Header / control bar ---------- */
-  header.bar{
-    background:linear-gradient(180deg,var(--deep-space) 0%,var(--deep-space-2) 100%);
-    color:#fff;
-    padding:22px 0 0;
-    box-shadow:0 6px 24px rgba(48,54,80,.28);
-    position:relative;
-  }
+  /* header */
+  header.bar{background:linear-gradient(180deg,var(--deep-space),var(--deep-space-2));color:#fff;
+    padding:22px 0 0;box-shadow:0 6px 24px rgba(48,54,80,.28);}
   .bar .wrap{padding-bottom:0;}
-  .bar-top{
-    display:flex;align-items:flex-start;justify-content:space-between;
-    gap:24px;flex-wrap:wrap;
-  }
+  .bar-top{display:flex;align-items:flex-start;justify-content:space-between;gap:24px;flex-wrap:wrap;}
   .brandblock{display:flex;align-items:center;gap:14px;}
-  .brandmark{
-    width:42px;height:42px;border-radius:10px;flex:none;
-    background:var(--data-blue);
-    display:flex;align-items:center;justify-content:center;
-    font-weight:900;font-size:22px;letter-spacing:-1px;color:#fff;
-    box-shadow:inset 0 0 0 1px rgba(255,255,255,.14);
-  }
+  .brandmark{width:42px;height:42px;border-radius:10px;flex:none;background:var(--data-blue);
+    display:flex;align-items:center;justify-content:center;font-weight:900;font-size:22px;letter-spacing:-1px;color:#fff;
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,.14);}
   .brandmark span{color:var(--xanthous);}
-  .titles h1{
-    margin:0;font-size:23px;font-weight:900;letter-spacing:-.4px;line-height:1.1;
-  }
-  .titles .eyebrow{
-    display:block;font-size:11px;font-weight:700;letter-spacing:2px;
-    text-transform:uppercase;color:var(--xanthous);margin-bottom:3px;
-  }
+  .titles .eyebrow{display:block;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--xanthous);margin-bottom:3px;}
+  .titles h1{margin:0;font-size:23px;font-weight:900;letter-spacing:-.4px;line-height:1.1;}
   .titles .sub{font-size:13px;color:#b9c0d4;margin-top:2px;}
-
   .bar-controls{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
-  .meeting-field{
-    display:flex;flex-direction:column;gap:3px;
-  }
-  .meeting-field label{
-    font-size:10px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;
-    color:#9aa3bd;
-  }
-  .meeting-field input{
-    font-family:inherit;font-size:14px;font-weight:700;color:#fff;
-    background:rgba(255,255,255,.08);
-    border:1px solid rgba(255,255,255,.18);
-    border-radius:8px;padding:7px 10px;
-    color-scheme:dark;
-  }
+  .meeting-field{display:flex;flex-direction:column;gap:3px;}
+  .meeting-field label{font-size:10px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;color:#9aa3bd;}
+  .meeting-field input{font-family:inherit;font-size:14px;font-weight:700;color:#fff;background:rgba(255,255,255,.08);
+    border:1px solid rgba(255,255,255,.18);border-radius:8px;padding:7px 10px;color-scheme:dark;}
   .meeting-field input:focus{outline:2px solid var(--data-blue);outline-offset:1px;}
-
-  .btn{
-    font-family:inherit;font-size:13.5px;font-weight:700;cursor:pointer;
-    border-radius:9px;padding:9px 16px;border:1px solid transparent;
-    display:inline-flex;align-items:center;gap:8px;transition:transform .08s ease,filter .15s ease,background .15s ease;
-  }
+  .btn{font-family:inherit;font-size:13.5px;font-weight:700;cursor:pointer;border-radius:9px;padding:9px 16px;
+    border:1px solid transparent;display:inline-flex;align-items:center;gap:8px;transition:transform .08s,filter .15s,background .15s;}
   .btn:active{transform:translateY(1px);}
   .btn-export{background:var(--xanthous);color:#3a2c05;border-color:#e8af33;}
   .btn-export:hover{filter:brightness(1.05);}
   .btn svg{width:16px;height:16px;}
 
-  /* ---------- Tabs ---------- */
+  /* tabs */
   .tabs{display:flex;gap:2px;margin-top:20px;flex-wrap:wrap;}
-  .tab{
-    font-family:inherit;font-size:13.5px;font-weight:700;cursor:pointer;
-    background:transparent;border:none;color:#aab2c9;
-    padding:13px 18px 14px;border-radius:10px 10px 0 0;
-    display:flex;align-items:center;gap:9px;position:relative;
-    transition:color .15s ease,background .15s ease;
-  }
+  .tab{font-family:inherit;font-size:13.5px;font-weight:700;cursor:pointer;background:transparent;border:none;color:#aab2c9;
+    padding:13px 17px 14px;border-radius:10px 10px 0 0;display:flex;align-items:center;gap:9px;transition:color .15s,background .15s;}
   .tab:hover{color:#fff;}
   .tab.active{background:var(--paper);color:var(--ink);}
   .tab .dot{width:9px;height:9px;border-radius:50%;flex:none;box-shadow:0 0 0 2px rgba(255,255,255,.18);}
   .tab.active .dot{box-shadow:0 0 0 2px rgba(0,0,0,.05);}
-  .tab .flag{
-    font-size:9px;font-weight:900;letter-spacing:.8px;color:#3a2c05;
-    background:var(--xanthous);padding:2px 6px;border-radius:5px;text-transform:uppercase;
-  }
+  .tab .flag{font-size:9px;font-weight:900;letter-spacing:.8px;color:#3a2c05;background:var(--xanthous);padding:2px 6px;border-radius:5px;text-transform:uppercase;}
 
-  /* ---------- Panels ---------- */
+  /* panels */
   .panel{display:none;padding-top:30px;}
   .panel.active{display:block;animation:fade .25s ease;}
   @keyframes fade{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
 
-  /* ---------- Overview ---------- */
-  .ov-head{margin:0 0 18px;}
+  /* overview */
   .ov-head h2{margin:0;font-size:18px;font-weight:900;letter-spacing:-.3px;}
-  .ov-head p{margin:4px 0 0;color:var(--muted);font-size:13.5px;}
+  .ov-head p{margin:4px 0 18px;color:var(--muted);font-size:13.5px;}
   .ov-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;}
-  .ov-card{
-    background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
-    padding:18px 20px;box-shadow:var(--shadow);cursor:pointer;text-align:left;
-    font-family:inherit;transition:border-color .15s ease,transform .08s ease;
-  }
+  .ov-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px;box-shadow:var(--shadow);
+    cursor:pointer;text-align:left;font-family:inherit;transition:border-color .15s,transform .08s;}
   .ov-card:hover{border-color:var(--line-strong);transform:translateY(-2px);}
-  .ov-card .row1{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px;}
-  .ov-card .pname{font-size:16px;font-weight:900;letter-spacing:-.2px;display:flex;align-items:center;gap:8px;}
-  .ov-card .pct{font-size:24px;font-weight:900;letter-spacing:-1px;font-variant-numeric:tabular-nums;}
-  .ov-bar{height:9px;border-radius:6px;background:#eef1f7;overflow:hidden;}
-  .ov-bar i{display:block;height:100%;border-radius:6px;transition:width .3s ease,background .3s ease;}
+  .ov-card .pname{font-size:16px;font-weight:900;letter-spacing:-.2px;display:flex;align-items:center;gap:8px;margin-bottom:14px;}
+  .metric{margin-bottom:11px;}
+  .metric .ml{display:flex;justify-content:space-between;font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-bottom:5px;}
+  .metric .ml b{font-variant-numeric:tabular-nums;font-size:13px;}
+  .ov-bar{height:8px;border-radius:6px;background:#eef1f7;overflow:hidden;}
+  .ov-bar i{display:block;height:100%;border-radius:6px;transition:width .3s,background .3s;}
   .ov-meta{display:flex;justify-content:space-between;margin-top:13px;font-size:12.5px;color:var(--muted);}
   .ov-meta b{color:var(--ink);font-weight:700;}
-  .ov-status-pill{font-size:11px;font-weight:800;padding:3px 9px;border-radius:20px;letter-spacing:.3px;}
   .mini-flag{font-size:8.5px;font-weight:900;letter-spacing:.6px;color:#3a2c05;background:var(--xanthous);padding:2px 6px;border-radius:5px;text-transform:uppercase;}
 
-  /* ---------- Product header ---------- */
-  .phead{
-    display:flex;justify-content:space-between;align-items:flex-end;gap:20px;
-    flex-wrap:wrap;margin-bottom:22px;
-  }
+  /* product header */
+  .phead{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap;margin-bottom:22px;}
   .phead h2{margin:0;font-size:26px;font-weight:900;letter-spacing:-.6px;display:flex;align-items:center;gap:11px;}
   .phead .ptag{font-size:13px;color:var(--muted);margin-top:5px;}
   .target-field{display:flex;flex-direction:column;gap:4px;align-items:flex-end;}
   .target-field label{font-size:10px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted);}
-  .target-field input{
-    font-family:inherit;font-size:15px;font-weight:800;color:var(--ink);text-align:right;
-    border:1px solid var(--line-strong);border-radius:8px;padding:7px 11px;background:#fff;min-width:120px;
-  }
+  .target-field input{font-family:inherit;font-size:14px;font-weight:800;color:var(--ink);text-align:right;
+    border:1px solid var(--line-strong);border-radius:8px;padding:7px 11px;background:#fff;min-width:200px;}
   .target-field input:focus{outline:2px solid var(--data-blue);outline-offset:1px;border-color:var(--data-blue);}
 
-  /* ---------- Readiness slider (signature element) ---------- */
-  .gauge{
-    background:linear-gradient(180deg,#fff 0%,#fbfcfe 100%);
-    border:1px solid var(--line);border-radius:var(--radius);
-    padding:22px 24px 24px;box-shadow:var(--shadow);margin-bottom:26px;
-  }
-  .gauge-top{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:18px;flex-wrap:wrap;}
-  .gauge-label{font-size:11px;font-weight:800;letter-spacing:1.6px;text-transform:uppercase;color:var(--muted);}
-  .gauge-stamp{display:flex;align-items:center;gap:13px;}
-  .gauge-pct{font-size:34px;font-weight:900;letter-spacing:-1.5px;font-variant-numeric:tabular-nums;line-height:1;}
-  .gauge-status{
-    font-size:13px;font-weight:800;padding:6px 14px;border-radius:22px;letter-spacing:.3px;
-    border:1.5px solid transparent;display:inline-flex;align-items:center;gap:7px;
-  }
-  .gauge-status .led{width:9px;height:9px;border-radius:50%;}
-
-  .slider-shell{position:relative;padding:8px 0 4px;}
-  input[type=range].readiness{
-    -webkit-appearance:none;appearance:none;width:100%;height:16px;border-radius:10px;
-    background:linear-gradient(90deg,
-      var(--red) 0%, var(--orange) 28%, var(--amber) 52%, var(--lime) 78%, var(--green) 100%);
-    outline:none;cursor:pointer;margin:0;
-    box-shadow:inset 0 1px 3px rgba(0,0,0,.18);
-  }
-  input[type=range].readiness::-webkit-slider-thumb{
-    -webkit-appearance:none;appearance:none;width:30px;height:30px;border-radius:50%;
-    background:#fff;border:4px solid var(--deep-space);cursor:grab;
-    box-shadow:0 2px 8px rgba(0,0,0,.28);margin-top:0;transition:transform .08s ease;
-  }
-  input[type=range].readiness::-webkit-slider-thumb:active{cursor:grabbing;transform:scale(1.08);}
-  input[type=range].readiness::-moz-range-thumb{
-    width:30px;height:30px;border-radius:50%;background:#fff;border:4px solid var(--deep-space);
-    cursor:grab;box-shadow:0 2px 8px rgba(0,0,0,.28);
-  }
-  input[type=range].readiness:focus-visible{outline:3px solid var(--data-blue);outline-offset:4px;}
-  .scale{display:flex;justify-content:space-between;margin-top:11px;font-size:10.5px;font-weight:700;letter-spacing:.4px;color:var(--muted-soft);text-transform:uppercase;}
-
-  .notes-line{margin-top:18px;}
+  /* dual gauges */
+  .gauge{background:linear-gradient(180deg,#fff,#fbfcfe);border:1px solid var(--line);border-radius:var(--radius);
+    padding:22px 24px 24px;box-shadow:var(--shadow);margin-bottom:26px;}
+  .gauge-grid{display:grid;grid-template-columns:1fr 1fr;gap:30px;}
+  .g-block .gt{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px;}
+  .gauge-label{font-size:11px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted);}
+  .gstamp{display:flex;align-items:center;gap:11px;}
+  .gpct{font-size:30px;font-weight:900;letter-spacing:-1.3px;font-variant-numeric:tabular-nums;line-height:1;}
+  .gstatus{font-size:11.5px;font-weight:800;padding:5px 12px;border-radius:20px;letter-spacing:.3px;border:1.5px solid transparent;display:inline-flex;align-items:center;gap:6px;}
+  .gstatus .led{width:8px;height:8px;border-radius:50%;}
+  input[type=range].rd{-webkit-appearance:none;appearance:none;width:100%;height:14px;border-radius:9px;outline:none;cursor:pointer;margin:0;
+    background:linear-gradient(90deg,var(--red) 0%,var(--orange) 28%,var(--amber) 52%,var(--lime) 78%,var(--green) 100%);
+    box-shadow:inset 0 1px 3px rgba(0,0,0,.18);}
+  input[type=range].rd::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:26px;height:26px;border-radius:50%;background:#fff;border:4px solid var(--deep-space);cursor:grab;box-shadow:0 2px 8px rgba(0,0,0,.28);transition:transform .08s;}
+  input[type=range].rd::-webkit-slider-thumb:active{cursor:grabbing;transform:scale(1.08);}
+  input[type=range].rd::-moz-range-thumb{width:26px;height:26px;border-radius:50%;background:#fff;border:4px solid var(--deep-space);cursor:grab;box-shadow:0 2px 8px rgba(0,0,0,.28);}
+  input[type=range].rd:focus-visible{outline:3px solid var(--data-blue);outline-offset:4px;}
+  .scale{display:flex;justify-content:space-between;margin-top:9px;font-size:10px;font-weight:700;letter-spacing:.3px;color:var(--muted-soft);text-transform:uppercase;}
+  .notes-line{margin-top:20px;border-top:1px solid var(--line);padding-top:16px;}
   .notes-line label{display:block;font-size:10px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted);margin-bottom:6px;}
-  .notes-line textarea{
-    width:100%;font-family:inherit;font-size:13.5px;color:var(--ink);line-height:1.5;
-    border:1px solid var(--line);border-radius:9px;padding:10px 12px;resize:vertical;min-height:46px;background:#fff;
-  }
-  .notes-line textarea:focus{outline:2px solid var(--data-blue);outline-offset:0;border-color:var(--data-blue);}
+  .notes-line textarea{width:100%;font-family:inherit;font-size:13.5px;color:var(--ink);line-height:1.5;border:1px solid var(--line);border-radius:9px;padding:10px 12px;resize:vertical;min-height:46px;background:#fff;}
+  .notes-line textarea:focus{outline:2px solid var(--data-blue);border-color:var(--data-blue);}
 
-  /* ---------- Deliverables table ---------- */
+  /* table */
   .tbl-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:10px;}
   .tbl-head h3{margin:0;font-size:15px;font-weight:900;letter-spacing:-.2px;}
-  .tbl-head .count{font-size:12.5px;color:var(--muted);font-weight:600;}
+  .tbl-head .count{font-size:12.5px;color:var(--muted);font-weight:600;margin-left:8px;}
+  .tbl-actions{display:flex;align-items:center;gap:14px;}
+  .hide-toggle{font-size:12px;color:var(--muted);font-weight:700;display:flex;align-items:center;gap:6px;cursor:pointer;user-select:none;}
   .btn-add{background:var(--data-blue);color:#fff;font-size:12.5px;padding:8px 13px;border-radius:8px;}
   .btn-add:hover{background:var(--data-blue-dk);}
-
   .tbl-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);}
   table{width:100%;border-collapse:collapse;}
-  thead th{
-    text-align:left;font-size:10.5px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--muted);
-    padding:12px 14px;background:#f7f9fc;border-bottom:1px solid var(--line);white-space:nowrap;
-  }
-  tbody td{padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:middle;}
-  tbody tr:last-child td{border-bottom:none;}
-  tbody tr:hover{background:#fafbfe;}
-  .cell-input{
-    width:100%;font-family:inherit;font-size:13.5px;color:var(--ink);
-    border:1px solid transparent;border-radius:7px;padding:8px 9px;background:transparent;
-  }
+  thead th{text-align:left;font-size:10.5px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--muted);
+    padding:12px 12px;background:#f7f9fc;border-bottom:1px solid var(--line);white-space:nowrap;}
+  tbody td{padding:6px 7px;border-bottom:1px solid var(--line);vertical-align:middle;}
+  tr.task-row:hover{background:#fafbfe;}
+  tr.detail-row td{padding:0;border-bottom:1px solid var(--line);background:#f8fafd;}
+  tr.detail-row.open td{padding:14px 16px 16px 44px;}
+  .detail-wrap{display:none;}
+  tr.detail-row.open .detail-wrap{display:block;}
+  .cell-input{width:100%;font-family:inherit;font-size:13.5px;color:var(--ink);border:1px solid transparent;border-radius:7px;padding:8px 8px;background:transparent;}
   .cell-input:hover{border-color:var(--line);}
   .cell-input:focus{outline:none;border-color:var(--data-blue);background:#fff;box-shadow:0 0 0 3px rgba(0,118,222,.12);}
   .cell-input::placeholder{color:#aeb6c8;}
-
-  .col-task{width:38%;}
-  .col-owner{width:15%;}
+  .col-exp{width:30px;}
+  .col-task{width:33%;}
+  .col-owner{width:13%;}
   .col-due{width:11%;}
-  .col-link{width:17%;}
-  .col-status{width:14%;}
-  .col-x{width:42px;}
+  .col-link{width:15%;}
+  .col-status{width:15%;}
+  .col-x{width:40px;}
+  .task-done .task-text{text-decoration:line-through;color:var(--muted-soft);}
+  .task-done{background:#fafbfd;}
+  .done-stamp{font-size:11px;color:var(--green);font-weight:800;margin-top:2px;padding-left:8px;display:flex;align-items:center;gap:5px;}
+  .done-stamp svg{width:12px;height:12px;}
 
-  .link-cell{display:flex;align-items:center;gap:4px;}
-  .link-open{
-    flex:none;width:30px;height:30px;border-radius:7px;display:flex;align-items:center;justify-content:center;
-    color:var(--data-blue);text-decoration:none;border:1px solid var(--line);background:#fff;
-  }
+  .exp-btn{width:26px;height:26px;border-radius:6px;border:1px solid transparent;background:transparent;color:#9aa3bd;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+  .exp-btn:hover{background:#eef1f7;color:var(--ink);}
+  .exp-btn svg{width:14px;height:14px;transition:transform .15s;}
+  tr.detail-row.open + tr, .task-row.expanded .exp-btn svg{transform:rotate(90deg);}
+
+  .link-cell{display:flex;align-items:center;gap:3px;}
+  .link-open{flex:none;width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;color:var(--data-blue);text-decoration:none;border:1px solid var(--line);background:#fff;}
   .link-open.disabled{color:#c2c9d8;border-color:transparent;pointer-events:none;background:transparent;}
   .link-open:hover{background:#eef6ff;}
-  .link-open svg{width:14px;height:14px;}
+  .link-open svg{width:13px;height:13px;}
 
-  select.status-sel{
-    width:100%;font-family:inherit;font-size:12.5px;font-weight:800;cursor:pointer;
-    border:1px solid var(--line);border-radius:7px;padding:7px 8px;background:#fff;color:var(--ink);
-    -webkit-appearance:none;appearance:none;
-    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'><path d='M1 3l4 4 4-4' stroke='%236b7488' stroke-width='1.6' fill='none' stroke-linecap='round'/></svg>");
-    background-repeat:no-repeat;background-position:right 9px center;padding-right:24px;
-  }
-  select.status-sel:focus{outline:2px solid var(--data-blue);outline-offset:0;}
-  .status-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:2px;}
-
-  .btn-del{
-    width:30px;height:30px;border-radius:7px;border:1px solid transparent;background:transparent;
-    color:#b7bfd0;cursor:pointer;display:flex;align-items:center;justify-content:center;
-  }
+  select.status-sel{width:100%;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer;border:1px solid var(--line);border-radius:7px;padding:7px 7px;background:#fff;
+    -webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'><path d='M1 3l4 4 4-4' stroke='%236b7488' stroke-width='1.6' fill='none' stroke-linecap='round'/></svg>");
+    background-repeat:no-repeat;background-position:right 8px center;padding-right:22px;}
+  select.status-sel:focus{outline:2px solid var(--data-blue);}
+  .btn-del{width:28px;height:28px;border-radius:7px;border:1px solid transparent;background:transparent;color:#b7bfd0;cursor:pointer;display:flex;align-items:center;justify-content:center;}
   .btn-del:hover{background:#fdeceb;color:var(--red);}
-  .btn-del svg{width:15px;height:15px;}
+  .btn-del svg{width:14px;height:14px;}
+  .empty-row td{padding:24px 14px;text-align:center;color:var(--muted);font-size:13px;}
 
-  .empty-row td{padding:26px 14px;text-align:center;color:var(--muted);font-size:13px;}
+  /* detail panel */
+  .detail-grid{display:grid;grid-template-columns:1fr;gap:14px;}
+  .d-field label{display:block;font-size:10px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);margin-bottom:5px;}
+  .d-field textarea{width:100%;font-family:inherit;font-size:13px;line-height:1.5;color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:9px 11px;resize:vertical;min-height:54px;background:#fff;}
+  .d-field textarea:focus{outline:2px solid var(--data-blue);border-color:var(--data-blue);}
+  .completion-row{display:none;gap:14px;background:#eef7ee;border:1px solid #cdeacd;border-radius:9px;padding:11px 13px;}
+  .completion-row.show{display:flex;flex-wrap:wrap;}
+  .completion-row .cf{flex:1;min-width:140px;}
+  .completion-row label{display:block;font-size:9.5px;font-weight:800;letter-spacing:1.1px;text-transform:uppercase;color:#3a7a45;margin-bottom:4px;}
+  .completion-row input{width:100%;font-family:inherit;font-size:12.5px;color:var(--ink);border:1px solid #bcdfbc;border-radius:7px;padding:7px 9px;background:#fff;}
+  .addedweek-tag{font-size:10px;font-weight:800;color:var(--data-blue);background:#e9f3ff;border-radius:5px;padding:2px 7px;letter-spacing:.3px;}
 
-  /* ---------- Footer / how-to ---------- */
-  .howto{
-    margin-top:32px;background:#eef2f9;border:1px solid var(--line);border-radius:var(--radius);
-    padding:16px 20px;font-size:12.5px;color:var(--muted);display:flex;gap:14px;align-items:flex-start;
-  }
+  /* weekly */
+  .wk-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:12px;}
+  .wk-head h2{margin:0;font-size:18px;font-weight:900;letter-spacing:-.3px;}
+  .wk-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:18px;overflow:hidden;}
+  .wk-top{display:flex;justify-content:space-between;align-items:center;gap:12px;background:var(--deep-space);color:#fff;padding:14px 20px;}
+  .wk-top .wkdate{font-family:inherit;font-size:16px;font-weight:900;letter-spacing:-.2px;color:#fff;background:transparent;border:1px solid transparent;border-radius:7px;padding:4px 8px;}
+  .wk-top .wkdate:hover{border-color:rgba(255,255,255,.25);}
+  .wk-top .wkdate:focus{outline:2px solid var(--xanthous);background:rgba(255,255,255,.08);}
+  .wk-body{padding:18px 20px;}
+  .wk-sec{margin-bottom:18px;}
+  .wk-sec:last-child{margin-bottom:0;}
+  .wk-sec h4{margin:0 0 9px;font-size:11px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);}
+  .wk-sec textarea{width:100%;font-family:inherit;font-size:13.5px;line-height:1.55;color:var(--ink);border:1px solid var(--line);border-radius:9px;padding:11px 13px;resize:vertical;min-height:70px;background:#fff;}
+  .wk-sec textarea:focus{outline:2px solid var(--data-blue);border-color:var(--data-blue);}
+  .added-item,.sugg-item{display:flex;align-items:center;gap:8px;margin-bottom:7px;}
+  .added-item input.ai-task,.sugg-item input{flex:1;font-family:inherit;font-size:13px;color:var(--ink);border:1px solid var(--line);border-radius:7px;padding:8px 10px;background:#fff;}
+  .added-item input:focus,.sugg-item input:focus{outline:2px solid var(--data-blue);border-color:var(--data-blue);}
+  .added-item select{font-family:inherit;font-size:12px;font-weight:800;border:1px solid var(--line);border-radius:7px;padding:8px 9px;background:#fff;color:var(--data-blue);min-width:140px;}
+  .mini-add{font-size:12px;font-weight:700;color:var(--data-blue);background:transparent;border:1px dashed var(--line-strong);border-radius:7px;padding:7px 11px;cursor:pointer;margin-top:3px;}
+  .mini-add:hover{background:#f0f6ff;border-color:var(--data-blue);}
+  .sugg-note{font-size:12px;color:var(--muted);margin:-2px 0 10px;}
+
+  .howto{margin-top:32px;background:#eef2f9;border:1px solid var(--line);border-radius:var(--radius);padding:16px 20px;font-size:12.5px;color:var(--muted);display:flex;gap:14px;align-items:flex-start;}
   .howto svg{width:18px;height:18px;flex:none;color:var(--data-blue);margin-top:1px;}
   .howto b{color:var(--ink);}
-  .exported-stamp{font-size:11px;color:#9aa3bd;margin-top:9px;text-align:right;}
+  .exported-stamp{font-size:11px;color:#9aa3bd;margin-top:9px;}
 
-  .toast{
-    position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);
-    background:var(--deep-space);color:#fff;font-size:13.5px;font-weight:700;
-    padding:12px 20px;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.3);
-    opacity:0;pointer-events:none;transition:opacity .2s ease,transform .2s ease;z-index:50;
-    display:flex;align-items:center;gap:9px;
-  }
+  .toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);background:var(--deep-space);color:#fff;font-size:13.5px;font-weight:700;
+    padding:12px 20px;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.3);opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:50;display:flex;align-items:center;gap:9px;}
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
   .toast svg{width:16px;height:16px;color:var(--xanthous);}
 
-  @media (max-width:760px){
+  @media (max-width:780px){
     .ov-grid{grid-template-columns:1fr;}
-    .col-task,.col-owner,.col-due,.col-link,.col-status{width:auto;}
-    table{display:block;overflow-x:auto;white-space:nowrap;}
+    .gauge-grid{grid-template-columns:1fr;gap:22px;}
+    .col-owner,.col-due,.col-link{display:none;}
     .phead h2{font-size:22px;}
+    .target-field input{min-width:150px;}
   }
-  @media (prefers-reduced-motion:reduce){
-    *{animation:none!important;transition:none!important;}
-  }
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;}}
 </style>
 </head>
 <body>
 
-<!-- Live, editable dashboard state. Updated on export. -->
 <script id="gtm-state" type="application/json">
 {
   "meetingDate": "2026-06-16",
   "products": [
     {
-      "id": "mcp",
-      "name": "MCP",
-      "priority": true,
-      "targetDate": "Jun 16",
-      "readiness": 82,
-      "notes": "Full go-to-market push scheduled June 16 — most visible GovSpend release in years. Commercial All Hands June 15. Reps prepping LinkedIn messaging.",
+      "id": "mcp", "name": "MCP", "priority": true,
+      "targetDate": "Jun 16 — LAUNCHED",
+      "launch": 100, "adoption": 28,
+      "notes": "Released to the masses Jun 16 — most visible GovSpend release in years. Website takeover, first press release in years, and LinkedIn enablement slides all shipped. Focus now shifts to ADOPTION: finishing IC training, defining what 'good usage' means (goaling), top-3 selling use cases, and the 12 Days of MCP video campaign.",
       "tasks": [
-        {"task":"Schedule Commercial All Hands","owner":"LDM","due":"Jun 15","link":"","status":"In progress"},
-        {"task":"Postable LinkedIn messaging themes for reps","owner":"Marketing","due":"Jun 15","link":"","status":"In progress"},
-        {"task":"Finalize & publish MCP Prompt Library","owner":"LDM / Beard","due":"Jun 12","link":"","status":"In progress"},
-        {"task":"Website takeover for MCP","owner":"LDM / Anne","due":"Jun 12","link":"","status":"In progress"},
-        {"task":"OAuth documentation for non-Claude implementations","owner":"Sam / Geo","due":"Jun 14","link":"","status":"In progress"},
-        {"task":"MCP security documentation update","owner":"Brian","due":"Jun 9","link":"","status":"In progress"},
-        {"task":"Finalize MCP entitlements in Spark (warm to hot fix)","owner":"Sam / Yarwood","due":"Jun 9","link":"","status":"In progress"},
-        {"task":"Review MCP commercial training with Sales Leaders","owner":"Jackson","due":"Jun 9","link":"https://govspend.learnupon.com/content-details/323968807/2","status":"In progress"},
-        {"task":"MCP goaling","owner":"Tiffany / JB","due":"Jun 9","link":"","status":"In progress"},
-        {"task":"AI Search Library","owner":"LDM / Tiff / Paige","due":"Jun 9","link":"","status":"In progress"},
-        {"task":"MLA / Trial Agreement ready for launch","owner":"RevOps","due":"Jun 16","link":"","status":"In progress"},
-        {"task":"Get ICs to finish MCP training ahead of release","owner":"Burrows / Jackson","due":"Jun 16","link":"https://govspend.learnupon.com/content-details/5083657/0","status":"In progress"}
+        {"task":"Commercial All Hands","owner":"LDM","due":"Jun 15","link":"","status":"Done","notes":"","completedDate":"Jun 16","completedBy":"LDM","addedWeek":""},
+        {"task":"Finalize & publish MCP Prompt Library","owner":"LDM / Beard","due":"Jun 12","link":"","status":"Done","notes":"","completedDate":"Jun 16","completedBy":"LDM / Beard","addedWeek":""},
+        {"task":"Website takeover + press release","owner":"Marketing / Anne","due":"Jun 12","link":"","status":"Done","notes":"Website takeover + first press release in years, live and on-brand.","completedDate":"Jun 16","completedBy":"Marketing","addedWeek":""},
+        {"task":"Repost enablement slides for ICs (LinkedIn)","owner":"Marketing / Meghan","due":"Jun 15","link":"","status":"Done","notes":"Slides handed out in the marketing meeting, reshared alongside the launch post.","completedDate":"Jun 16","completedBy":"Meghan","addedWeek":""},
+        {"task":"MCP security documentation update","owner":"Brian","due":"Jun 9","link":"","status":"Done","notes":"","completedDate":"Jun 16","completedBy":"Brian","addedWeek":""},
+        {"task":"MLA / Trial Agreement ready","owner":"RevOps","due":"Jun 16","link":"","status":"Done","notes":"Have the MLA — mandatory on sales side, nice-to-have on RM side.","completedDate":"Jun 16","completedBy":"RevOps","addedWeek":""},
+        {"task":"Entitlement fix + Friday backfill","owner":"Sam / Yarwood","due":"Jun 18","link":"","status":"On track","notes":"Fix this week, backfill Friday. Some release-schedule hiccups but tracking to the 18th.","completedDate":"","completedBy":"","addedWeek":""},
+        {"task":"MCP goaling — define 'good usage' & how to track it","owner":"Tiffany / JB","due":"Jun 23","link":"","status":"At risk","notes":"Not there yet. Have goals on right customer/sales; still need to define what good usage looks like and the measurement. Work in progress.","completedDate":"","completedBy":"","addedWeek":""},
+        {"task":"Define top-3 MCP selling use cases (sales + eng)","owner":"Ryan Jackson","due":"Jun 23","link":"","status":"On track","notes":"Ryan working with engineers; good feedback Monday/Tuesday but still WIP on their end. Emphasis on strong discovery before pulling engineers in.","completedDate":"","completedBy":"","addedWeek":""},
+        {"task":"Finish IC MCP training completion","owner":"Daniel / JB / Adam","due":"Jun 20","link":"https://govspend.learnupon.com/content-details/5083657/0","status":"At risk","notes":"51 complete / 29 outstanding (not started or in progress). Commissions now gated on completion. Course = 'MCP: Find the Right Fit'.","completedDate":"","completedBy":"","addedWeek":""},
+        {"task":"12 Days of MCP — assign use-case video topics","owner":"Meghan","due":"Jun 17","link":"","status":"On track","notes":"Topics picked by EOD 6/17 or assigned. Murphy use-case video posts Thu 6/18 as the first one.","completedDate":"","completedBy":"","addedWeek":"2026-06-16"},
+        {"task":"12 Days of MCP — recording logistics & branding session","owner":"Meghan / Pam","due":"Jun 22","link":"","status":"Not started","notes":"Early next week. Group session on Zoom recording + on-brand guidance. Spread 1-2 videos/week to avoid content fatigue; release internally first so reps can repost.","completedDate":"","completedBy":"","addedWeek":"2026-06-16"},
+        {"task":"Post training-completion names in sales thread","owner":"Daniel / Adam","due":"Jun 17","link":"","status":"On track","notes":"Daniel pulls the report; Adam/JB name the not-yet-complete reps in the sales thread.","completedDate":"","completedBy":"","addedWeek":"2026-06-16"},
+        {"task":"Monitor MCP training completion (daily reports)","owner":"Daniel","due":"Ongoing","link":"","status":"On track","notes":"Running daily LMS reports; sending reminders.","completedDate":"","completedBy":"","addedWeek":"2026-06-16"}
       ]
     },
     {
-      "id": "slack",
-      "name": "Slack App Add-On",
-      "priority": false,
-      "targetDate": "Jun 15",
-      "readiness": 72,
-      "notes": "Bug fixed. UAT testing in progress. Targeting June 15 release — confirm on track.",
+      "id": "slack", "name": "Slack App Add-On", "priority": false,
+      "targetDate": "5 orgs ~Jun 23 → marketplace ~Sept",
+      "launch": 40, "adoption": 12,
+      "notes": "NOT a June release. Marketplace listing requires 5 active orgs over ~28 days (currently 3, two of which are internal — won't pass review). Then a ~10-week approval, so realistic public availability is ~September. App is trial-ready now and syncs Slack chats back into AI search. Plan: drive real test orgs via AI-search button/popup + Thursday webinar.",
       "tasks": [
-        {"task":"UAT follow-up","owner":"Grover","due":"Jun 12","link":"https://docs.google.com/spreadsheets/d/1DXcFKOvkZF9lgwFO9kbPrA6lnKbaEFx7TucGnF1aglg/edit","status":"In progress"},
-        {"task":"UAT feedback loop — required \"help\" documentation","owner":"Team Grover","due":"Jun 12","link":"","status":"In progress"},
-        {"task":"Commercial training (Slack LMS)","owner":"Burrows / Jackson","due":"","link":"https://govspend.learnupon.com/content-details/4994330/0","status":"Not started"}
+        {"task":"UAT follow-up","owner":"Grover","due":"Jun 12","link":"https://docs.google.com/spreadsheets/d/1DXcFKOvkZF9lgwFO9kbPrA6lnKbaEFx7TucGnF1aglg/edit","status":"Done","notes":"App rebuilt (faster, better layout), sent to 14 orgs to trial. UAT effectively complete.","completedDate":"Jun 16","completedBy":"Grover","addedWeek":""},
+        {"task":"Add button + popup in AI search to drive Slack signups","owner":"Lindsay","due":"Jun 16","link":"","status":"On track","notes":"Both a persistent button and a first-visit popup linking to the Slack setup page. Lindsay building same-day; possibly live for the Thursday webinar.","completedDate":"","completedBy":"","addedWeek":"2026-06-16"},
+        {"task":"Recruit 5+ friendly orgs as Slack test users","owner":"Adam / Sales","due":"Jun 23","link":"","status":"On track","notes":"Sales to find real, friendly orgs (not internal) willing to trial. Targets floated: Circool, US Energy Mgmt, 3E/Gartland. Need 2 more beyond current 3.","completedDate":"","completedBy":"","addedWeek":"2026-06-16"},
+        {"task":"Webinar — drive Slack signups + messaging-tool poll","owner":"Tiffany / Kathryn","due":"Jun 18","link":"","status":"On track","notes":"Thursday webinar: demo AI search → Slack; poll on Slack vs Teams vs other to target the right users.","completedDate":"","completedBy":"","addedWeek":"2026-06-16"},
+        {"task":"Newsletter copy on Slack marketplace status","owner":"Trip / Lindsay / Anne","due":"Jun 18","link":"","status":"On track","notes":"Clarify that the app is not yet in the marketplace; invite friendly customers to trial.","completedDate":"","completedBy":"","addedWeek":"2026-06-16"},
+        {"task":"Monitor org connections toward the 5-org threshold","owner":"Sam","due":"Ongoing","link":"","status":"On track","notes":"Manual check for now — Grafana can't yet split Slack-app vs AI-search usage (upgrade coming). Sam checks the Slack app directly; flags when at 5.","completedDate":"","completedBy":"","addedWeek":"2026-06-16"},
+        {"task":"Slack commercial training (LMS)","owner":"Daniel / Jackson","due":"~Jun 23 revisit","link":"https://govspend.learnupon.com/content-details/4994330/0","status":"Not started","notes":"Deferred behind MCP. Revisit Tue 6/23. Course does NOT depend on marketplace status (shows connecting via the guide).","completedDate":"","completedBy":"","addedWeek":""}
       ]
     },
     {
-      "id": "opps",
-      "name": "Opportunities Module",
-      "priority": false,
+      "id": "opps", "name": "Opportunities Module", "priority": false,
       "targetDate": "Rolling — 90% by end of Sept",
-      "readiness": 58,
-      "notes": "~40% active usage. Mass-enabled 53 accounts Monday. Goal: 90% of accounts by end of September. Test tranche of 30 early-'27 renewers for auto-permission.",
+      "launch": 100, "adoption": 30,
+      "notes": "Module is live; 53 Q1-'27 renewers mass-enabled last week. Adoption is the open question — little traction/feedback so far and tour completion is weak (many users dismiss the tour and self-navigate). Goal is set. Decision: HOLD the next tranche until Territory Builder is live (~July) so users set up territory at first login instead of redoing setup.",
       "tasks": [
-        {"task":"Mass enablement feedback (53 accounts)","owner":"Milnor","due":"Jun 16","link":"","status":"In progress"},
-        {"task":"Follow up on opp enablement calls for feedback & questions","owner":"Kate","due":"Jun 12","link":"","status":"In progress"},
-        {"task":"Userflow for 30-client auto-permission test (post 1/1/27 renewal)","owner":"Luke / Anne","due":"","link":"","status":"In progress"},
-        {"task":"Opp Module goaling","owner":"Milnor / Anne","due":"","link":"https://docs.google.com/spreadsheets/d/1OUmE80GZEiDIbY1l1YOr37ax-EZwmrMXYmTGFkViiF0/edit","status":"In progress"},
-        {"task":"List of early-'27 renewers without Opp access","owner":"Luke / Jaden","due":"","link":"https://docs.google.com/spreadsheets/d/1xzIkTafZ4sIBxy8vayidHcbNS6kHK68YnOC6Xv-FPRM/edit","status":"Done"}
+        {"task":"Opp Module goaling","owner":"Milnor / Anne","due":"","link":"https://docs.google.com/spreadsheets/d/1OUmE80GZEiDIbY1l1YOr37ax-EZwmrMXYmTGFkViiF0/edit","status":"Done","notes":"Goal figured out.","completedDate":"Jun 16","completedBy":"Milnor / Anne","addedWeek":""},
+        {"task":"List of early-'27 renewers without Opp access","owner":"Luke / Jaden","due":"","link":"https://docs.google.com/spreadsheets/d/1xzIkTafZ4sIBxy8vayidHcbNS6kHK68YnOC6Xv-FPRM/edit","status":"Done","notes":"List built — 53 accounts enabled.","completedDate":"Jun 16","completedBy":"Luke / Jaden","addedWeek":""},
+        {"task":"Mass-enablement feedback (53 accounts)","owner":"Kate / Milnor","due":"Jun 20","link":"","status":"At risk","notes":"Most enablement calls made; little feedback or traction yet. Tour completion low. Luke to sync with Kate on what's working/not.","completedDate":"","completedBy":"","addedWeek":""},
+        {"task":"Build account-level usage tracking for enabled accounts","owner":"Luke / Seth","due":"Jun 23","link":"","status":"On track","notes":"Individual-level not available in the mesh yet; pull account-level usage from Crate for the 53 accounts. Usage where there was none = adoption signal.","completedDate":"","completedBy":"","addedWeek":"2026-06-16"},
+        {"task":"Hold next enablement tranche until Territory Builder live","owner":"Luke / JB","due":"After Territory Builder (~Jul)","link":"","status":"On track","notes":"Agreed to wait so users set territory at first login. Territory Builder full customer rollout likely July; Kathryn to confirm timeline next week.","completedDate":"","completedBy":"","addedWeek":"2026-06-16"}
       ]
     },
     {
-      "id":"federal",
-      "name":"GovSpend Federal",
-      "priority": false,
-      "targetDate":"Roadmap TBD",
-      "readiness":30,
-      "notes":"Bifurcating accounts/users to approach for reengagement campaign. Commercial training timeline still to be set. Confirm roadmap dates on track.",
+      "id": "federal", "name": "GovSpend Federal", "priority": false,
+      "targetDate": "Search migration deadline Jul 31",
+      "launch": 38, "adoption": 5,
+      "notes": "Search data migrates to GovSpend Federal by Jul 31 (~6,000 searches in the first cut). Decisions: notify via in-product POPUP not a banner (banner hurts platform performance); keep legacy PO/spending data ~1 release cycle (~2 weeks) past migration so users can compare; RMs manually migrate the complex searches. Thursday deep-dive on inactive users.",
       "tasks": [
-        {"task":"Federal bifurcation account/user list (reengagement)","owner":"Deepak / JB","due":"Jun 19","link":"","status":"In progress"},
-        {"task":"Fedmine inactive users without GSFed access — list","owner":"JB / Deepak","due":"Jun 9","link":"https://docs.google.com/spreadsheets/d/1iIeoW9W2P86wqfUfc2H0xr9SU38I-71R/edit","status":"In progress"},
-        {"task":"Commercial training release timeline","owner":"Burrows / Jackson","due":"","link":"","status":"Not started"}
+        {"task":"Federal bifurcation account/user list (reengagement)","owner":"Deepak / JB","due":"Jun 19","link":"","status":"On track","notes":"Split accounts/users to approach for the reengagement campaign.","completedDate":"","completedBy":"","addedWeek":""},
+        {"task":"Identify users impacted by GSFed migration","owner":"JB","due":"Jun 18","link":"","status":"On track","notes":"Identify the who first, then decide migration sequencing. Thursday meeting digs into inactive users.","completedDate":"","completedBy":"","addedWeek":"2026-06-16"},
+        {"task":"Estimate easy vs complex search migration (~6,000)","owner":"Deepak","due":"Jun 19","link":"","status":"On track","notes":"First cut ~6,000 searches. Bulk should be easy; remainder trickier. Rough breakout by end of week.","completedDate":"","completedBy":"","addedWeek":"2026-06-16"},
+        {"task":"Build in-product migration popup","owner":"Lindsay","due":"After Jul 4","link":"","status":"Not started","notes":"Popup, not banner. Starts when search migration actually begins (Lindsay would start ~after Jul 4). Runs to ~2 weeks past Jul 31.","completedDate":"","completedBy":"","addedWeek":"2026-06-16"},
+        {"task":"Fedmine inactive users without GSFed access — list","owner":"JB / Deepak","due":"Jun 9","link":"https://docs.google.com/spreadsheets/d/1iIeoW9W2P86wqfUfc2H0xr9SU38I-71R/edit","status":"At risk","notes":"Past the original 6/9 target. Revisit at the Thursday deep-dive.","completedDate":"","completedBy":"","addedWeek":""},
+        {"task":"Commercial training release timeline","owner":"Burrows / Jackson","due":"","link":"","status":"Not started","notes":"Timeline still TBD.","completedDate":"","completedBy":"","addedWeek":""}
+      ]
+    }
+  ],
+  "weeklies": [
+    {
+      "date": "Jun 16, 2026",
+      "summary": "MCP launched to all customers — the headline release. Marketing shipped the website takeover, first press release in years, and LinkedIn enablement; focus now turns to adoption (training completion at 51/80, goaling definition, top-3 use cases, and the 12 Days of MCP video campaign). Slack reset expectations: not a June release — needs 5 active orgs then a ~10-week marketplace approval (~Sept), so the team is driving real test orgs via an AI-search button/popup and Thursday's webinar. Opportunities: 53 accounts enabled but low adoption/tour completion; next tranche on hold until Territory Builder is live (~July); Luke to build account-level usage tracking. Federal: search migration to Jul 31 (~6,000 searches), in-product popup (not banner) after Jul 4, legacy data kept ~1 release cycle for comparison.",
+      "added": [
+        {"task":"12 Days of MCP — assign use-case video topics","product":"MCP"},
+        {"task":"12 Days of MCP — recording logistics & branding session","product":"MCP"},
+        {"task":"Post training-completion names in sales thread","product":"MCP"},
+        {"task":"Monitor MCP training completion (daily reports)","product":"MCP"},
+        {"task":"Add button + popup in AI search to drive Slack signups","product":"Slack App Add-On"},
+        {"task":"Recruit 5+ friendly orgs as Slack test users","product":"Slack App Add-On"},
+        {"task":"Webinar — drive Slack signups + messaging-tool poll","product":"Slack App Add-On"},
+        {"task":"Newsletter copy on Slack marketplace status","product":"Slack App Add-On"},
+        {"task":"Monitor org connections toward the 5-org threshold","product":"Slack App Add-On"},
+        {"task":"Build account-level usage tracking for enabled accounts","product":"Opportunities Module"},
+        {"task":"Hold next enablement tranche until Territory Builder live","product":"Opportunities Module"},
+        {"task":"Identify users impacted by GSFed migration","product":"GovSpend Federal"},
+        {"task":"Estimate easy vs complex search migration (~6,000)","product":"GovSpend Federal"},
+        {"task":"Build in-product migration popup","product":"GovSpend Federal"}
+      ],
+      "suggestive": [
+        "Connectivity workflows (MCP ↔ Salesforce / Gong) — Luke offered to restart this, no date set.",
+        "Reach out to Lighthouse for a customer tool-connectivity use-case video — Luke, no date set. (NetSync, Zya also floated.)",
+        "Webinar poll refinement: ask company-PREFERRED LLM, and which tools they connect into their LLM (Outreach / Agentforce / Gong) — Tiffany / Trip.",
+        "Future roadmap: push opportunity notifications directly into Slack channels (after Territory Builder + notification push are built).",
+        "'Interactive tool / middleman' messaging — explain MCP needs middleware to connect to Salesforce/Gong/ZoomInfo; don't say 'no, you can't' — Sam / Tiffany.",
+        "Marketing button on the Opportunities module ('receive opportunities via Slack alert') — parked until the Slack notification push exists.",
+        "Rejected: fudging the 5-org Slack count with internal/legal instances — won't pass marketplace review (Sam/Adam)."
       ]
     }
   ]
@@ -421,7 +398,7 @@
       </div>
       <div class="bar-controls">
         <div class="meeting-field">
-          <label for="meetingDate">Meeting date</label>
+          <label for="meetingDate">Latest meeting</label>
           <input type="date" id="meetingDate" />
         </div>
         <button class="btn btn-export" id="exportBtn" title="Download the whole dashboard with your changes baked in">
@@ -435,23 +412,28 @@
 </header>
 
 <main class="wrap">
-  <!-- Overview panel -->
   <section class="panel active" id="panel-overview" role="tabpanel">
     <div class="ov-head">
       <h2>This month's launches</h2>
-      <p>Four products in flight. Drag each readiness slider as items close out — green means cleared for release.</p>
+      <p>Two readings per product: <b>launch readiness</b> (cleared to ship) and <b>adoption</b> (cleared to ship doesn't mean people are using it). Drag the sliders on each tab.</p>
     </div>
     <div class="ov-grid" id="ovGrid"></div>
     <div class="howto">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
       <div>
-        <b>Keeping this in sync.</b> Make your edits live during the call, then hit <b>Download dashboard</b> — it saves the whole thing as a single HTML file with your changes baked in. Drop that file into a new chat with the meeting transcript and ask Claude to update it; the next version comes back the same way.
+        <b>The update loop.</b> Edit live during the call and all week, then hit <b>Download dashboard</b> — it saves everything (including your manual edits) into one HTML file. This downloaded file is the source of truth: next week, drop it back in with the new transcript and ask for an update. Tracked tasks need an owner <i>and</i> a date; loose ideas land in the Weekly tab as suggestive items.
         <div class="exported-stamp" id="exportedStamp"></div>
       </div>
     </div>
   </section>
-  <!-- Product panels injected here -->
   <div id="productPanels"></div>
+  <section class="panel" id="panel-weekly" role="tabpanel">
+    <div class="wk-head">
+      <h2>Weekly recap</h2>
+      <button class="btn btn-add" id="addRecap">+ Add recap</button>
+    </div>
+    <div id="weeklyList"></div>
+  </section>
 </main>
 
 <div class="toast" id="toast">
@@ -463,390 +445,362 @@
 (function(){
   "use strict";
 
-  /* ---------------- constants ---------------- */
-  var STATUS_OPTS = ["Not started","In progress","Blocked","Done"];
+  var STATUS_OPTS = ["Not started","On track","At risk","Off track","Blocked","Done"];
   var STATUS_COLOR = {
-    "Not started":"#9aa3bd",
-    "In progress":"#0076DE",
-    "Blocked":"#e2483d",
-    "Done":"#2faa57"
+    "Not started":"#9aa3bd","On track":"#2faa57","At risk":"#d39a10",
+    "Off track":"#e0742c","Blocked":"#e2483d","Done":"#0076DE"
   };
+  var PRODUCT_NAMES = []; // filled after load
 
   function band(v){
-    v = Number(v)||0;
-    if(v>=95) return {label:"Ready for release", color:"#2faa57", bg:"#e8f6ec"};
-    if(v>=75) return {label:"Nearly ready",      color:"#5fae33", bg:"#eef7e6"};
-    if(v>=50) return {label:"In progress",       color:"#d39a10", bg:"#fdf4dc"};
-    if(v>=25) return {label:"Early progress",    color:"#e0742c", bg:"#fdeee2"};
-    return         {label:"Not started",        color:"#e2483d", bg:"#fdeceb"};
+    v=Number(v)||0;
+    if(v>=95) return {label:"Ready",       color:"#2faa57", bg:"#e8f6ec"};
+    if(v>=75) return {label:"Nearly there",color:"#5fae33", bg:"#eef7e6"};
+    if(v>=50) return {label:"In progress", color:"#d39a10", bg:"#fdf4dc"};
+    if(v>=25) return {label:"Early",       color:"#e0742c", bg:"#fdeee2"};
+    return        {label:"Not started",   color:"#e2483d", bg:"#fdeceb"};
   }
 
-  /* ---------------- load state ---------------- */
-  var SEED_EL = document.getElementById("gtm-state");
-  var STATE;
-  try {
-    var raw = (SEED_EL.textContent || "").trim();
-    STATE = raw ? JSON.parse(raw) : null;
-  } catch(e){ STATE = null; }
-  if(!STATE || !STATE.products){
-    STATE = {meetingDate:"", products:[]};
-  }
+  var SEED_EL=document.getElementById("gtm-state"), STATE;
+  try{ var raw=(SEED_EL.textContent||"").trim(); STATE=raw?JSON.parse(raw):null; }catch(e){ STATE=null; }
+  if(!STATE||!STATE.products){ STATE={meetingDate:"",products:[],weeklies:[]}; }
+  if(!STATE.weeklies) STATE.weeklies=[];
+  PRODUCT_NAMES = STATE.products.map(function(p){return p.name;});
 
-  /* ---------------- helpers ---------------- */
-  function el(tag, cls, attrs){
-    var n = document.createElement(tag);
-    if(cls) n.className = cls;
-    if(attrs) for(var k in attrs){ n.setAttribute(k, attrs[k]); }
-    return n;
-  }
-  function svgIcon(paths){
-    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+paths+'</svg>';
-  }
-  function toast(msg){
-    var t = document.getElementById("toast");
-    document.getElementById("toastMsg").textContent = msg || "Saved";
-    t.classList.add("show");
-    clearTimeout(toast._t);
-    toast._t = setTimeout(function(){ t.classList.remove("show"); }, 1900);
-  }
+  function el(t,c,a){var n=document.createElement(t);if(c)n.className=c;if(a)for(var k in a)n.setAttribute(k,a[k]);return n;}
+  function ico(p){return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+p+'</svg>';}
+  function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c];});}
+  function toast(m){var t=document.getElementById("toast");document.getElementById("toastMsg").textContent=m||"Saved";t.classList.add("show");clearTimeout(toast._t);toast._t=setTimeout(function(){t.classList.remove("show");},2200);}
 
-  /* ---------------- render: tabs ---------------- */
-  var tabsEl = document.getElementById("tabs");
+  /* tabs */
+  var tabsEl=document.getElementById("tabs");
   function buildTabs(){
-    tabsEl.innerHTML = "";
-    var ov = el("button","tab active",{ "data-target":"panel-overview", "role":"tab" });
-    ov.innerHTML = '<span style="width:9px;height:9px;border-radius:2px;display:inline-block;background:linear-gradient(135deg,#0076DE,#FFC44D)"></span>Overview';
+    tabsEl.innerHTML="";
+    var ov=el("button","tab active",{"data-target":"panel-overview","role":"tab"});
+    ov.innerHTML='<span style="width:9px;height:9px;border-radius:2px;display:inline-block;background:linear-gradient(135deg,#0076DE,#FFC44D)"></span>Overview';
     tabsEl.appendChild(ov);
-
     STATE.products.forEach(function(p){
-      var b = band(p.readiness);
-      var t = el("button","tab",{ "data-target":"panel-"+p.id, "role":"tab" });
-      t.innerHTML = '<span class="dot" style="background:'+b.color+'"></span>'+escapeHtml(p.name)
-        + (p.priority ? '<span class="flag">Priority</span>' : '');
+      var b=band(p.launch);
+      var t=el("button","tab",{"data-target":"panel-"+p.id,"role":"tab"});
+      t.innerHTML='<span class="dot" data-tabdot="'+p.id+'" style="background:'+b.color+'"></span>'+esc(p.name)+(p.priority?'<span class="flag">Priority</span>':'');
       tabsEl.appendChild(t);
     });
-
-    Array.prototype.forEach.call(tabsEl.querySelectorAll(".tab"), function(tab){
-      tab.addEventListener("click", function(){ activate(tab.getAttribute("data-target")); });
+    var wk=el("button","tab",{"data-target":"panel-weekly","role":"tab"});
+    wk.innerHTML='<span style="width:9px;height:9px;border-radius:50%;display:inline-block;background:#aab2c9"></span>Weekly recap';
+    tabsEl.appendChild(wk);
+    Array.prototype.forEach.call(tabsEl.querySelectorAll(".tab"),function(tab){
+      tab.addEventListener("click",function(){activate(tab.getAttribute("data-target"));});
     });
   }
-
-  function activate(panelId){
-    Array.prototype.forEach.call(document.querySelectorAll(".tab"), function(t){
-      t.classList.toggle("active", t.getAttribute("data-target")===panelId);
-    });
-    Array.prototype.forEach.call(document.querySelectorAll(".panel"), function(p){
-      p.classList.toggle("active", p.id===panelId);
-    });
-    window.scrollTo({top:0, behavior:"smooth"});
+  function activate(id){
+    Array.prototype.forEach.call(document.querySelectorAll(".tab"),function(t){t.classList.toggle("active",t.getAttribute("data-target")===id);});
+    Array.prototype.forEach.call(document.querySelectorAll(".panel"),function(p){p.classList.toggle("active",p.id===id);});
+    window.scrollTo({top:0,behavior:"smooth"});
   }
 
-  /* ---------------- render: overview ---------------- */
+  /* overview */
+  function metricRow(label,val){
+    var b=band(val);
+    return '<div class="metric"><div class="ml"><span>'+label+'</span><b style="color:'+b.color+'" data-ov="'+label+'">'+(Number(val)||0)+'%</b></div>'+
+           '<div class="ov-bar"><i data-ovbar="'+label+'" style="width:'+(Number(val)||0)+'%;background:'+b.color+'"></i></div></div>';
+  }
   function buildOverview(){
-    var grid = document.getElementById("ovGrid");
-    grid.innerHTML = "";
+    var g=document.getElementById("ovGrid");g.innerHTML="";
     STATE.products.forEach(function(p){
-      var b = band(p.readiness);
-      var done = p.tasks.filter(function(t){return t.status==="Done";}).length;
-      var card = el("button","ov-card",{ "data-target":"panel-"+p.id });
-      card.innerHTML =
-        '<div class="row1">'+
-          '<span class="pname">'+escapeHtml(p.name)+(p.priority?' <span class="mini-flag">Priority</span>':'')+'</span>'+
-          '<span class="pct" style="color:'+b.color+'" data-ov-pct="'+p.id+'">'+(Number(p.readiness)||0)+'%</span>'+
-        '</div>'+
-        '<div class="ov-bar"><i data-ov-bar="'+p.id+'" style="width:'+(Number(p.readiness)||0)+'%;background:'+b.color+'"></i></div>'+
-        '<div class="ov-meta">'+
-          '<span><b>'+done+'</b>/'+p.tasks.length+' done · target <b>'+escapeHtml(p.targetDate||"—")+'</b></span>'+
-          '<span class="ov-status-pill" data-ov-pill="'+p.id+'" style="color:'+b.color+';background:'+b.bg+'">'+b.label+'</span>'+
-        '</div>';
-      card.addEventListener("click", function(){ activate("panel-"+p.id); });
-      grid.appendChild(card);
+      var done=p.tasks.filter(function(t){return t.status==="Done";}).length;
+      var open=p.tasks.length-done;
+      var card=el("button","ov-card",{"data-target":"panel-"+p.id});
+      card.innerHTML=
+        '<div class="pname">'+esc(p.name)+(p.priority?' <span class="mini-flag">Priority</span>':'')+'</div>'+
+        '<div data-ovmetrics="'+p.id+'">'+metricRow("Launch",p.launch)+metricRow("Adoption",p.adoption)+'</div>'+
+        '<div class="ov-meta"><span><b>'+open+'</b> open · <b>'+done+'</b> done</span><span>target <b>'+esc(p.targetDate||"—")+'</b></span></div>';
+      // scope the data-ov / data-ovbar to this card by re-querying within
+      card.addEventListener("click",function(){activate("panel-"+p.id);});
+      g.appendChild(card);
     });
   }
-  function refreshOverviewFor(p){
-    var b = band(p.readiness);
-    var pct = document.querySelector('[data-ov-pct="'+p.id+'"]');
-    var bar = document.querySelector('[data-ov-bar="'+p.id+'"]');
-    var pill = document.querySelector('[data-ov-pill="'+p.id+'"]');
-    if(pct){ pct.textContent=(Number(p.readiness)||0)+"%"; pct.style.color=b.color; }
-    if(bar){ bar.style.width=(Number(p.readiness)||0)+"%"; bar.style.background=b.color; }
-    if(pill){ pill.textContent=b.label; pill.style.color=b.color; pill.style.background=b.bg; }
+  function refreshOverview(p){
+    var holder=document.querySelector('[data-ovmetrics="'+p.id+'"]');
+    if(!holder)return;
+    [["Launch",p.launch],["Adoption",p.adoption]].forEach(function(pair){
+      var b=band(pair[1]);
+      var val=holder.querySelector('[data-ov="'+pair[0]+'"]');
+      var bar=holder.querySelector('[data-ovbar="'+pair[0]+'"]');
+      if(val){val.textContent=(Number(pair[1])||0)+"%";val.style.color=b.color;}
+      if(bar){bar.style.width=(Number(pair[1])||0)+"%";bar.style.background=b.color;}
+    });
+    var card=holder.closest(".ov-card");
+    if(card){
+      var done=p.tasks.filter(function(t){return t.status==="Done";}).length;
+      var meta=card.querySelector(".ov-meta span:first-child");
+      if(meta)meta.innerHTML='<b>'+(p.tasks.length-done)+'</b> open · <b>'+done+'</b> done';
+      var tgt=card.querySelector(".ov-meta span:last-child");
+      if(tgt)tgt.innerHTML='target <b>'+esc(p.targetDate||"—")+'</b>';
+    }
   }
 
-  /* ---------------- render: product panels ---------------- */
-  var panelsEl = document.getElementById("productPanels");
+  /* product panels */
+  var panelsEl=document.getElementById("productPanels");
+  function gaugeBlock(p,metric,label){
+    var val=p[metric], b=band(val);
+    return '<div class="g-block">'+
+      '<div class="gt"><span class="gauge-label">'+label+'</span>'+
+        '<div class="gstamp"><span class="gpct" data-pct="'+metric+'" style="color:'+b.color+'">'+(Number(val)||0)+'%</span>'+
+        '<span class="gstatus" data-st="'+metric+'" style="color:'+b.color+';background:'+b.bg+';border-color:'+b.color+'33"><span class="led" style="background:'+b.color+'"></span><span data-stl="'+metric+'">'+b.label+'</span></span></div></div>'+
+      '<input type="range" class="rd" min="0" max="100" value="'+(Number(val)||0)+'" data-slider="'+metric+'" aria-label="'+label+' for '+esc(p.name)+'" />'+
+      '<div class="scale"><span>0</span><span>50</span><span>100</span></div></div>';
+  }
   function buildPanels(){
-    panelsEl.innerHTML = "";
+    panelsEl.innerHTML="";
     STATE.products.forEach(function(p){
-      var b = band(p.readiness);
-      var panel = el("section","panel",{ id:"panel-"+p.id, role:"tabpanel" });
-
-      panel.innerHTML =
-        '<div class="phead">'+
-          '<div>'+
-            '<h2>'+escapeHtml(p.name)+(p.priority?' <span class="flag" style="font-size:11px;vertical-align:middle">Priority</span>':'')+'</h2>'+
-            '<div class="ptag">'+p.tasks.length+' deliverable'+(p.tasks.length===1?'':'s')+' tracked</div>'+
-          '</div>'+
-          '<div class="target-field">'+
-            '<label for="tgt-'+p.id+'">Target release</label>'+
-            '<input id="tgt-'+p.id+'" type="text" value="'+escapeAttr(p.targetDate||"")+'" placeholder="e.g. Jun 16" />'+
-          '</div>'+
+      var panel=el("section","panel",{id:"panel-"+p.id,role:"tabpanel"});
+      panel.innerHTML=
+        '<div class="phead"><div>'+
+          '<h2>'+esc(p.name)+(p.priority?' <span class="flag" style="font-size:11px;vertical-align:middle">Priority</span>':'')+'</h2>'+
+          '<div class="ptag" data-ptag></div></div>'+
+          '<div class="target-field"><label for="tgt-'+p.id+'">Launch target</label>'+
+          '<input id="tgt-'+p.id+'" type="text" value="'+esc(p.targetDate||"")+'" placeholder="e.g. Jun 16 — LAUNCHED" /></div>'+
         '</div>'+
-
-        '<div class="gauge">'+
-          '<div class="gauge-top">'+
-            '<span class="gauge-label">Release readiness</span>'+
-            '<div class="gauge-stamp">'+
-              '<span class="gauge-pct" data-pct style="color:'+b.color+'">'+(Number(p.readiness)||0)+'%</span>'+
-              '<span class="gauge-status" data-status style="color:'+b.color+';background:'+b.bg+';border-color:'+b.color+'33">'+
-                '<span class="led" style="background:'+b.color+'"></span><span data-status-label>'+b.label+'</span>'+
-              '</span>'+
-            '</div>'+
-          '</div>'+
-          '<div class="slider-shell">'+
-            '<input type="range" class="readiness" min="0" max="100" value="'+(Number(p.readiness)||0)+'" data-slider aria-label="Release readiness for '+escapeAttr(p.name)+'" />'+
-            '<div class="scale"><span>Not started</span><span>In progress</span><span>Ready</span></div>'+
-          '</div>'+
-          '<div class="notes-line">'+
-            '<label for="notes-'+p.id+'">Status notes</label>'+
-            '<textarea id="notes-'+p.id+'" placeholder="Headline status, blockers, decisions made on the call…">'+escapeHtml(p.notes||"")+'</textarea>'+
-          '</div>'+
+        '<div class="gauge"><div class="gauge-grid">'+
+          gaugeBlock(p,"launch","Launch readiness")+
+          gaugeBlock(p,"adoption","Adoption")+
         '</div>'+
-
-        '<div class="tbl-head">'+
-          '<div><h3>Deliverables</h3><span class="count" data-count></span></div>'+
-          '<button class="btn btn-add" data-add>'+svgIcon('<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>')+'Add task</button>'+
+          '<div class="notes-line"><label for="notes-'+p.id+'">Status notes</label>'+
+          '<textarea id="notes-'+p.id+'" placeholder="Headline status, decisions, blockers…">'+esc(p.notes||"")+'</textarea></div>'+
         '</div>'+
-        '<div class="tbl-card">'+
-          '<table>'+
-            '<thead><tr>'+
-              '<th class="col-task">Task</th>'+
-              '<th class="col-owner">Owner</th>'+
-              '<th class="col-due">Due</th>'+
-              '<th class="col-link">Artifact</th>'+
-              '<th class="col-status">Status</th>'+
-              '<th class="col-x"></th>'+
-            '</tr></thead>'+
-            '<tbody data-rows></tbody>'+
-          '</table>'+
-        '</div>';
-
+        '<div class="tbl-head"><div><h3 style="display:inline">Deliverables</h3><span class="count" data-count></span></div>'+
+          '<div class="tbl-actions"><label class="hide-toggle"><input type="checkbox" data-hidedone> Hide completed</label>'+
+          '<button class="btn btn-add" data-add>'+ico('<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>')+'Add task</button></div></div>'+
+        '<div class="tbl-card"><table><thead><tr>'+
+          '<th class="col-exp"></th><th class="col-task">Task</th><th class="col-owner">Owner</th><th class="col-due">Target</th>'+
+          '<th class="col-link">Artifact</th><th class="col-status">Status</th><th class="col-x"></th>'+
+        '</tr></thead><tbody data-rows></tbody></table></div>';
       panelsEl.appendChild(panel);
 
-      /* wire target date */
-      panel.querySelector("#tgt-"+p.id).addEventListener("input", function(e){
-        p.targetDate = e.target.value;
-        var pill = document.querySelector('[data-ov-pill="'+p.id+'"]');
-        // refresh overview meta line (target shown there)
-        buildOverviewMetaTarget(p);
+      updatePtag(p,panel);
+      panel.querySelector("#tgt-"+p.id).addEventListener("input",function(e){p.targetDate=e.target.value;refreshOverview(p);});
+      panel.querySelector("#notes-"+p.id).addEventListener("input",function(e){p.notes=e.target.value;});
+
+      ["launch","adoption"].forEach(function(metric){
+        var s=panel.querySelector('[data-slider="'+metric+'"]');
+        s.addEventListener("input",function(e){
+          p[metric]=Number(e.target.value);
+          var b=band(p[metric]);
+          panel.querySelector('[data-pct="'+metric+'"]').textContent=p[metric]+"%";
+          panel.querySelector('[data-pct="'+metric+'"]').style.color=b.color;
+          var st=panel.querySelector('[data-st="'+metric+'"]');
+          st.style.color=b.color;st.style.background=b.bg;st.style.borderColor=b.color+"33";
+          st.querySelector(".led").style.background=b.color;
+          panel.querySelector('[data-stl="'+metric+'"]').textContent=b.label;
+          if(metric==="launch"){var d=document.querySelector('[data-tabdot="'+p.id+'"]');if(d)d.style.background=b.color;}
+          refreshOverview(p);
+        });
       });
 
-      /* wire notes */
-      panel.querySelector("#notes-"+p.id).addEventListener("input", function(e){
-        p.notes = e.target.value;
+      panel.querySelector("[data-hidedone]").addEventListener("change",function(e){
+        panel.setAttribute("data-hide", e.target.checked?"1":"0"); renderRows(p,panel);
       });
-
-      /* wire slider */
-      var slider = panel.querySelector("[data-slider]");
-      slider.addEventListener("input", function(e){
-        p.readiness = Number(e.target.value);
-        var bb = band(p.readiness);
-        panel.querySelector("[data-pct]").textContent = p.readiness+"%";
-        panel.querySelector("[data-pct]").style.color = bb.color;
-        var st = panel.querySelector("[data-status]");
-        st.style.color = bb.color; st.style.background = bb.bg; st.style.borderColor = bb.color+"33";
-        st.querySelector(".led").style.background = bb.color;
-        panel.querySelector("[data-status-label]").textContent = bb.label;
-        // tab dot + overview
-        var tabDot = document.querySelector('.tab[data-target="panel-'+p.id+'"] .dot');
-        if(tabDot) tabDot.style.background = bb.color;
-        refreshOverviewFor(p);
+      panel.querySelector("[data-add]").addEventListener("click",function(){
+        p.tasks.push({task:"",owner:"",due:"",link:"",status:"Not started",notes:"",completedDate:"",completedBy:"",addedWeek:STATE.meetingDate});
+        renderRows(p,panel);updatePtag(p,panel);refreshOverview(p);
+        var rows=panel.querySelectorAll("[data-rows] tr.task-row");var last=rows[rows.length-1];
+        if(last){var i=last.querySelector(".cell-input");if(i)i.focus();}
       });
-
-      /* wire add */
-      panel.querySelector("[data-add]").addEventListener("click", function(){
-        p.tasks.push({task:"",owner:"",due:"",link:"",status:"Not started"});
-        renderRows(p, panel);
-        // focus the new first cell
-        var rows = panel.querySelectorAll("[data-rows] tr");
-        var last = rows[rows.length-1];
-        if(last){ var inp = last.querySelector(".cell-input"); if(inp) inp.focus(); }
-        refreshOverviewCounts(p);
-      });
-
-      renderRows(p, panel);
+      renderRows(p,panel);
     });
   }
-
-  function buildOverviewMetaTarget(p){
-    // the overview meta target is part of a larger string; simplest is to rebuild that card's meta
-    var bar = document.querySelector('[data-ov-bar="'+p.id+'"]');
-    if(!bar) return;
-    var card = bar.closest(".ov-card");
-    if(!card) return;
-    var done = p.tasks.filter(function(t){return t.status==="Done";}).length;
-    var meta = card.querySelector(".ov-meta span:first-child");
-    if(meta){ meta.innerHTML = '<b>'+done+'</b>/'+p.tasks.length+' done · target <b>'+escapeHtml(p.targetDate||"—")+'</b>'; }
+  function updatePtag(p,panel){
+    var done=p.tasks.filter(function(t){return t.status==="Done";}).length;
+    var t=panel.querySelector("[data-ptag]");
+    if(t)t.textContent=(p.tasks.length-done)+" open · "+done+" complete of "+p.tasks.length+" tracked";
   }
-  function refreshOverviewCounts(p){ buildOverviewMetaTarget(p); }
+  function setCount(p,panel){
+    var done=p.tasks.filter(function(t){return t.status==="Done";}).length;
+    var c=panel.querySelector("[data-count]");if(c)c.textContent="· "+done+" of "+p.tasks.length+" complete";
+  }
 
-  function renderRows(p, panel){
-    var tbody = panel.querySelector("[data-rows]");
-    tbody.innerHTML = "";
-    panel.querySelector("[data-count]").textContent =
-      p.tasks.filter(function(t){return t.status==="Done";}).length + " of " + p.tasks.length + " complete";
-
-    if(p.tasks.length===0){
-      var er = el("tr","empty-row");
-      er.innerHTML = '<td colspan="6">No deliverables yet. Use <b>Add task</b> to start tracking.</td>';
-      tbody.appendChild(er);
-      refreshOverviewCounts(p);
-      return;
+  function renderRows(p,panel){
+    var tb=panel.querySelector("[data-rows]");tb.innerHTML="";
+    var hide=panel.getAttribute("data-hide")==="1";
+    setCount(p,panel);
+    var visible=p.tasks.filter(function(t){return !(hide && t.status==="Done");});
+    if(visible.length===0){
+      var er=el("tr","empty-row");er.innerHTML='<td colspan="7">'+(p.tasks.length?'All tasks complete and hidden.':'No deliverables yet. Use <b>Add task</b> to start tracking.')+'</td>';
+      tb.appendChild(er);updatePtag(p,panel);return;
     }
+    p.tasks.forEach(function(task,idx){
+      if(hide && task.status==="Done") return;
+      var isDone=task.status==="Done";
+      var tr=el("tr","task-row"+(isDone?" task-done":""));
 
-    p.tasks.forEach(function(task, idx){
-      var tr = el("tr");
+      var tdExp=el("td","col-exp");
+      var expBtn=el("button","exp-btn",{title:"Notes & details"});
+      expBtn.innerHTML=ico('<polyline points="9 18 15 12 9 6"/>');
+      tdExp.appendChild(expBtn);tr.appendChild(tdExp);
 
-      // task
-      var tdTask = el("td"); 
-      var iTask = el("input","cell-input",{type:"text",placeholder:"Describe the deliverable"});
-      iTask.value = task.task||""; 
-      iTask.addEventListener("input", function(){ task.task=iTask.value; });
-      tdTask.appendChild(iTask); tr.appendChild(tdTask);
+      var tdTask=el("td");
+      var taskWrap=el("div");
+      var iTask=el("input","cell-input task-text",{type:"text",placeholder:"Describe the deliverable"});
+      iTask.value=task.task||"";iTask.addEventListener("input",function(){task.task=iTask.value;});
+      taskWrap.appendChild(iTask);
+      if(isDone){
+        var stamp=el("div","done-stamp");
+        stamp.innerHTML=ico('<polyline points="20 6 9 17 4 12"/>')+'Completed '+esc(task.completedDate||"—")+(task.completedBy?' · '+esc(task.completedBy):'');
+        taskWrap.appendChild(stamp);
+      }
+      tdTask.appendChild(taskWrap);tr.appendChild(tdTask);
 
-      // owner
-      var tdOwner = el("td");
-      var iOwner = el("input","cell-input",{type:"text",placeholder:"Owner"});
-      iOwner.value = task.owner||"";
-      iOwner.addEventListener("input", function(){ task.owner=iOwner.value; });
-      tdOwner.appendChild(iOwner); tr.appendChild(tdOwner);
+      var tdOwner=el("td","col-owner");var iOwner=el("input","cell-input",{type:"text",placeholder:"Owner"});
+      iOwner.value=task.owner||"";iOwner.addEventListener("input",function(){task.owner=iOwner.value;});
+      tdOwner.appendChild(iOwner);tr.appendChild(tdOwner);
 
-      // due
-      var tdDue = el("td");
-      var iDue = el("input","cell-input",{type:"text",placeholder:"Due"});
-      iDue.value = task.due||"";
-      iDue.addEventListener("input", function(){ task.due=iDue.value; });
-      tdDue.appendChild(iDue); tr.appendChild(tdDue);
+      var tdDue=el("td","col-due");var iDue=el("input","cell-input",{type:"text",placeholder:"Target"});
+      iDue.value=task.due||"";iDue.addEventListener("input",function(){task.due=iDue.value;});
+      tdDue.appendChild(iDue);tr.appendChild(tdDue);
 
-      // link
-      var tdLink = el("td");
-      var wrap = el("div","link-cell");
-      var iLink = el("input","cell-input",{type:"text",placeholder:"Paste URL"});
-      iLink.value = task.link||"";
-      var open = el("a","link-open"+(task.link?"":" disabled"),{target:"_blank",rel:"noopener",title:"Open artifact"});
-      open.innerHTML = svgIcon('<path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>');
-      if(task.link) open.href = task.link;
-      iLink.addEventListener("input", function(){
-        task.link = iLink.value.trim();
-        if(task.link){ open.href = task.link; open.classList.remove("disabled"); }
-        else { open.removeAttribute("href"); open.classList.add("disabled"); }
+      var tdLink=el("td","col-link");var lw=el("div","link-cell");
+      var iLink=el("input","cell-input",{type:"text",placeholder:"URL"});iLink.value=task.link||"";
+      var open=el("a","link-open"+(task.link?"":" disabled"),{target:"_blank",rel:"noopener",title:"Open"});
+      open.innerHTML=ico('<path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>');
+      if(task.link)open.href=task.link;
+      iLink.addEventListener("input",function(){task.link=iLink.value.trim();if(task.link){open.href=task.link;open.classList.remove("disabled");}else{open.removeAttribute("href");open.classList.add("disabled");}});
+      lw.appendChild(iLink);lw.appendChild(open);tdLink.appendChild(lw);tr.appendChild(tdLink);
+
+      var tdStat=el("td","col-status");var sel=el("select","status-sel");
+      STATUS_OPTS.forEach(function(o){var op=el("option");op.value=o;op.textContent=o;if(o===(task.status||"Not started"))op.selected=true;sel.appendChild(op);});
+      sel.style.color=STATUS_COLOR[task.status||"Not started"];
+      tdStat.appendChild(sel);tr.appendChild(tdStat);
+
+      var tdX=el("td","col-x");var del=el("button","btn-del",{title:"Remove"});
+      del.innerHTML=ico('<polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>');
+      del.addEventListener("click",function(){p.tasks.splice(idx,1);renderRows(p,panel);updatePtag(p,panel);refreshOverview(p);});
+      tdX.appendChild(del);tr.appendChild(tdX);
+
+      // detail row
+      var dr=el("tr","detail-row");var dtd=el("td",null,{colspan:"7"});
+      var dw=el("div","detail-wrap");
+      dw.innerHTML=
+        '<div class="detail-grid"><div class="d-field"><label>Running notes</label>'+
+        '<textarea data-tnotes placeholder="Ongoing notes until this is complete…">'+esc(task.notes||"")+'</textarea></div></div>'+
+        '<div class="completion-row'+(isDone?' show':'')+'" data-comp>'+
+          '<div class="cf"><label>Completed on</label><input data-cdate type="text" value="'+esc(task.completedDate||"")+'" placeholder="e.g. Jun 16"></div>'+
+          '<div class="cf"><label>Completed by</label><input data-cby type="text" value="'+esc(task.completedBy||"")+'" placeholder="who"></div>'+
+        '</div>';
+      dtd.appendChild(dw);dr.appendChild(dtd);
+
+      expBtn.addEventListener("click",function(){
+        var openNow=dr.classList.toggle("open");tr.classList.toggle("expanded",openNow);
+        expBtn.querySelector("svg").style.transform=openNow?"rotate(90deg)":"";
       });
-      wrap.appendChild(iLink); wrap.appendChild(open);
-      tdLink.appendChild(wrap); tr.appendChild(tdLink);
+      dw.querySelector("[data-tnotes]").addEventListener("input",function(e){task.notes=e.target.value;});
+      dw.querySelector("[data-cdate]").addEventListener("input",function(e){task.completedDate=e.target.value;
+        var s2=tr.querySelector(".done-stamp");if(s2)s2.innerHTML=ico('<polyline points="20 6 9 17 4 12"/>')+'Completed '+esc(task.completedDate||"—")+(task.completedBy?' · '+esc(task.completedBy):'');});
+      dw.querySelector("[data-cby]").addEventListener("input",function(e){task.completedBy=e.target.value;
+        var s2=tr.querySelector(".done-stamp");if(s2)s2.innerHTML=ico('<polyline points="20 6 9 17 4 12"/>')+'Completed '+esc(task.completedDate||"—")+(task.completedBy?' · '+esc(task.completedBy):'');});
 
-      // status
-      var tdStat = el("td");
-      var sel = el("select","status-sel");
-      STATUS_OPTS.forEach(function(opt){
-        var o = el("option"); o.value=opt; o.textContent=opt;
-        if(opt===(task.status||"Not started")) o.selected=true;
-        sel.appendChild(o);
+      sel.addEventListener("change",function(){
+        task.status=sel.value;sel.style.color=STATUS_COLOR[sel.value];
+        if(sel.value==="Done" && !task.completedDate){task.completedDate=humanDate(STATE.meetingDate);}
+        renderRows(p,panel);updatePtag(p,panel);refreshOverview(p);
       });
-      sel.style.color = STATUS_COLOR[task.status||"Not started"];
-      sel.addEventListener("change", function(){
-        task.status = sel.value;
-        sel.style.color = STATUS_COLOR[sel.value];
-        panel.querySelector("[data-count]").textContent =
-          p.tasks.filter(function(t){return t.status==="Done";}).length + " of " + p.tasks.length + " complete";
-        refreshOverviewCounts(p);
-      });
-      tdStat.appendChild(sel); tr.appendChild(tdStat);
 
-      // delete
-      var tdX = el("td");
-      var del = el("button","btn-del",{title:"Remove task"});
-      del.innerHTML = svgIcon('<polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>');
-      del.addEventListener("click", function(){
-        p.tasks.splice(idx,1);
-        renderRows(p, panel);
-        refreshOverviewCounts(p);
-      });
-      tdX.appendChild(del); tr.appendChild(tdX);
-
-      tbody.appendChild(tr);
+      tb.appendChild(tr);tb.appendChild(dr);
     });
-    refreshOverviewCounts(p);
+    updatePtag(p,panel);
   }
 
-  /* ---------------- meeting date ---------------- */
-  var mdInput = document.getElementById("meetingDate");
-  mdInput.value = STATE.meetingDate || "";
-  mdInput.addEventListener("input", function(){ STATE.meetingDate = mdInput.value; });
-
-  /* ---------------- export (self-saving file) ---------------- */
-  function serializeStateForScript(){
-    // escape "<" so an embedded URL/text can never break out of the script tag
-    return JSON.stringify(STATE, null, 2).replace(/</g, "\\u003c");
+  function humanDate(iso){
+    if(!iso)return "";
+    try{var d=new Date(iso+"T00:00:00");return d.toLocaleDateString(undefined,{month:"short",day:"numeric"});}catch(e){return iso;}
   }
+
+  /* weekly */
+  var weeklyList=document.getElementById("weeklyList");
+  function buildWeekly(){
+    weeklyList.innerHTML="";
+    if(!STATE.weeklies.length){
+      var e0=el("div","wk-card");e0.innerHTML='<div class="wk-body" style="color:#6b7488;font-size:13.5px">No recaps yet. Add one after your next meeting.</div>';
+      weeklyList.appendChild(e0);return;
+    }
+    STATE.weeklies.forEach(function(wk,wi){
+      var card=el("div","wk-card");
+      card.innerHTML=
+        '<div class="wk-top"><input class="wkdate" value="'+esc(wk.date||"")+'" /><button class="btn-del" data-delwk title="Remove recap" style="color:#cdd5e3">'+ico('<polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/>')+'</button></div>'+
+        '<div class="wk-body">'+
+          '<div class="wk-sec"><h4>Meeting summary</h4><textarea data-summary>'+esc(wk.summary||"")+'</textarea></div>'+
+          '<div class="wk-sec"><h4>Tasks added to the tracker this week</h4><div data-added></div><button class="mini-add" data-addtask>+ Add</button></div>'+
+          '<div class="wk-sec"><h4>Suggestive items (not tracked)</h4><p class="sugg-note">Ideas raised without an owner + date. Promote to a tab when they firm up.</p><div data-sugg></div><button class="mini-add" data-addsugg>+ Add</button></div>'+
+        '</div>';
+      weeklyList.appendChild(card);
+
+      card.querySelector(".wkdate").addEventListener("input",function(e){wk.date=e.target.value;});
+      card.querySelector("[data-delwk]").addEventListener("click",function(){STATE.weeklies.splice(wi,1);buildWeekly();});
+      card.querySelector("[data-summary]").addEventListener("input",function(e){wk.summary=e.target.value;});
+
+      var addedBox=card.querySelector("[data-added]");
+      wk.added=wk.added||[];
+      function renderAdded(){
+        addedBox.innerHTML="";
+        wk.added.forEach(function(a,ai){
+          var row=el("div","added-item");
+          var opts=PRODUCT_NAMES.map(function(n){return '<option value="'+esc(n)+'"'+(n===a.product?' selected':'')+'>'+esc(n)+'</option>';}).join("");
+          row.innerHTML='<input class="ai-task" value="'+esc(a.task||"")+'" placeholder="Task added" /><select>'+opts+'</select><button class="btn-del" title="Remove">'+ico('<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>')+'</button>';
+          row.querySelector("input").addEventListener("input",function(e){a.task=e.target.value;});
+          row.querySelector("select").addEventListener("change",function(e){a.product=e.target.value;});
+          row.querySelector(".btn-del").addEventListener("click",function(){wk.added.splice(ai,1);renderAdded();});
+          addedBox.appendChild(row);
+        });
+      }
+      renderAdded();
+      card.querySelector("[data-addtask]").addEventListener("click",function(){wk.added.push({task:"",product:PRODUCT_NAMES[0]||""});renderAdded();});
+
+      var suggBox=card.querySelector("[data-sugg]");
+      wk.suggestive=wk.suggestive||[];
+      function renderSugg(){
+        suggBox.innerHTML="";
+        wk.suggestive.forEach(function(s,si){
+          var row=el("div","sugg-item");
+          row.innerHTML='<input value="'+esc(s)+'" placeholder="Suggestive item" /><button class="btn-del" title="Remove">'+ico('<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>')+'</button>';
+          row.querySelector("input").addEventListener("input",function(e){wk.suggestive[si]=e.target.value;});
+          row.querySelector(".btn-del").addEventListener("click",function(){wk.suggestive.splice(si,1);renderSugg();});
+          suggBox.appendChild(row);
+        });
+      }
+      renderSugg();
+      card.querySelector("[data-addsugg]").addEventListener("click",function(){wk.suggestive.push("");renderSugg();});
+    });
+  }
+  document.getElementById("addRecap").addEventListener("click",function(){
+    STATE.weeklies.unshift({date:humanDate(STATE.meetingDate)||"New meeting",summary:"",added:[],suggestive:[]});
+    buildWeekly();
+  });
+
+  /* meeting date */
+  var md=document.getElementById("meetingDate");md.value=STATE.meetingDate||"";
+  md.addEventListener("input",function(){STATE.meetingDate=md.value;});
+
+  /* export */
+  function serialize(){return JSON.stringify(STATE,null,2).replace(/</g,"\\u003c");}
   function exportDashboard(){
-    var stamp = new Date();
-    var clone = document.documentElement.cloneNode(true);
-
-    // 1) write current state into the cloned #gtm-state block
-    var st = clone.querySelector("#gtm-state");
-    if(st){ st.textContent = "\n" + serializeStateForScript() + "\n"; }
-
-    // 2) clear dynamically-rendered containers so the saved file is tidy
-    //    (they're rebuilt from STATE on load anyway)
-    ["tabs","ovGrid","productPanels"].forEach(function(id){
-      var n = clone.querySelector("#"+id);
-      if(n) n.innerHTML = "";
-    });
-    var ovPanel = clone.querySelector("#panel-overview");
-    if(ovPanel){ ovPanel.classList.add("active"); }
-
-    // 3) record export time
-    clone.setAttribute("data-exported", stamp.toISOString());
-
-    var html = "<!DOCTYPE html>\n" + clone.outerHTML;
-    var blob = new Blob([html], {type:"text/html"});
-    var url = URL.createObjectURL(blob);
-    var a = document.createElement("a");
-    var d = (STATE.meetingDate || stamp.toISOString().slice(0,10));
-    a.href = url;
-    a.download = "govspend-gtm-tracker-" + d + ".html";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    setTimeout(function(){ URL.revokeObjectURL(url); }, 1500);
-
-    toast("Downloaded — drop it into a new chat with the transcript");
+    var stamp=new Date(),clone=document.documentElement.cloneNode(true);
+    var st=clone.querySelector("#gtm-state");if(st)st.textContent="\n"+serialize()+"\n";
+    ["tabs","ovGrid","productPanels","weeklyList"].forEach(function(id){var n=clone.querySelector("#"+id);if(n)n.innerHTML="";});
+    var ov=clone.querySelector("#panel-overview");if(ov)ov.classList.add("active");
+    Array.prototype.forEach.call(clone.querySelectorAll(".panel"),function(pn){if(pn.id!=="panel-overview")pn.classList.remove("active");});
+    clone.setAttribute("data-exported",stamp.toISOString());
+    var html="<!DOCTYPE html>\n"+clone.outerHTML;
+    var blob=new Blob([html],{type:"text/html"}),url=URL.createObjectURL(blob),a=document.createElement("a");
+    a.href=url;a.download="govspend-gtm-tracker-"+(STATE.meetingDate||stamp.toISOString().slice(0,10))+".html";
+    document.body.appendChild(a);a.click();document.body.removeChild(a);
+    setTimeout(function(){URL.revokeObjectURL(url);},1500);
+    toast("Downloaded — this file is now your source of truth");
   }
-  document.getElementById("exportBtn").addEventListener("click", exportDashboard);
+  document.getElementById("exportBtn").addEventListener("click",exportDashboard);
 
-  /* show last-exported stamp if this file was saved before */
-  var prevExport = document.documentElement.getAttribute("data-exported");
-  if(prevExport){
-    try{
-      var ds = new Date(prevExport);
-      document.getElementById("exportedStamp").textContent =
-        "Last exported " + ds.toLocaleDateString(undefined,{month:"short",day:"numeric"}) +
-        " at " + ds.toLocaleTimeString(undefined,{hour:"numeric",minute:"2-digit"});
-    }catch(e){}
-  }
+  var prev=document.documentElement.getAttribute("data-exported");
+  if(prev){try{var ds=new Date(prev);document.getElementById("exportedStamp").textContent="Last exported "+ds.toLocaleDateString(undefined,{month:"short",day:"numeric"})+" at "+ds.toLocaleTimeString(undefined,{hour:"numeric",minute:"2-digit"});}catch(e){}}
 
-  /* ---------------- escaping ---------------- */
-  function escapeHtml(s){
-    return String(s==null?"":s).replace(/[&<>"']/g, function(c){
-      return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c];
-    });
-  }
-  function escapeAttr(s){ return escapeHtml(s); }
-
-  /* ---------------- boot ---------------- */
-  buildTabs();
-  buildOverview();
-  buildPanels();
+  buildTabs();buildOverview();buildPanels();buildWeekly();
 })();
 </script>
 </body>
