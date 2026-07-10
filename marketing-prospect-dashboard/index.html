@@ -3,1292 +3,794 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GovSpend — Prospect Pipeline Dashboard v4.x (Live)</title>
+<title>GovSpend — Prospect &amp; Opportunity Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,300;0,400;0,700;0,900;1,400&display=swap" rel="stylesheet">
 <style>
-:root{--gs-navy:#0B1F3A;--gs-blue:#1A6DC0;--gs-teal:#0D8C72;--gs-sky:#3DAEE9;--gs-amber:#E8970A;--gs-red:#D63B3B;--gs-purple:#6B5FD4;--gs-green:#4A9E3F;--gs-muted:#64748B;--gs-border:#E2E8F0;--gs-bg:#F7F9FC;--gs-surface:#FFFFFF;--gs-text:#0F172A;--gs-text2:#475569;--t1:#378ADD;--t2:#1D9E75;--t3:#BA7517;--t4:#7F77DD;}
+:root{
+  /* ── GovSpend brand (per Brand Guide) ── */
+  --deep-space:#303650; --ds-700:#303650; --ds-500:#5B6075; --ds-400:#7B8095; --ds-300:#9A9DAC; --ds-200:#C9CCD6; --ds-100:#E8E9ED;
+  --data-blue:#0076DE;  --db-700:#0076DE;  --db-500:#3392E5;  --db-300:#80BBEF;  --db-200:#B3D4F5; --db-100:#E6F1FB;
+  --xanthous:#FFC44D;   --xa-700:#FFC44D;  --xa-500:#FFD071;  --xa-300:#FFDD94;  --xa-100:#FFF4DB;
+  --bg:#F4F6F9; --surface:#FFFFFF; --border:#E4E6EB; --text:#23283C; --text2:#5B6075; --muted:#8A8FA0;
+}
 *{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:'DM Sans',sans-serif;background:var(--gs-bg);color:var(--gs-text);font-size:14px;line-height:1.5;}
-.header{background:var(--gs-navy);padding:0 32px;display:flex;align-items:center;justify-content:space-between;height:60px;border-bottom:3px solid var(--gs-blue);}
-.logo-mark{width:36px;height:36px;background:var(--gs-blue);border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-weight:500;font-size:14px;color:#fff;}
-.header-logo{display:flex;align-items:center;gap:12px;}
-.logo-text{font-size:18px;font-weight:600;color:#fff;}
-.logo-text span{color:var(--gs-sky);}
-.header-meta{display:flex;align-items:center;gap:12px;}
-.header-date{font-size:12px;color:rgba(255,255,255,0.7);background:rgba(255,255,255,0.08);padding:4px 10px;border-radius:4px;font-family:'DM Mono',monospace;}
+body{font-family:'Lato',-apple-system,sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;}
+h1,h2,h3,h4{font-weight:900;color:var(--deep-space);}
 
-/* MONTH FILTER BAR */
-.month-bar{background:#EBF4FF;border-bottom:1px solid #BDD7F5;padding:8px 32px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
-.month-bar-label{font-size:11px;font-weight:600;color:var(--gs-blue);text-transform:uppercase;letter-spacing:0.07em;margin-right:4px;white-space:nowrap;}
-.month-btn{font-size:12px;padding:4px 10px;border-radius:14px;border:1px solid #BDD7F5;background:#fff;cursor:pointer;color:var(--gs-muted);transition:all 0.12s;font-family:'DM Sans',sans-serif;}
-.month-btn:hover{border-color:var(--gs-blue);color:var(--gs-blue);}
-.month-btn.active{background:var(--gs-blue);border-color:var(--gs-blue);color:#fff;font-weight:500;}
-.month-btn.preset{background:transparent;border-color:var(--gs-blue);color:var(--gs-blue);font-weight:500;}
-.month-btn.preset.active{background:var(--gs-blue);color:#fff;}
-.month-divider{width:1px;height:20px;background:#BDD7F5;margin:0 4px;}
-.month-clear{font-size:11px;color:var(--gs-muted);cursor:pointer;text-decoration:underline;padding:2px 4px;}
-.month-clear:hover{color:var(--gs-red);}
+/* ── HEADER ── */
+.header{background:var(--deep-space);padding:0 28px;display:flex;align-items:center;justify-content:space-between;height:62px;border-bottom:3px solid var(--data-blue);position:sticky;top:0;z-index:40;}
+.wordmark{display:flex;align-items:center;font-weight:900;font-size:23px;letter-spacing:-0.5px;line-height:1;}
+.wm-gov{color:#fff;}
+.wm-pend{color:var(--data-blue);}
+.wm-badge{width:25px;height:25px;border-radius:50%;background:var(--data-blue);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:15px;font-weight:900;margin:0 -1px;position:relative;top:1px;}
+.header-sub{color:var(--ds-300);font-size:12px;font-weight:400;margin-left:14px;padding-left:14px;border-left:1px solid rgba(255,255,255,0.15);}
+.header-meta{display:flex;align-items:center;gap:10px;}
+.header-status{font-size:12px;color:rgba(255,255,255,0.7);background:rgba(255,255,255,0.08);padding:5px 11px;border-radius:5px;font-weight:400;}
+.header-status b{color:#fff;font-weight:700;}
+.btn{font-family:'Lato',sans-serif;font-size:13px;font-weight:700;padding:8px 15px;border-radius:6px;border:1px solid transparent;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:7px;}
+.btn-primary{background:var(--data-blue);color:#fff;}
+.btn-primary:hover{background:#0063bd;}
+.btn-ghost{background:rgba(255,255,255,0.1);color:#fff;border-color:rgba(255,255,255,0.2);}
+.btn-ghost:hover{background:rgba(255,255,255,0.2);}
+.btn-outline{background:#fff;color:var(--data-blue);border-color:var(--data-blue);}
+.btn-outline:hover{background:var(--db-100);}
+.btn:disabled{opacity:.45;cursor:not-allowed;}
+.btn svg{width:15px;height:15px;}
 
-.nav{background:var(--gs-surface);border-bottom:1px solid var(--gs-border);padding:0 32px;display:flex;gap:0;overflow-x:auto;}
-.nav-tab{padding:13px 18px;font-size:13px;font-weight:500;color:var(--gs-muted);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:all 0.15s;}
-.nav-tab:hover{color:var(--gs-text);}
-.nav-tab.active{color:var(--gs-blue);border-bottom-color:var(--gs-blue);}
-.main{padding:24px 32px;max-width:1400px;margin:0 auto;}
+/* ── MONTH BAR ── */
+.month-bar{background:var(--db-100);border-bottom:1px solid var(--db-200);padding:8px 28px;display:flex;align-items:center;gap:7px;flex-wrap:wrap;}
+.month-bar-label{font-size:11px;font-weight:700;color:var(--data-blue);text-transform:uppercase;letter-spacing:0.07em;margin-right:4px;white-space:nowrap;}
+.month-btn{font-size:12px;padding:4px 11px;border-radius:14px;border:1px solid var(--db-200);background:#fff;cursor:pointer;color:var(--text2);transition:all 0.12s;font-family:'Lato',sans-serif;font-weight:400;}
+.month-btn:hover{border-color:var(--data-blue);color:var(--data-blue);}
+.month-btn.active{background:var(--data-blue);border-color:var(--data-blue);color:#fff;font-weight:700;}
+.month-btn.preset{font-weight:700;color:var(--data-blue);}
+.month-btn.preset.active{background:var(--data-blue);color:#fff;}
+.month-divider{width:1px;height:20px;background:var(--db-200);margin:0 3px;}
+
+/* ── NAV ── */
+.nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 28px;display:flex;overflow-x:auto;position:sticky;top:62px;z-index:30;}
+.nav-tab{padding:14px 18px;font-size:13px;font-weight:700;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:all 0.15s;}
+.nav-tab:hover{color:var(--deep-space);}
+.nav-tab.active{color:var(--data-blue);border-bottom-color:var(--data-blue);}
+.main{padding:24px 28px;max-width:1420px;margin:0 auto;}
 .section{display:none;}
 .section.active{display:block;}
 
-/* FILTER CONTEXT BANNER */
-.filter-banner{background:#FFF8E6;border:1px solid #F5D78B;border-radius:8px;padding:10px 16px;margin-bottom:16px;font-size:13px;color:#7A5500;display:none;align-items:center;gap:8px;}
+.filter-banner{background:var(--xa-100);border:1px solid var(--xa-300);border-radius:8px;padding:10px 16px;margin-bottom:16px;font-size:13px;color:#7a5d12;display:none;align-items:center;gap:8px;}
 .filter-banner.visible{display:flex;}
-.filter-banner strong{color:#5A3E00;}
+.filter-banner strong{color:#5e4708;}
 
-/* EXEC SUMMARY */
-.exec-summary{background:linear-gradient(135deg,var(--gs-navy) 0%,#132A4A 100%);border-radius:12px;padding:24px 28px;margin-bottom:24px;color:#fff;}
-.exec-title{font-size:11px;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:rgba(255,255,255,0.5);margin-bottom:6px;}
-.exec-headline{font-size:18px;font-weight:600;margin-bottom:16px;line-height:1.35;}
-.exec-bullets{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;}
-.exec-bullet{background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:12px 14px;}
-.exec-bullet-label{font-size:11px;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;}
-.exec-bullet-val{font-size:22px;font-weight:600;margin-bottom:2px;}
+/* ── EMPTY STATE ── */
+.empty-state{background:var(--surface);border:1px dashed var(--ds-200);border-radius:12px;padding:48px 32px;text-align:center;color:var(--muted);}
+.empty-state .es-icon{width:46px;height:46px;border-radius:12px;background:var(--db-100);color:var(--data-blue);display:flex;align-items:center;justify-content:center;font-size:22px;margin:0 auto 14px;font-weight:900;}
+.empty-state h3{color:var(--deep-space);font-size:16px;margin-bottom:6px;}
+.empty-state p{font-size:13px;max-width:420px;margin:0 auto;}
+
+/* ── EXEC ── */
+.exec-summary{background:linear-gradient(135deg,var(--deep-space) 0%,#3C4361 100%);border-radius:12px;padding:24px 28px;margin-bottom:22px;color:#fff;}
+.exec-title{font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.45);margin-bottom:7px;}
+.exec-headline{font-size:18px;font-weight:700;margin-bottom:18px;line-height:1.4;color:#fff;}
+.exec-bullets{display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:10px;}
+.exec-bullet{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:13px 15px;}
+.exec-bullet-label{font-size:11px;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:5px;font-weight:700;}
+.exec-bullet-val{font-size:23px;font-weight:900;margin-bottom:2px;line-height:1;}
 .exec-bullet-sub{font-size:12px;color:rgba(255,255,255,0.6);}
-.insight-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;}
-.insight-pill{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);border-radius:20px;padding:5px 12px;font-size:12px;color:rgba(255,255,255,0.85);}
-.insight-pill .dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:6px;vertical-align:middle;}
 
-/* TIER/STAGE LEGEND */
-.tier-legend{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:16px;padding:12px 16px;background:#F8FAFC;border-radius:8px;border:1px solid var(--gs-border);}
-.tier-legend-item{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--gs-text2);}
+.tier-legend{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:16px;padding:12px 16px;background:var(--surface);border-radius:8px;border:1px solid var(--border);}
+.tier-legend-item{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--text2);}
 .tier-legend-dot{width:12px;height:12px;border-radius:3px;flex-shrink:0;}
-.tier-legend-name{font-weight:500;color:var(--gs-text);}
-.tier-legend-desc{color:var(--gs-muted);}
+.tier-legend-name{font-weight:700;color:var(--deep-space);}
+.tier-legend-desc{color:var(--muted);}
 
-/* METRIC CARDS */
-.metric-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:12px;margin-bottom:20px;}
-.metric-card{background:var(--gs-surface);border:1px solid var(--gs-border);border-radius:10px;padding:14px 16px;}
-.metric-label{font-size:11px;font-weight:500;color:var(--gs-muted);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:5px;}
-.metric-value{font-size:24px;font-weight:600;color:var(--gs-text);line-height:1;margin-bottom:3px;}
-.metric-sub{font-size:12px;color:var(--gs-muted);}
-.metric-card.accent{border-left:3px solid var(--gs-blue);}
-.metric-card.green{border-left:3px solid var(--gs-teal);}
-.metric-card.amber{border-left:3px solid var(--gs-amber);}
-.metric-card.red{border-left:3px solid var(--gs-red);}
+.metric-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:20px;}
+.metric-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;}
+.metric-label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;}
+.metric-value{font-size:25px;font-weight:900;color:var(--deep-space);line-height:1;margin-bottom:4px;}
+.metric-sub{font-size:12px;color:var(--muted);}
+.metric-card.blue{border-left:3px solid var(--data-blue);}
+.metric-card.dark{border-left:3px solid var(--ds-500);}
+.metric-card.gold{border-left:3px solid var(--xanthous);}
 
 .chart-grid{display:grid;gap:18px;margin-bottom:20px;}
 .chart-grid-2{grid-template-columns:1fr 1fr;}
-.chart-grid-3{grid-template-columns:1fr 1fr 1fr;}
 .chart-grid-1{grid-template-columns:1fr;}
-@media(max-width:900px){.chart-grid-2,.chart-grid-3{grid-template-columns:1fr;}}
-.chart-card{background:var(--gs-surface);border:1px solid var(--gs-border);border-radius:10px;padding:18px 20px;}
-.chart-card-title{font-size:13px;font-weight:600;color:var(--gs-text);margin-bottom:2px;}
-.chart-card-sub{font-size:12px;color:var(--gs-muted);margin-bottom:12px;}
-.chart-wrap{position:relative;width:100%;}
-.legend{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:10px;}
-.legend-item{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--gs-text2);}
-.legend-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0;}
+.chart-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:18px 20px;}
+.chart-card-title{font-size:14px;font-weight:700;color:var(--deep-space);margin-bottom:2px;}
+.chart-card-sub{font-size:12px;color:var(--muted);margin-bottom:14px;}
+.chart-wrap{position:relative;height:280px;}
+.chart-wrap.tall{height:340px;}
+.section-title{font-size:16px;font-weight:900;color:var(--deep-space);margin:4px 0 14px;}
+.note-inline{background:var(--db-100);border:1px solid var(--db-200);border-radius:9px;padding:11px 15px;font-size:13px;color:#1a4f86;margin-bottom:16px;display:flex;gap:9px;align-items:flex-start;}
+.note-inline strong{font-weight:700;}
 
-.data-table{width:100%;border-collapse:collapse;font-size:13px;}
-.data-table th{font-size:11px;font-weight:600;color:var(--gs-muted);text-align:left;padding:8px 12px;border-bottom:1px solid var(--gs-border);text-transform:uppercase;letter-spacing:0.06em;background:#F8FAFC;}
-.data-table td{padding:9px 12px;border-bottom:1px solid var(--gs-border);color:var(--gs-text);}
-.data-table tr:last-child td{border-bottom:none;}
-.data-table tr:hover td{background:#F8FAFC;}
-.pill{display:inline-block;font-size:11px;font-weight:500;padding:2px 8px;border-radius:10px;}
-.pill-blue{background:#EBF5FF;color:#1A6DC0;}
-.pill-teal{background:#E6F7F3;color:#0D7A62;}
-.pill-amber{background:#FEF3DC;color:#9A6200;}
-.pill-purple{background:#EFEDFE;color:#5A4FC4;}
-.pill-coral{background:#FEF0EE;color:#B83A2A;}
-.pill-gray{background:#F1F5F9;color:#475569;}
-.mini-bar-bg{display:inline-block;background:#EEF2F7;border-radius:3px;height:5px;width:80px;vertical-align:middle;margin-left:6px;}
-.mini-bar-fill{height:5px;border-radius:3px;display:block;}
-.section-header{font-size:13px;font-weight:600;color:var(--gs-muted);text-transform:uppercase;letter-spacing:0.08em;margin:24px 0 12px;padding-bottom:8px;border-bottom:1px solid var(--gs-border);}
-.callout{background:#EFF6FF;border-left:3px solid var(--gs-blue);border-radius:0 8px 8px 0;padding:11px 16px;margin-bottom:14px;font-size:13px;color:var(--gs-text);}
-.callout strong{color:var(--gs-blue);}
-.callout-warn{background:#FEF9EC;border-left-color:var(--gs-amber);}
-.callout-warn strong{color:#9A6200;}
-.callout-danger{background:#FEF2F2;border-left-color:var(--gs-red);}
-.callout-danger strong{color:var(--gs-red);}
-.callout-success{background:#F0FDF4;border-left-color:var(--gs-teal);}
-.callout-success strong{color:var(--gs-teal);}
-.filter-row{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;align-items:center;}
-.filter-btn{font-size:12px;padding:5px 12px;border-radius:20px;border:1px solid var(--gs-border);background:transparent;cursor:pointer;color:var(--gs-muted);transition:all 0.12s;font-family:'DM Sans',sans-serif;}
-.filter-btn:hover{border-color:var(--gs-blue);color:var(--gs-blue);}
-.filter-btn.active{background:var(--gs-blue);border-color:var(--gs-blue);color:#fff;}
+/* ── TABLE ── */
+.tbl-wrap{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;}
+.tbl-toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border);background:#FAFBFD;}
+.tbl-toolbar input,.tbl-toolbar select{font-family:'Lato',sans-serif;font-size:12px;padding:6px 9px;border-radius:6px;border:1px solid var(--border);background:#fff;color:var(--text);}
+.tbl-toolbar input{min-width:210px;}
+.tbl-count{margin-left:auto;font-size:12px;color:var(--muted);}
+table.data{width:100%;border-collapse:collapse;font-size:13px;}
+table.data th{text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;color:var(--muted);padding:10px 12px;border-bottom:1px solid var(--border);background:#FAFBFD;position:sticky;top:0;}
+table.data td{padding:9px 12px;border-bottom:1px solid #EEF1F5;}
+table.data tr:hover td{background:var(--db-100);}
+.pill{display:inline-block;font-size:11px;font-weight:700;padding:2px 9px;border-radius:11px;}
+.pill-blue{background:var(--db-100);color:var(--data-blue);}
+.pill-dark{background:var(--ds-100);color:var(--ds-500);}
+.pill-gold{background:var(--xa-100);color:#9a6f10;}
+.pill-gray{background:#F1F3F6;color:var(--muted);}
+.pager{display:flex;gap:8px;align-items:center;justify-content:center;padding:12px;border-top:1px solid var(--border);}
+.pager button{font-size:12px;padding:5px 11px;border-radius:6px;border:1px solid var(--border);background:#fff;cursor:pointer;color:var(--text2);font-family:'Lato',sans-serif;}
+.pager button:disabled{opacity:.4;cursor:not-allowed;}
+.footer-note{text-align:center;font-size:11px;color:var(--muted);padding:24px 0 36px;}
+.hidden{display:none!important;}
 
-/* COACHING */
-.coaching-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px;margin-top:4px;}
-.coach-card{background:var(--gs-surface);border:1px solid var(--gs-border);border-radius:10px;overflow:hidden;}
-.coach-card-header{padding:14px 16px 10px;border-bottom:1px solid var(--gs-border);display:flex;align-items:center;gap:10px;}
-.coach-avatar{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;color:#fff;flex-shrink:0;}
-.coach-name{font-size:14px;font-weight:600;color:var(--gs-text);}
-.coach-meta{font-size:12px;color:var(--gs-muted);}
-.coach-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;border-bottom:1px solid var(--gs-border);}
-.coach-stat{padding:10px 14px;text-align:center;border-right:1px solid var(--gs-border);}
-.coach-stat:last-child{border-right:none;}
-.coach-stat-val{font-size:16px;font-weight:600;color:var(--gs-text);}
-.coach-stat-label{font-size:10px;color:var(--gs-muted);text-transform:uppercase;letter-spacing:0.06em;}
-.coach-tips{padding:14px 16px;}
-.coach-tip{display:flex;gap:10px;margin-bottom:10px;align-items:flex-start;}
-.coach-tip:last-child{margin-bottom:0;}
-.tip-icon{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;margin-top:1px;}
-.tip-icon-warn{background:#FEF3DC;color:#9A6200;}
-.tip-icon-good{background:#DCFCE7;color:#166534;}
-.tip-icon-info{background:#EFF6FF;color:#1A6DC0;}
-.tip-icon-alert{background:#FEF2F2;color:#991B1B;}
-.tip-text{font-size:12px;color:var(--gs-text2);line-height:1.5;}
-.tip-text strong{color:var(--gs-text);}
-.coach-no-data{padding:20px 16px;font-size:13px;color:var(--gs-muted);text-align:center;}
-.perf-bar{height:4px;border-radius:2px;margin-top:4px;}
+/* ── UPLOAD MODAL ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(35,40,60,0.55);backdrop-filter:blur(2px);z-index:100;display:none;align-items:flex-start;justify-content:center;padding:48px 20px;overflow-y:auto;}
+.modal-overlay.open{display:flex;}
+.modal-card{background:var(--surface);border-radius:14px;width:100%;max-width:640px;box-shadow:0 18px 50px rgba(35,40,60,0.3);overflow:hidden;}
+.modal-head{background:var(--deep-space);padding:18px 24px;display:flex;align-items:center;justify-content:space-between;}
+.modal-head h2{color:#fff;font-size:17px;}
+.modal-head p{color:var(--ds-300);font-size:12px;margin-top:2px;font-weight:400;}
+.modal-close{background:rgba(255,255,255,0.1);border:none;color:#fff;width:30px;height:30px;border-radius:7px;cursor:pointer;font-size:17px;}
+.modal-close:hover{background:rgba(255,255,255,0.22);}
+.modal-body{padding:22px 24px;}
+.dropzone{border:2px dashed var(--db-200);border-radius:11px;background:var(--db-100);padding:28px 20px;text-align:center;cursor:pointer;transition:all .15s;margin-bottom:18px;}
+.dropzone:hover,.dropzone.drag{border-color:var(--data-blue);background:#dceafb;}
+.dropzone-icon{width:42px;height:42px;border-radius:10px;background:var(--data-blue);color:#fff;display:flex;align-items:center;justify-content:center;font-size:20px;margin:0 auto 10px;font-weight:900;}
+.dropzone-title{font-size:14px;font-weight:700;color:var(--deep-space);margin-bottom:3px;}
+.dropzone-sub{font-size:12px;color:var(--muted);}
+.dropzone-sub b{color:var(--text2);}
+.slot{border:1px solid var(--border);border-radius:10px;padding:13px 15px;margin-bottom:11px;display:flex;align-items:flex-start;gap:12px;}
+.slot.filled{border-color:var(--db-300);background:#FAFCFF;}
+.slot-icon{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;font-weight:900;background:var(--ds-100);color:var(--ds-400);}
+.slot.filled .slot-icon{background:var(--db-100);color:var(--data-blue);}
+.slot-body{flex:1;min-width:0;}
+.slot-title{font-size:13px;font-weight:700;color:var(--deep-space);display:flex;align-items:center;gap:8px;}
+.slot-meta{font-size:12px;color:var(--muted);margin-top:2px;word-break:break-word;}
+.slot-clear{background:none;border:none;color:var(--muted);cursor:pointer;font-size:12px;text-decoration:underline;padding:0;margin-top:4px;}
+.badge{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;text-transform:uppercase;letter-spacing:0.04em;}
+.badge-ok{background:var(--db-100);color:var(--data-blue);}
+.badge-wait{background:var(--ds-100);color:var(--ds-400);}
+.modal-notices{margin:6px 0 4px;}
+.notice{border-radius:9px;padding:10px 13px;font-size:12.5px;margin-bottom:9px;display:flex;gap:9px;align-items:flex-start;line-height:1.45;}
+.notice-info{background:var(--db-100);border:1px solid var(--db-200);color:#1a4f86;}
+.notice-warn{background:var(--xa-100);border:1px solid var(--xa-300);color:#7a5d12;}
+.notice-err{background:#FBEAEA;border:1px solid #F0C2C2;color:#9a2a2a;}
+.notice strong{font-weight:700;}
+.modal-foot{padding:16px 24px;border-top:1px solid var(--border);display:flex;gap:10px;justify-content:flex-end;background:#FAFBFD;}
+.export-help{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.55;}
+.export-help summary{cursor:pointer;color:var(--data-blue);font-weight:700;}
+.export-help code{background:var(--ds-100);padding:1px 5px;border-radius:4px;font-size:11px;color:var(--deep-space);}
+.export-help ol{margin:8px 0 0 18px;}
+
+@media print{
+  .nav,.month-bar,.tbl-toolbar,.pager,.header .btn,.modal-overlay,.filter-banner{display:none!important;}
+  .section{display:block!important;page-break-inside:avoid;margin-bottom:24px;}
+  .nav,.header{position:static;}
+  body{background:#fff;}
+}
+@media(max-width:840px){.chart-grid-2{grid-template-columns:1fr;}}
 </style>
 </head>
 <body>
 
 <div class="header">
-  <div class="header-logo">
-    <div class="logo-mark">GS</div>
-    <div class="logo-text">Gov<span>Spend</span></div>
+  <div style="display:flex;align-items:center">
+    <div class="wordmark"><span class="wm-gov">gov</span><span class="wm-badge">S</span><span class="wm-pend">pend</span></div>
+    <span class="header-sub">Prospect &amp; Opportunity Pipeline</span>
   </div>
   <div class="header-meta">
-    <span style="font-size:12px;color:rgba(255,255,255,0.5);font-family:'DM Mono',monospace">Prospect Pipeline</span>
-    <span class="header-date">Snapshot: 2026-07-06</span>
+    <span class="header-status" id="headerStatus">No data loaded</span>
+    <button class="btn btn-ghost" id="printBtn" onclick="window.print()" style="display:none">Print / PDF</button>
+    <button class="btn btn-primary" onclick="openModal()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 16V4M7 9l5-5 5 5M5 20h14"/></svg>
+      Update data
+    </button>
   </div>
 </div>
 
-<!-- MONTH FILTER BAR -->
-<div class="month-bar">
-  <span class="month-bar-label">📅 Filter by month:</span>
-  <button class="month-btn preset active" onclick="setPreset('all',this)">All Time</button>
-  <button class="month-btn preset" onclick="setPreset('ytd',this)">YTD 2026</button>
-  <button class="month-btn preset" onclick="setPreset('q1',this)">Q1 2026</button>
-  <div class="month-divider"></div>
-  <button class="month-btn" data-month="2025-09" onclick="toggleMonth(this)">Sep '25</button>
-  <button class="month-btn" data-month="2025-10" onclick="toggleMonth(this)">Oct '25</button>
-  <button class="month-btn" data-month="2025-11" onclick="toggleMonth(this)">Nov '25</button>
-  <button class="month-btn" data-month="2025-12" onclick="toggleMonth(this)">Dec '25</button>
-  <button class="month-btn" data-month="2026-01" onclick="toggleMonth(this)">Jan '26</button>
-  <button class="month-btn" data-month="2026-02" onclick="toggleMonth(this)">Feb '26</button>
-  <button class="month-btn" data-month="2026-03" onclick="toggleMonth(this)">Mar '26</button>
-  <button class="month-btn" data-month="2026-04" onclick="toggleMonth(this)">Apr '26</button>
-  <button class="month-btn" data-month="2026-05" onclick="toggleMonth(this)">May '26</button>
-  <button class="month-btn" data-month="2026-06" onclick="toggleMonth(this)">Jun '26</button>
-  <button class="month-btn" data-month="2026-07" onclick="toggleMonth(this)">Jul '26</button>
-<span class="month-clear" onclick="setPreset('all',document.querySelector('.preset'))">Clear</span>
+<div class="month-bar" id="monthBar">
+  <span class="month-bar-label">Created month</span>
+  <button class="month-btn preset active" data-preset="all" onclick="setPreset('all',this)">All</button>
+  <button class="month-btn preset" data-preset="ytd" onclick="setPreset('ytd',this)">YTD 2026</button>
+  <span class="month-divider"></span>
+  <span id="monthBtns"></span>
 </div>
 
-<div class="nav">
+<div class="nav" id="nav">
   <div class="nav-tab active" onclick="showTab('overview',this)">Overview</div>
-  <div class="nav-tab" onclick="showTab('pipeline',this)">Open Pipeline</div>
-  <div class="nav-tab" onclick="showTab('conversion',this)">Conversion Rates</div>
+  <div class="nav-tab" onclick="showTab('funnel',this)">Funnel &amp; Stage</div>
   <div class="nav-tab" onclick="showTab('dq',this)">Disqualification</div>
-  <div class="nav-tab" onclick="showTab('acv',this)">Revenue & ACV</div>
+  <div class="nav-tab" onclick="showTab('opp',this)">Opportunities &amp; ACV</div>
   <div class="nav-tab" onclick="showTab('speed',this)">Speed to Lead</div>
   <div class="nav-tab" onclick="showTab('reps',this)">Rep Performance</div>
-  <div class="nav-tab" onclick="showTab('coaching',this)">🎯 Coaching</div>
 </div>
 
 <div class="main">
-<div id="filterBanner" class="filter-banner"><strong>Filtered view:</strong> <span id="filterBannerText"></span></div>
+  <div id="filterBanner" class="filter-banner"><strong>Filtered view:</strong>&nbsp;<span id="filterBannerText"></span></div>
 
-<!-- ══ OVERVIEW ══ -->
-<div class="section active" id="section-overview">
-  <div class="exec-summary">
-    <div class="exec-title">Executive Summary</div>
-    <div class="exec-headline" id="execHeadline">3,354 YTD prospect records · 534 qualified (15.9%) · $1.68M ACV from 75 Closed Won deals</div>
-    <div class="exec-bullets">
-      <div class="exec-bullet"><div class="exec-bullet-label">Open Pipeline</div><div class="exec-bullet-val" style="color:#3DAEE9" id="eb-open">829</div><div class="exec-bullet-sub">Active, non-closed prospects</div></div>
-      <div class="exec-bullet"><div class="exec-bullet-label">Qual. Rate</div><div class="exec-bullet-val" style="color:#4CD9A8" id="eb-qual-pct">15.9%</div><div class="exec-bullet-sub">T1 Inbound leads at 33%+</div></div>
-      <div class="exec-bullet"><div class="exec-bullet-label">Speed Improvement</div><div class="exec-bullet-val" style="color:#F6C743">87%</div><div class="exec-bullet-sub">New→Outreach: 186h → 25h (Jan→May)</div></div>
-      <div class="exec-bullet"><div class="exec-bullet-label">Top DQ Reason</div><div class="exec-bullet-val" style="color:#F87171">829</div><div class="exec-bullet-sub">Unresponsive — #1 every month</div></div>
+  <!-- OVERVIEW -->
+  <div class="section active" id="section-overview">
+    <div class="exec-summary">
+      <div class="exec-title">Executive Summary</div>
+      <div class="exec-headline" id="execHeadline">Upload your reports to populate the dashboard.</div>
+      <div class="exec-bullets" id="execBullets"></div>
     </div>
-    <div class="insight-row">
-      <div class="insight-pill"><span class="dot" style="background:#3DAEE9"></span>T1 Inbound 33%+ qual — best bucket by 8x vs T4</div>
-      <div class="insight-pill"><span class="dot" style="background:#F87171"></span>Champify: 2.8% qual on 1,725 records</div>
-      <div class="insight-pill"><span class="dot" style="background:#4CD9A8"></span>Enterprise ICP converts 2x better than Non-ICP</div>
-      <div class="insight-pill"><span class="dot" style="background:#F6C743"></span>"Not Govt Focused" DQs rising since Nov '25</div>
+    <div class="tier-legend">
+      <span style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.07em;margin-right:8px;align-self:center">Prospect Buckets:</span>
+      <span class="tier-legend-item"><span class="tier-legend-dot" style="background:var(--data-blue)"></span><span class="tier-legend-name">Tier 1</span><span class="tier-legend-desc">— Inbound</span></span>
+      <span class="tier-legend-item"><span class="tier-legend-dot" style="background:var(--deep-space)"></span><span class="tier-legend-name">Tier 2</span><span class="tier-legend-desc">— Trade Show</span></span>
+      <span class="tier-legend-item"><span class="tier-legend-dot" style="background:var(--xanthous)"></span><span class="tier-legend-name">Tier 3</span><span class="tier-legend-desc">— Intent</span></span>
+      <span class="tier-legend-item"><span class="tier-legend-dot" style="background:var(--db-300)"></span><span class="tier-legend-name">Tier 4</span><span class="tier-legend-desc">— Good Fit</span></span>
     </div>
-  </div>
-
-  <div class="tier-legend">
-    <span style="font-size:11px;font-weight:600;color:var(--gs-muted);text-transform:uppercase;letter-spacing:0.07em;margin-right:8px;align-self:center">Prospect Buckets:</span>
-    <span class="tier-legend-item"><span class="tier-legend-dot" style="background:var(--t1)"></span><span class="tier-legend-name">Tier 1</span><span class="tier-legend-desc">— Inbound (Web Demo, High Intent)</span></span>
-    <span class="tier-legend-item"><span class="tier-legend-dot" style="background:var(--t2)"></span><span class="tier-legend-name">Tier 2</span><span class="tier-legend-desc">— Trade Show (Attended events)</span></span>
-    <span class="tier-legend-item"><span class="tier-legend-dot" style="background:var(--t3)"></span><span class="tier-legend-name">Tier 3</span><span class="tier-legend-desc">— Intent (High Lead Score signals)</span></span>
-    <span class="tier-legend-item"><span class="tier-legend-dot" style="background:var(--t4)"></span><span class="tier-legend-name">Tier 4</span><span class="tier-legend-desc">— Good Fit (Champify, Expiry-based)</span></span>
-  </div>
-
-  <div class="metric-row">
-    <div class="metric-card accent"><div class="metric-label">Total Prospects</div><div class="metric-value" id="m-total">3,354</div><div class="metric-sub">Excl. Evan White records</div></div>
-    <div class="metric-card accent"><div class="metric-label">YTD 2026</div><div class="metric-value" id="m-ytd">3,354</div><div class="metric-sub">Jan – May 5, 2026</div></div>
-    <div class="metric-card green"><div class="metric-label">Open Pipeline</div><div class="metric-value" id="m-open">829</div><div class="metric-sub">Across 5 active stages</div></div>
-    <div class="metric-card green"><div class="metric-label">Closed Qualified</div><div class="metric-value" id="m-qual">534</div><div class="metric-sub" id="m-qual-pct-sub">15.9% conversion</div></div>
-    <div class="metric-card red"><div class="metric-label">Disqualified</div><div class="metric-value" id="m-dq">1,990</div><div class="metric-sub" id="m-dq-pct-sub">59.3% of all</div></div>
-    <div class="metric-card amber"><div class="metric-label">Closed Won ACV</div><div class="metric-value">$1.68M</div><div class="metric-sub">75 deals, $22.4K avg</div></div>
-  </div>
-
-  <div class="chart-grid chart-grid-2">
-    <div class="chart-card">
-      <div class="chart-card-title">Tier mix — YTD 2026</div>
-      <div class="chart-card-sub">Jan – Apr 24, 2026</div>
-      <div class="legend">
-        <span class="legend-item"><span class="legend-dot" style="background:var(--t1)"></span>T1 Inbound 39%</span>
-        <span class="legend-item"><span class="legend-dot" style="background:var(--t2)"></span>T2 Trade Show 4%</span>
-        <span class="legend-item"><span class="legend-dot" style="background:var(--t4)"></span>T4 Good Fit 57%</span>
-      </div>
-      <div class="chart-wrap" style="height:210px"><canvas id="c_ytd_donut" role="img" aria-label="YTD tier donut">T4 57%, T1 39%, T2 4%</canvas></div>
-    </div>
-    <div class="chart-card">
-      <div class="chart-card-title">Monthly volume by tier</div>
-      <div class="chart-card-sub">Sep 2025 – Apr 2026 (filtered)</div>
-      <div class="legend">
-        <span class="legend-item"><span class="legend-dot" style="background:var(--t1)"></span>T1 Inbound</span>
-        <span class="legend-item"><span class="legend-dot" style="background:var(--t2)"></span>T2 Trade Show</span>
-        <span class="legend-item"><span class="legend-dot" style="background:var(--t3)"></span>T3 Intent</span>
-        <span class="legend-item"><span class="legend-dot" style="background:var(--t4)"></span>T4 Good Fit</span>
-      </div>
-      <div class="chart-wrap" style="height:210px"><canvas id="c_tier_month" role="img" aria-label="Monthly tier volumes">Monthly tiers</canvas></div>
-    </div>
-  </div>
-
-  <div class="chart-grid chart-grid-2">
-    <div class="chart-card">
-      <div class="chart-card-title">Conversion rate by tier</div>
-      <div class="chart-card-sub">% Qualified vs % Disqualified</div>
-      <div class="chart-wrap" style="height:190px"><canvas id="c_conv_tier" role="img" aria-label="Tier conversion rates">Tier conv</canvas></div>
-    </div>
-    <div class="chart-card">
-      <div class="chart-card-title">Conversion rate by ICP</div>
-      <div class="chart-card-sub">Enterprise & Mid-Market ICPs lead</div>
-      <div class="chart-wrap" style="height:190px"><canvas id="c_conv_icp" role="img" aria-label="ICP conversion rates">ICP conv</canvas></div>
-    </div>
-  </div>
-</div>
-
-<!-- ══ PIPELINE ══ -->
-<div class="section" id="section-pipeline">
-  <div class="callout"><strong>Open pipeline snapshot.</strong> 701 active prospects across 6 stages. Research is largest (281, 40%); Outreach (189) and New (192) close behind.</div>
-  <div class="metric-row">
-    <div class="metric-card accent"><div class="metric-label">Total Open</div><div class="metric-value">829</div><div class="metric-sub">Non-closed prospects</div></div>
-    <div class="metric-card"><div class="metric-label">New</div><div class="metric-value">237</div><div class="metric-sub">Not yet contacted</div></div>
-    <div class="metric-card"><div class="metric-label">Research</div><div class="metric-value">339</div><div class="metric-sub">51% of open pipeline</div></div>
-    <div class="metric-card"><div class="metric-label">Outreach</div><div class="metric-value">183</div><div class="metric-sub">19% of open pipeline</div></div>
-    <div class="metric-card"><div class="metric-label">Discovery</div><div class="metric-value">55</div><div class="metric-sub">Active discovery calls</div></div>
-    <div class="metric-card amber"><div class="metric-label">On Hold</div><div class="metric-value">12</div><div class="metric-sub">Paused</div></div>
-  </div>
-  <div class="chart-grid chart-grid-2">
-    <div class="chart-card">
-      <div class="chart-card-title">Open pipeline by stage</div>
-      <div class="chart-card-sub">All active records</div>
-      <div class="chart-wrap" style="height:200px"><canvas id="c_pipeline_stage" role="img" aria-label="Pipeline by stage">Pipeline stages</canvas></div>
-    </div>
-    <div class="chart-card">
-      <div class="chart-card-title">Open pipeline by tier</div>
-      <div class="chart-card-sub">Stacked — open stage counts per tier</div>
-      <div class="legend">
-        <span class="legend-item"><span class="legend-dot" style="background:#378ADD"></span>New</span>
-        <span class="legend-item"><span class="legend-dot" style="background:#7F77DD"></span>Research</span>
-        <span class="legend-item"><span class="legend-dot" style="background:#1D9E75"></span>Outreach</span>
-        <span class="legend-item"><span class="legend-dot" style="background:#BA7517"></span>Discovery</span>
-        <span class="legend-item"><span class="legend-dot" style="background:#888780"></span>On Hold</span>
-      </div>
-      <div class="chart-wrap" style="height:200px"><canvas id="c_pipeline_tier" role="img" aria-label="Pipeline by tier">Pipeline tier</canvas></div>
-    </div>
-  </div>
-
-  <div class="section-header">Stage Distribution — % of All Records by Prospect Bucket</div>
-  <div class="tier-legend">
-    <span style="font-size:11px;font-weight:600;color:var(--gs-muted);text-transform:uppercase;letter-spacing:0.07em;margin-right:8px;align-self:center">Stage Legend:</span>
-    <span class="tier-legend-item"><span class="tier-legend-dot" style="background:#378ADD"></span><span class="tier-legend-name">New</span><span class="tier-legend-desc">— Assigned, not yet worked</span></span>
-    <span class="tier-legend-item"><span class="tier-legend-dot" style="background:#7F77DD"></span><span class="tier-legend-name">Research</span><span class="tier-legend-desc">— Being researched before contact</span></span>
-    <span class="tier-legend-item"><span class="tier-legend-dot" style="background:#1D9E75"></span><span class="tier-legend-name">Outreach</span><span class="tier-legend-desc">— Active contact attempts</span></span>
-    <span class="tier-legend-item"><span class="tier-legend-dot" style="background:#BA7517"></span><span class="tier-legend-name">Discovery</span><span class="tier-legend-desc">— Discovery call scheduled/held</span></span>
-    <span class="tier-legend-item"><span class="tier-legend-dot" style="background:#888780"></span><span class="tier-legend-name">On Hold</span><span class="tier-legend-desc">— Temporarily paused</span></span>
-    <span class="tier-legend-item"><span class="tier-legend-dot" style="background:#639922"></span><span class="tier-legend-name">Closed/Qualified</span><span class="tier-legend-desc">— Opp opened</span></span>
-    <span class="tier-legend-item"><span class="tier-legend-dot" style="background:#E24B4A"></span><span class="tier-legend-name">Closed/DQ</span><span class="tier-legend-desc">— Disqualified</span></span>
-  </div>
-  <div class="chart-grid chart-grid-2">
-    <div class="chart-card">
-      <div class="chart-card-title">Stage % by tier</div>
-      <div class="chart-card-sub">100% stacked — stage mix within each tier</div>
-      <div class="chart-wrap" style="height:250px"><canvas id="c_stage_pct_tier" role="img" aria-label="Stage pct by tier">Stage pct tier</canvas></div>
-    </div>
-    <div class="chart-card">
-      <div class="chart-card-title">Stage % by ICP</div>
-      <div class="chart-card-sub">100% stacked — ICP vs Non-ICP stage mix</div>
-      <div class="chart-wrap" style="height:250px"><canvas id="c_stage_pct_icp" role="img" aria-label="Stage pct by ICP">Stage pct ICP</canvas></div>
-    </div>
-  </div>
-</div>
-
-<!-- ══ CONVERSION ══ -->
-<div class="section" id="section-conversion">
-  <div class="callout callout-success"><strong>T1 Inbound converts at 28%</strong> — 312 qualified out of 1,085 records. Web Demo Request remains the highest-volume, highest-quality source.</div>
-  <div class="callout callout-danger"><strong>Champify:</strong> 1,217 YTD records — 2.5% qual rate (31 qualified). The Property Casualty Expired & Life Insurance Expired pipelines show 0% qualification.</div>
-  <div class="chart-grid chart-grid-2">
-    <div class="chart-card">
-      <div class="chart-card-title">Qual & DQ rate by tier</div>
-      <div class="legend"><span class="legend-item"><span class="legend-dot" style="background:#1D9E75"></span>Qual %</span><span class="legend-item"><span class="legend-dot" style="background:#E24B4A"></span>DQ %</span></div>
-      <div class="chart-wrap" style="height:230px"><canvas id="c_conv_tier2" role="img" aria-label="Conv by tier">Conv tier</canvas></div>
-    </div>
-    <div class="chart-card">
-      <div class="chart-card-title">Qual & DQ rate by ICP</div>
-      <div class="legend"><span class="legend-item"><span class="legend-dot" style="background:#1D9E75"></span>Qual %</span><span class="legend-item"><span class="legend-dot" style="background:#E24B4A"></span>DQ %</span></div>
-      <div class="chart-wrap" style="height:230px"><canvas id="c_conv_icp2" role="img" aria-label="Conv by ICP">Conv ICP</canvas></div>
-    </div>
-  </div>
-  <div class="chart-grid chart-grid-1">
-    <div class="chart-card">
-      <div class="chart-card-title">Qual rate by record type (Prospect Origin)</div>
-      <div class="chart-card-sub">% reaching Closed/Qualified — with volume context</div>
-      <div class="chart-wrap" style="height:210px"><canvas id="c_conv_origin" role="img" aria-label="Conv by origin">Conv origin</canvas></div>
-    </div>
-  </div>
-  <div class="section-header">Conversion Detail Table</div>
-  <div class="chart-card"><table class="data-table"><thead><tr><th>Segment</th><th>Type</th><th>Total</th><th>Qualified</th><th>Qual %</th><th>Disqualified</th><th>DQ %</th><th>Open</th></tr></thead><tbody id="convTableBody"></tbody></table></div>
-</div>
-
-<!-- ══ DQ ══ -->
-<div class="section" id="section-dq">
-  <div class="callout callout-warn"><strong>Unresponsive (614 records YTD) is #1 every month.</strong> Click any reason bucket to drill into individual prospects. Champify-sourced prospects drive most of the Unresponsive DQ volume.</div>
-  <div class="metric-row">
-    <div class="metric-card red"><div class="metric-label">Total DQ</div><div class="metric-value" id="dq-total">1,990</div><div class="metric-sub">Across all prospect records</div></div>
-    <div class="metric-card red" style="cursor:pointer" onclick="openDrillDown('Unresponsive')" title="Click to see prospects"><div class="metric-label">Unresponsive <span style="font-size:10px;opacity:0.7">↗</span></div><div class="metric-value">829</div><div class="metric-sub">41.7% of DQs — click to drill in</div></div>
-    <div class="metric-card amber" style="cursor:pointer" onclick="openDrillDown('Not Government Focused')" title="Click to see prospects"><div class="metric-label">Not Govt Focused <span style="font-size:10px;opacity:0.7">↗</span></div><div class="metric-value">271</div><div class="metric-sub">13.6% of DQs — click to drill in</div></div>
-    <div class="metric-card amber" style="cursor:pointer" onclick="openDrillDown('False Lead')" title="Click to see prospects"><div class="metric-label">False Lead <span style="font-size:10px;opacity:0.7">↗</span></div><div class="metric-value">328</div><div class="metric-sub">16.5% of DQs — click to drill in</div></div>
-    <div class="metric-card" style="cursor:pointer" onclick="openDrillDown('Not a Decision Maker')" title="Click to see prospects"><div class="metric-label">Not Decision Maker <span style="font-size:10px;opacity:0.7">↗</span></div><div class="metric-value">83</div><div class="metric-sub">4.2% of DQs — click to drill in</div></div>
-    <div class="metric-card" style="cursor:pointer" onclick="openDrillDown('Budget')" title="Click to see prospects"><div class="metric-label">Budget <span style="font-size:10px;opacity:0.7">↗</span></div><div class="metric-value">35</div><div class="metric-sub">1.8% of DQs — click to drill in</div></div>
-  </div>
-  <div class="chart-grid chart-grid-2">
-    <div class="chart-card">
-      <div class="chart-card-title">DQ reason distribution</div>
-      <div class="chart-card-sub" style="color:#1A6DC0;font-weight:500">↓ Click a segment to see individual prospects</div>
-      <div class="chart-wrap" style="height:230px"><canvas id="c_dq_donut" role="img" aria-label="DQ reasons — click to drill in" style="cursor:pointer">DQ reasons</canvas></div>
-    </div>
-    <div class="chart-card">
-      <div class="chart-card-title">DQ reasons — MoM trend</div>
-      <div class="chart-card-sub">Stacked by reason · click any bar segment to drill in</div>
-      <div class="chart-wrap" style="height:220px"><canvas id="c_dq_mom" role="img" aria-label="DQ MoM" style="cursor:pointer">DQ MoM</canvas></div>
-      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px">
-        <span style="font-size:11px;color:var(--gs-muted);align-self:center;margin-right:4px">Drill into:</span>
-        <button onclick="openDrillDown('Unresponsive')" style="font-size:11px;padding:3px 10px;border-radius:12px;border:1.5px solid #E24B4A;background:transparent;color:#E24B4A;cursor:pointer">Unresponsive</button>
-        <button onclick="openDrillDown('Not Government Focused')" style="font-size:11px;padding:3px 10px;border-radius:12px;border:1.5px solid #BA7517;background:transparent;color:#BA7517;cursor:pointer">Not Govt Focused</button>
-        <button onclick="openDrillDown('False Lead')" style="font-size:11px;padding:3px 10px;border-radius:12px;border:1.5px solid #378ADD;background:transparent;color:#378ADD;cursor:pointer">False Lead</button>
-        <button onclick="openDrillDown('Other')" style="font-size:11px;padding:3px 10px;border-radius:12px;border:1.5px solid #888780;background:transparent;color:#64748B;cursor:pointer">Other</button>
-        <button onclick="openDrillDown('Not a Decision Maker')" style="font-size:11px;padding:3px 10px;border-radius:12px;border:1.5px solid #7F77DD;background:transparent;color:#7F77DD;cursor:pointer">Not Decision Maker</button>
-        <button onclick="openDrillDown('Only Bids Focused')" style="font-size:11px;padding:3px 10px;border-radius:12px;border:1.5px solid #1D9E75;background:transparent;color:#1D9E75;cursor:pointer">Only Bids Focused</button>
-        <button onclick="openDrillDown('Budget')" style="font-size:11px;padding:3px 10px;border-radius:12px;border:1.5px solid #97C459;background:transparent;color:#639922;cursor:pointer">Budget</button>
-        <button onclick="openDrillDown('Unsubscribed')" style="font-size:11px;padding:3px 10px;border-radius:12px;border:1.5px solid #D4537E;background:transparent;color:#D4537E;cursor:pointer">Unsubscribed</button>
-      </div>
-    </div>
-  </div>
-  <div class="chart-grid chart-grid-1">
-    <div class="chart-card">
-      <div class="chart-card-title">Unresponsive trend (MoM)</div>
-      <div class="chart-card-sub">Peaked at 236 in Feb 2026 — declining since</div>
-      <div class="chart-wrap" style="height:160px"><canvas id="c_dq_unresponsive" role="img" aria-label="Unresponsive trend">Unresponsive</canvas></div>
-    </div>
-  </div>
-
-  <!-- DRILL-DOWN PANEL -->
-  <div id="dqDrillPanel" style="display:none;margin-top:20px">
-    <div class="chart-card">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px">
-        <div>
-          <div class="chart-card-title" id="dqDrillTitle">Prospects — Drill</div>
-          <div class="chart-card-sub" id="dqDrillSub">Click any chart to filter</div>
-        </div>
-        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-          <input id="dqSearch" type="text" placeholder="Search prospect, account, rep..." style="font-size:12px;padding:5px 10px;border-radius:6px;border:0.5px solid var(--gs-border);width:240px;background:var(--gs-surface);color:var(--gs-text)">
-          <select id="dqRepFilter" style="font-size:12px;padding:5px 8px;border-radius:6px;border:0.5px solid var(--gs-border);background:var(--gs-surface);color:var(--gs-text)" onchange="renderDrillTable()">
-            <option value="">All reps</option>
-          </select>
-          <button style="font-size:12px;padding:5px 12px;border-radius:6px;border:0.5px solid var(--gs-border);background:transparent;cursor:pointer;color:var(--gs-muted)" onclick="closeDrillDown()">✕ Close</button>
-        </div>
-      </div>
-      <div style="font-size:12px;color:var(--gs-muted);margin-bottom:10px;display:flex;gap:20px;flex-wrap:wrap" id="dqDrillStats"></div>
-      <div style="overflow-x:auto">
-        <table class="data-table" style="font-size:12px">
-          <thead>
-            <tr>
-              <th>Prospect</th>
-              <th>Account</th>
-              <th>Rep</th>
-              <th>Tier</th>
-              <th>ICP</th>
-              <th>Origin</th>
-              <th>Stage</th>
-              <th>DQ Reason</th>
-              <th>Opp Outcome</th>
-              <th>Age (hrs)</th>
-              <th>Created</th>
-              <th>📧</th>
-              <th>🤝</th>
-            </tr>
-          </thead>
-          <tbody id="dqDrillBody" style="font-size:12px"></tbody>
-        </table>
-      </div>
-      <div style="margin-top:10px;font-size:12px;color:var(--gs-muted);display:flex;justify-content:space-between;align-items:center">
-        <span id="dqDrillCount"></span>
-        <div style="display:flex;gap:6px">
-          <button id="dqPrevBtn" onclick="dqChangePage(-1)" class="filter-btn">← Prev</button>
-          <span id="dqPageInfo" style="padding:5px 10px;font-size:12px;color:var(--gs-muted)"></span>
-          <button id="dqNextBtn" onclick="dqChangePage(1)" class="filter-btn">Next →</button>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ══ ACV ══ -->
-<div class="section" id="section-acv">
-  <div class="callout callout-success"><strong>$838K ACV</strong> from 37 Closed Won deals YTD. T1 Inbound dominates: $822K (98%) from 36 deals. T4 Champify-sourced only 1 deal ($16K).</div>
-  <div class="metric-row">
-    <div class="metric-card green"><div class="metric-label">Total ACV</div><div class="metric-value">$838K</div><div class="metric-sub">37 Closed Won opps</div></div>
-    <div class="metric-card green"><div class="metric-label">Avg Deal Size</div><div class="metric-value">$22.7K</div><div class="metric-sub">Per Closed Won opp</div></div>
-    <div class="metric-card accent"><div class="metric-label">Top Tier ACV</div><div class="metric-value">$822K</div><div class="metric-sub">T1 Inbound — 36 deals</div></div>
-    <div class="metric-card accent"><div class="metric-label">Top ICP ACV</div><div class="metric-value">$461K</div><div class="metric-sub">Non-ICP — 24 deals</div></div>
-    <div class="metric-card amber"><div class="metric-label">Best Avg Deal</div><div class="metric-value">$57K</div><div class="metric-sub">Strategic ICP avg ($228K÷4)</div></div>
-  </div>
-  <div class="chart-grid chart-grid-2">
-    <div class="chart-card">
-      <div class="chart-card-title">ACV by tier</div>
-      <div class="chart-card-sub">Closed Won revenue from prospect pipeline</div>
-      <div class="chart-wrap" style="height:210px"><canvas id="c_acv_tier" role="img" aria-label="ACV by tier">ACV tier</canvas></div>
-    </div>
-    <div class="chart-card">
-      <div class="chart-card-title">ACV by ICP segment</div>
-      <div class="chart-card-sub">Enterprise ICP punches above its weight</div>
-      <div class="chart-wrap" style="height:210px"><canvas id="c_acv_icp" role="img" aria-label="ACV by ICP">ACV ICP</canvas></div>
-    </div>
-  </div>
+    <div class="metric-row" id="overviewKPIs"></div>
     <div class="chart-grid chart-grid-2">
-    <div class="chart-card">
-      <div class="chart-card-title">Qualified prospects → Opp outcome</div>
-      <div class="chart-card-sub">Of 517 prospects that closed Qualified, where did the linked Opportunity land?</div>
-      <div class="chart-wrap" style="height:230px"><canvas id="c_qual_opp_outcome" role="img" aria-label="Qualified opportunity outcome — click to drill in" style="cursor:pointer">Qual opp outcome</canvas></div>
+      <div class="chart-card"><div class="chart-card-title">Prospect volume by created month</div><div class="chart-card-sub">Qualified · Disqualified · Still open</div><div class="chart-wrap"><canvas id="chMonthly"></canvas></div></div>
+      <div class="chart-card"><div class="chart-card-title">Qualification rate by month</div><div class="chart-card-sub">Closed/Qualified ÷ prospects created that month</div><div class="chart-wrap"><canvas id="chQualRate"></canvas></div></div>
     </div>
-    <div class="chart-card">
-      <div class="chart-card-title">Opp outcome by tier</div>
-      <div class="chart-card-sub">Where do qualified prospects land by source tier</div>
-      <div class="chart-wrap" style="height:230px"><canvas id="c_opp_tier" role="img" aria-label="Opp outcome by tier — click to drill in" style="cursor:pointer">Opp tier</canvas></div>
+    <div class="chart-grid chart-grid-2">
+      <div class="chart-card"><div class="chart-card-title">Tier mix</div><div class="chart-card-sub">Share of prospects by bucket</div><div class="chart-wrap"><canvas id="chTier"></canvas></div></div>
+      <div class="chart-card"><div class="chart-card-title">ICP mix</div><div class="chart-card-sub">Account fit profile</div><div class="chart-wrap"><canvas id="chIcp"></canvas></div></div>
     </div>
   </div>
-  <div class="section-header">ACV Detail by Segment</div>
-  <div class="chart-card"><table class="data-table"><thead><tr><th>Segment</th><th>Type</th><th>Deals Won</th><th>Total ACV</th><th>Avg Deal</th><th>Qual Rate</th><th>ACV / Prospect</th></tr></thead><tbody id="acvTableBody"></tbody></table></div>
+
+  <!-- FUNNEL -->
+  <div class="section" id="section-funnel">
+    <div class="section-title">Current pipeline stage</div>
+    <div class="metric-row" id="funnelKPIs"></div>
+    <div class="chart-grid chart-grid-2">
+      <div class="chart-card"><div class="chart-card-title">Where prospects sit today</div><div class="chart-card-sub">Count by current stage</div><div class="chart-wrap"><canvas id="chStage"></canvas></div></div>
+      <div class="chart-card"><div class="chart-card-title">Tier mix by created month</div><div class="chart-card-sub">Stacked volume</div><div class="chart-wrap"><canvas id="chTierMonth"></canvas></div></div>
+    </div>
+    <div class="chart-grid chart-grid-1">
+      <div class="chart-card"><div class="chart-card-title">Qualification &amp; disqualification rate by tier</div><div class="chart-card-sub">% of each tier closing qualified vs disqualified</div><div class="chart-wrap"><canvas id="chTierRates"></canvas></div></div>
+    </div>
+  </div>
+
+  <!-- DQ -->
+  <div class="section" id="section-dq">
+    <div class="section-title">Disqualification analysis</div>
+    <div class="metric-row" id="dqKPIs"></div>
+    <div class="chart-grid chart-grid-2">
+      <div class="chart-card"><div class="chart-card-title">Disqualification reasons</div><div class="chart-card-sub">&ldquo;Unresonsive&rdquo; misspelling merged into Unresponsive</div><div class="chart-wrap tall"><canvas id="chDqReasons"></canvas></div></div>
+      <div class="chart-card"><div class="chart-card-title">DQ reasons by month</div><div class="chart-card-sub">Stacked, by created month</div><div class="chart-wrap tall"><canvas id="chDqMonth"></canvas></div></div>
+    </div>
+    <div class="section-title" style="margin-top:8px">Disqualified prospect drill-down</div>
+    <div class="tbl-wrap" id="drillWrap">
+      <div class="tbl-toolbar">
+        <input type="text" id="drillSearch" placeholder="Search account or contact…">
+        <select id="drillRep"><option value="">All reps</option></select>
+        <select id="drillReason"><option value="">All DQ reasons</option></select>
+        <select id="drillTier"><option value="">All tiers</option></select>
+        <span class="tbl-count" id="drillCount"></span>
+      </div>
+      <div style="overflow-x:auto"><table class="data">
+        <thead><tr><th>Account</th><th>Contact</th><th>Rep</th><th>Tier</th><th>ICP</th><th>Origin</th><th>DQ Reason</th><th>Age</th><th>Created</th></tr></thead>
+        <tbody id="drillBody"></tbody>
+      </table></div>
+      <div class="pager" id="drillPager"></div>
+    </div>
+  </div>
+
+  <!-- OPP & ACV -->
+  <div class="section" id="section-opp">
+    <div class="section-title">Opportunities &amp; ACV</div>
+    <div class="note-inline" id="oppNote" style="display:none"></div>
+    <div class="metric-row" id="oppKPIs"></div>
+    <div class="chart-grid chart-grid-2">
+      <div class="chart-card"><div class="chart-card-title">Opportunity stage funnel</div><div class="chart-card-sub">Count of opportunities by current stage</div><div class="chart-wrap tall"><canvas id="chOppStage"></canvas></div></div>
+      <div class="chart-card"><div class="chart-card-title">ACV by stage</div><div class="chart-card-sub">Annual contract value in pipeline, by stage</div><div class="chart-wrap tall"><canvas id="chOppAcv"></canvas></div></div>
+    </div>
+    <div class="chart-grid chart-grid-2">
+      <div class="chart-card"><div class="chart-card-title">Closed-Won ACV by close month</div><div class="chart-card-sub">Booked annual contract value</div><div class="chart-wrap"><canvas id="chWonTrend"></canvas></div></div>
+      <div class="chart-card"><div class="chart-card-title">Closed-Won ACV by tier</div><div class="chart-card-sub">For opportunities linked to a pipeline prospect</div><div class="chart-wrap"><canvas id="chWonTier"></canvas></div></div>
+    </div>
+  </div>
+
+  <!-- SPEED -->
+  <div class="section" id="section-speed">
+    <div class="section-title">Speed to lead</div>
+    <div class="metric-row" id="speedKPIs"></div>
+    <div class="chart-grid chart-grid-2">
+      <div class="chart-card"><div class="chart-card-title">New → Outreach (avg hrs)</div><div class="chart-card-sub">Average Total Time - New, by created month</div><div class="chart-wrap"><canvas id="chN2O"></canvas></div></div>
+      <div class="chart-card"><div class="chart-card-title">Outreach → Discovery (avg hrs)</div><div class="chart-card-sub">Average Total Time - Outreach, by created month</div><div class="chart-wrap"><canvas id="chO2D"></canvas></div></div>
+    </div>
+  </div>
+
+  <!-- REPS -->
+  <div class="section" id="section-reps">
+    <div class="section-title">Rep performance</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:12px">Team grouping uses a built-in name lookup; reps not in the lookup default to Mid Market. Speed columns average each rep's per-stage time accumulators.</div>
+    <div class="tbl-wrap" id="repWrap">
+      <div style="overflow-x:auto"><table class="data">
+        <thead><tr><th>Rep</th><th>Team</th><th>Total</th><th>Qualified</th><th>Qual %</th><th>New→Out (h)</th><th>Out→Disc (h)</th><th>Top DQ</th><th>DQ %</th></tr></thead>
+        <tbody id="repBody"></tbody>
+      </table></div>
+    </div>
+  </div>
+
+  <div class="footer-note" id="footerNote"></div>
 </div>
 
-<!-- ══ SPEED ══ -->
-<div class="section" id="section-speed">
-  <div class="callout callout-success"><strong>Speed improved 87% YTD.</strong> New → Outreach fell from 186h (Jan '26) to 25h (May '26). Outreach duration dropped from 176h to 26h. </div>
-  <div class="metric-row">
-    <div class="metric-card green"><div class="metric-label">May '26 N→Outreach</div><div class="metric-value">25h</div><div class="metric-sub">Down from 186h Jan '26</div></div>
-    <div class="metric-card green"><div class="metric-label">May '26 Outreach Dur.</div><div class="metric-value">26h</div><div class="metric-sub">Down from 176h Jan '26</div></div>
-    <div class="metric-card amber"><div class="metric-label">YTD Avg N→O</div><div class="metric-value">98h</div><div class="metric-sub">5-mo weighted (YTD 2026)</div></div>
-    <div class="metric-card amber"><div class="metric-label">YTD Avg Outreach</div><div class="metric-value">157h</div><div class="metric-sub">5-mo weighted (YTD 2026)</div></div>
-  </div>
-  <div class="chart-grid chart-grid-2">
-    <div class="chart-card">
-      <div class="chart-card-title">Avg New → Outreach (MoM)</div>
-      <div class="chart-card-sub">Hours in New stage before first touch</div>
-      <div class="chart-wrap" style="height:210px"><canvas id="c_speed_n2o" role="img" aria-label="N to O speed">N→O</canvas></div>
+<!-- ══ UPLOAD MODAL ══ -->
+<div class="modal-overlay" id="uploadModal">
+  <div class="modal-card">
+    <div class="modal-head">
+      <div><h2>Update dashboard data</h2><p>Drop today's report exports — the dashboard rebuilds from them.</p></div>
+      <button class="modal-close" onclick="closeModal()">×</button>
     </div>
-    <div class="chart-card">
-      <div class="chart-card-title">Avg Outreach duration (MoM)</div>
-      <div class="chart-card-sub">Hours in Outreach before advancing</div>
-      <div class="chart-wrap" style="height:210px"><canvas id="c_speed_o2d" role="img" aria-label="Outreach duration">O→D</canvas></div>
+    <div class="modal-body">
+      <div class="dropzone" id="dropzone">
+        <div class="dropzone-icon">↑</div>
+        <div class="dropzone-title">Drop a report CSV here</div>
+        <div class="dropzone-sub">or <b>click to choose a file</b> · prospect or opportunity report, auto-detected</div>
+        <input type="file" id="fileInput" accept=".csv,text/csv" multiple style="display:none">
+      </div>
+
+      <div class="slot" id="slot-prospect">
+        <div class="slot-icon">P</div>
+        <div class="slot-body">
+          <div class="slot-title">Prospect report <span class="badge badge-wait" id="badge-prospect">needed</span></div>
+          <div class="slot-meta" id="meta-prospect">Pipeline, tiers, disqualification, speed, reps.</div>
+          <button class="slot-clear hidden" id="clear-prospect" onclick="clearSlot('prospect')">Remove</button>
+        </div>
+      </div>
+      <div class="slot" id="slot-opp">
+        <div class="slot-icon">$</div>
+        <div class="slot-body">
+          <div class="slot-title">Opportunity report <span class="badge badge-wait" id="badge-opp">optional</span></div>
+          <div class="slot-meta" id="meta-opp">Outcomes &amp; ACV. Unlocks the Opportunities &amp; ACV tab.</div>
+          <button class="slot-clear hidden" id="clear-opp" onclick="clearSlot('opp')">Remove</button>
+        </div>
+      </div>
+
+      <div class="modal-notices" id="modalNotices"></div>
+
+      <details class="export-help">
+        <summary>How to export these reports from Salesforce</summary>
+        <ol>
+          <li>Open the report → dropdown <code>▾</code> → <strong>Export</strong>.</li>
+          <li>Choose <strong>Details Only</strong>, format <strong>.csv</strong>, then Export.</li>
+          <li>Drop both files here (prospect report and opportunity report).</li>
+        </ol>
+      </details>
     </div>
-  </div>
-  <div class="chart-grid chart-grid-1">
-    <div class="chart-card">
-      <div class="chart-card-title">Speed by record type</div>
-      <div class="legend"><span class="legend-item"><span class="legend-dot" style="background:#378ADD"></span>New→Outreach avg</span><span class="legend-item"><span class="legend-dot" style="background:#7F77DD"></span>Outreach duration avg</span></div>
-      <div class="chart-wrap" style="height:210px"><canvas id="c_speed_origin" role="img" aria-label="Speed by origin">Speed origin</canvas></div>
+    <div class="modal-foot">
+      <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" id="refreshBtn" onclick="refreshDashboard()" disabled>Refresh dashboard</button>
     </div>
   </div>
 </div>
-
-<!-- ══ REPS ══ -->
-<div class="section" id="section-reps">
-  <div class="callout"><strong>Direct Salesforce aggregation by OwnerId.</strong> Evan White records excluded. Jose Delgado (48% qual!) and Kris Hodgen now included.</div>
-  <div class="filter-row">
-    <span style="font-size:12px;color:var(--gs-muted);align-self:center">Team:</span>
-    <button class="filter-btn active" onclick="filterReps('all',this)">All</button>
-    <button class="filter-btn" onclick="filterReps('Mid Market',this)">Mid Market</button>
-    <button class="filter-btn" onclick="filterReps('Strategic A',this)">Strategic A</button>
-    <button class="filter-btn" onclick="filterReps('Strategic B',this)">Strategic B</button>
-  </div>
-  <div class="chart-card"><table class="data-table"><thead><tr><th>Rep</th><th>Team</th><th>Records</th><th>Qual</th><th>Qual %</th><th>Avg N→O</th><th style="min-width:90px"></th><th>Avg Outreach</th><th style="min-width:90px"></th></tr></thead><tbody id="repTableBody"></tbody></table></div>
-</div>
-
-<!-- ══ COACHING ══ -->
-<div class="section" id="section-coaching">
-  <div class="callout"><strong>AI-generated coaching insights</strong> based on each rep's prospect data — qualification rates, DQ patterns, speed metrics, and volume vs. team benchmarks. Filter by team or individual.</div>
-  <div class="filter-row">
-    <span style="font-size:12px;color:var(--gs-muted);align-self:center">Team:</span>
-    <button class="filter-btn active" onclick="filterCoaching('all',this)">All</button>
-    <button class="filter-btn" onclick="filterCoaching('Mid Market',this)">Mid Market</button>
-    <button class="filter-btn" onclick="filterCoaching('Strategic A',this)">Strategic A</button>
-    <button class="filter-btn" onclick="filterCoaching('Strategic B',this)">Strategic B</button>
-  </div>
-  <div id="coachingGrid" class="coaching-grid"></div>
-</div>
-
-</div><!-- /main -->
 
 <script>
-// ── DATA ──
-const MONTHS_ALL = ["2025-09","2025-10","2025-11","2025-12","2026-01","2026-02","2026-03","2026-04","2026-05","2026-06","2026-07"];
-const MONTH_LABELS = {"2025-09":"Sep '25","2025-10":"Oct '25","2025-11":"Nov '25","2025-12":"Dec '25","2026-01":"Jan '26","2026-02":"Feb '26","2026-03":"Mar '26","2026-04":"Apr '26","2026-05":"May '26","2026-06":"Jun '26","2026-07":"Jul '26"};
+"use strict";
+/* ════════════════════════════════════════════════════════════════
+   GovSpend Prospect & Opportunity Dashboard — v6 (two-CSV, brand-compliant)
+   Source of truth: uploaded Salesforce CSV exports.
+   • Prospect report  → pipeline, tiers, DQ, speed, reps
+   • Opportunity report → outcomes & ACV, joined on Prospect # (P-####)
+   ════════════════════════════════════════════════════════════════ */
 
-const MONTHLY_DATA = {"2025-09":{"total":0,"qual":0,"dq":0,"qual_pct":0.0,"dq_pct":0.0,"tiers":{},"icps":{},"dq_reasons":{}},"2025-10":{"total":0,"qual":0,"dq":0,"qual_pct":0.0,"dq_pct":0.0,"tiers":{},"icps":{},"dq_reasons":{}},"2025-11":{"total":0,"qual":0,"dq":0,"qual_pct":0.0,"dq_pct":0.0,"tiers":{},"icps":{},"dq_reasons":{}},"2025-12":{"total":0,"qual":0,"dq":0,"qual_pct":0.0,"dq_pct":0.0,"tiers":{},"icps":{},"dq_reasons":{}},"2026-01":{"total":802,"qual":97,"dq":563,"tiers":{"Tier 1 (Inbound)":264,"Tier 2 (Trade Show)":20,"Tier 4 (Good Fit)":518},"icps":{"Enterprise ICP":88,"Strategic ICP":169,"Mid-Market ICP":25,"Non-ICP":520},"dq_reasons":{"Unknown":2,"Budget":10,"Competitor":4,"False Lead":79,"Not a Decision Maker":35,"Not Government Focused":84,"Only Bids Focused":8,"Other":118,"Unresponsive":212,"Unsubscribed":11},"qual_pct":12.1,"dq_pct":70.2},"2026-02":{"total":819,"qual":86,"dq":598,"tiers":{"Tier 1 (Inbound)":240,"Tier 2 (Trade Show)":20,"Tier 4 (Good Fit)":559},"icps":{"Enterprise ICP":46,"Strategic ICP":161,"Mid-Market ICP":27,"Non-ICP":585},"dq_reasons":{"Budget":8,"Competitor":1,"False Lead":79,"Not a Decision Maker":19,"Not Government Focused":97,"Only Bids Focused":4,"Other":105,"Unresponsive":281,"Unsubscribed":4},"qual_pct":10.5,"dq_pct":73.0},"2026-03":{"total":392,"qual":83,"dq":231,"tiers":{"Tier 1 (Inbound)":238,"Tier 2 (Trade Show)":25,"Tier 4 (Good Fit)":129},"icps":{"Enterprise ICP":34,"Strategic ICP":78,"Mid-Market ICP":24,"Non-ICP":256},"dq_reasons":{"Budget":6,"Competitor":1,"False Lead":38,"Not a Decision Maker":10,"Not Government Focused":33,"Only Bids Focused":13,"Other":48,"Unresponsive":79,"Unsubscribed":3},"qual_pct":21.2,"dq_pct":58.9},"2026-04":{"total":521,"qual":117,"dq":277,"tiers":{"Tier 1 (Inbound)":267,"Tier 2 (Trade Show)":83,"Tier 4 (Good Fit)":171},"icps":{"Enterprise ICP":46,"Strategic ICP":144,"Mid-Market ICP":32,"Non-ICP":298},"dq_reasons":{"Budget":3,"Competitor":3,"False Lead":55,"Not a Decision Maker":10,"Not Government Focused":25,"Only Bids Focused":9,"Other":45,"Unresponsive":126,"Unsubscribed":1},"qual_pct":22.5,"dq_pct":53.2},"2026-05":{"total":392,"qual":62,"dq":198,"tiers":{"Tier 1 (Inbound)":200,"Tier 2 (Trade Show)":55,"Tier 4 (Good Fit)":137},"icps":{"Enterprise ICP":43,"Strategic ICP":82,"Mid-Market ICP":17,"Non-ICP":250},"dq_reasons":{"Automation Expired":1,"Budget":5,"Competitor":1,"False Lead":40,"Not a Decision Maker":7,"Not Government Focused":24,"Only Bids Focused":5,"Other":23,"Unresponsive":88,"Unsubscribed":4},"qual_pct":15.8,"dq_pct":50.5},"2026-06":{"total":411,"qual":87,"dq":122,"tiers":{"Tier 1 (Inbound)":272,"Tier 2 (Trade Show)":77,"Tier 4 (Good Fit)":62},"icps":{"Enterprise ICP":25,"Strategic ICP":65,"Mid-Market ICP":19,"Non-ICP":302},"dq_reasons":{"Automation Expired":2,"Budget":3,"False Lead":37,"Not a Decision Maker":2,"Not Government Focused":8,"Only Bids Focused":5,"Other":21,"Unresponsive":43,"Unsubscribed":1},"qual_pct":21.2,"dq_pct":29.7},"2026-07":{"total":17,"qual":2,"dq":1,"tiers":{"Tier 1 (Inbound)":13,"Tier 4 (Good Fit)":4},"icps":{"Strategic ICP":1,"Mid-Market ICP":2,"Non-ICP":14},"dq_reasons":{"Only Bids Focused":1},"qual_pct":11.8,"dq_pct":5.9}};
-
-const SPEED_DATA = {"2026-01":{"n2o":198.9,"o2d":180.4},"2026-02":{"n2o":112.7,"o2d":244.4},"2026-03":{"n2o":154.8,"o2d":157.8},"2026-04":{"n2o":131.4,"o2d":196.3},"2026-05":{"n2o":174.1,"o2d":261.1},"2026-06":{"n2o":61.8,"o2d":147.6},"2026-07":{"n2o":null,"o2d":null}};
-
-const REP_DATA = [
-  {name:"Keelan Richer",team:"Mid Market",total:439,qual:58,n2o:76.5,o2d:173.1,dq_top:"Unresponsive",dq_pct:58},
-  {name:"Jake Affeldt",team:"Mid Market",total:390,qual:56,n2o:39.7,o2d:119.7,dq_top:"Unresponsive",dq_pct:54},
-  {name:"Jamie Dolnick",team:"Mid Market",total:264,qual:50,n2o:67.7,o2d:246.4,dq_top:"Unresponsive",dq_pct:54},
-  {name:"Eric Swedler",team:"Mid Market",total:234,qual:28,n2o:83.3,o2d:205.6,dq_top:"Unresponsive",dq_pct:53},
-  {name:"Blake Cornett",team:"Mid Market",total:228,qual:31,n2o:66.9,o2d:199.4,dq_top:"Other",dq_pct:27},
-  {name:"Bryce Gilgallon",team:"Mid Market",total:188,qual:51,n2o:66.8,o2d:389.5,dq_top:"False Lead",dq_pct:46},
-  {name:"Christopher Larson",team:"Mid Market",total:84,qual:5,n2o:342.9,o2d:0,dq_top:"Other",dq_pct:24},
-  {name:"Jordan Sharaf",team:"Mid Market",total:67,qual:4,n2o:162.3,o2d:47.9,dq_top:"Other",dq_pct:55},
-  {name:"Gilbert Butler",team:"Mid Market",total:66,qual:19,n2o:41.3,o2d:187.9,dq_top:"Unresponsive",dq_pct:50},
-  {name:"Mayra Ramirez",team:"Mid Market",total:50,qual:0,n2o:336.4,o2d:39.0,dq_top:"False Lead",dq_pct:77},
-  {name:"Tyler Owen",team:"Mid Market",total:48,qual:12,n2o:757.1,o2d:12.4,dq_top:"Unresponsive",dq_pct:77},
-  {name:"Sean Williams",team:"Mid Market",total:44,qual:10,n2o:36.1,o2d:363.8,dq_top:"False Lead",dq_pct:44},
-  {name:"Ryan Levy",team:"Mid Market",total:43,qual:5,n2o:61.6,o2d:96.9,dq_top:"False Lead",dq_pct:75},
-  {name:"Connor Molloy",team:"Mid Market",total:43,qual:3,n2o:3.7,o2d:21.1,dq_top:"False Lead",dq_pct:67},
-  {name:"Mark Owen",team:"Mid Market",total:41,qual:11,n2o:41.2,o2d:137.8,dq_top:"Unresponsive",dq_pct:70},
-  {name:"Jonathan Silverstone",team:"Mid Market",total:38,qual:5,n2o:491.9,o2d:83.4,dq_top:"False Lead",dq_pct:86},
-  {name:"Hayley Lane",team:"Mid Market",total:37,qual:22,n2o:142.8,o2d:272.8,dq_top:"Unresponsive",dq_pct:45},
-  {name:"Baxter Knight",team:"Mid Market",total:32,qual:0,n2o:275.6,o2d:0,dq_top:"False Lead",dq_pct:100},
-  {name:"Jessica Thompson",team:"Mid Market",total:26,qual:0,n2o:17.4,o2d:0,dq_top:"Other",dq_pct:95},
-  {name:"Nate Van De Graff",team:"Mid Market",total:25,qual:1,n2o:91.8,o2d:163.8,dq_top:"\u2014",dq_pct:0},
-  {name:"Mara Chotiner",team:"Mid Market",total:24,qual:0,n2o:651.7,o2d:0,dq_top:"False Lead",dq_pct:100},
-  {name:"Erika Flynn",team:"Mid Market",total:19,qual:7,n2o:47.9,o2d:0.1,dq_top:"False Lead",dq_pct:80},
-  {name:"Jace Short",team:"Mid Market",total:17,qual:0,n2o:236.5,o2d:724.5,dq_top:"False Lead",dq_pct:50},
-  {name:"Stephanie Zuluaga",team:"Mid Market",total:17,qual:0,n2o:450.8,o2d:0,dq_top:"\u2014",dq_pct:0},
-  {name:"Kayla Maldonado",team:"Mid Market",total:17,qual:0,n2o:495.2,o2d:0,dq_top:"False Lead",dq_pct:100},
-  {name:"Marc Digeronimo",team:"Mid Market",total:15,qual:1,n2o:49.5,o2d:0,dq_top:"\u2014",dq_pct:0},
-  {name:"Shannon Boudreaux",team:"Mid Market",total:14,qual:0,n2o:1481.5,o2d:1939.7,dq_top:"False Lead",dq_pct:85},
-  {name:"Tiffany Grover",team:"Mid Market",total:14,qual:3,n2o:68.6,o2d:0,dq_top:"Other",dq_pct:67},
-  {name:"Steven Miner",team:"Mid Market",total:12,qual:0,n2o:2191.7,o2d:0,dq_top:"False Lead",dq_pct:58},
-  {name:"Jaden Trujillo",team:"Mid Market",total:9,qual:0,n2o:79.3,o2d:0,dq_top:"Unresponsive",dq_pct:100},
-  {name:"Brian Mooney",team:"Mid Market",total:9,qual:0,n2o:0,o2d:0,dq_top:"\u2014",dq_pct:0},
-  {name:"Chris Dennis",team:"Mid Market",total:8,qual:3,n2o:125.3,o2d:36.4,dq_top:"False Lead",dq_pct:40},
-  {name:"Connor Duddy",team:"Mid Market",total:8,qual:0,n2o:100.7,o2d:0,dq_top:"\u2014",dq_pct:0},
-  {name:"Murphy Allen",team:"Mid Market",total:8,qual:2,n2o:81.3,o2d:312.9,dq_top:"Other",dq_pct:100},
-  {name:"Kyle Latham",team:"Mid Market",total:7,qual:0,n2o:144.7,o2d:0,dq_top:"False Lead",dq_pct:67},
-  {name:"Lori Strauss",team:"Mid Market",total:7,qual:1,n2o:92.2,o2d:66.2,dq_top:"Other",dq_pct:50},
-  {name:"Jonathan Ross",team:"Mid Market",total:6,qual:1,n2o:113.2,o2d:0,dq_top:"Unresponsive",dq_pct:80},
-  {name:"Kelly Weed",team:"Mid Market",total:6,qual:0,n2o:560,o2d:168,dq_top:"False Lead",dq_pct:100},
-  {name:"Alexander Oakley",team:"Strategic A",total:105,qual:25,n2o:229.9,o2d:183.1,dq_top:"Other",dq_pct:35},
-  {name:"Cory Kozlin",team:"Strategic A",total:91,qual:9,n2o:127.9,o2d:389.9,dq_top:"False Lead",dq_pct:54},
-  {name:"Kris Hodgen",team:"Strategic A",total:37,qual:11,n2o:165.7,o2d:85.5,dq_top:"False Lead",dq_pct:90},
-  {name:"Dan King",team:"Strategic A",total:20,qual:9,n2o:72.1,o2d:102.0,dq_top:"Other",dq_pct:40},
-  {name:"Jose Delgado",team:"Strategic A",total:13,qual:9,n2o:130.6,o2d:3.2,dq_top:"Not a Decision Maker",dq_pct:50},
-  {name:"Corey Monfordini",team:"Strategic B",total:116,qual:12,n2o:127.2,o2d:464.9,dq_top:"Unresponsive",dq_pct:36},
-  {name:"Michael Roxin",team:"Strategic B",total:76,qual:7,n2o:143.7,o2d:201.4,dq_top:"Unresponsive",dq_pct:46},
-  {name:"Shawn Young",team:"Strategic B",total:74,qual:21,n2o:80.1,o2d:211.0,dq_top:"Unresponsive",dq_pct:47},
-  {name:"Pedro Hurtado",team:"Strategic B",total:69,qual:11,n2o:137.0,o2d:241.7,dq_top:"Other",dq_pct:52},
-  {name:"James Biesinger",team:"Strategic B",total:69,qual:7,n2o:222.0,o2d:130.3,dq_top:"False Lead",dq_pct:44},
-  {name:"Cameron Collins",team:"Strategic B",total:38,qual:18,n2o:46.6,o2d:75.8,dq_top:"False Lead",dq_pct:56},
-  {name:"Lauren Barbour",team:"Strategic B",total:25,qual:5,n2o:18.6,o2d:300.5,dq_top:"Other",dq_pct:30}
-];
-
-// Benchmarks
-const BENCH = {
-  n2o_good: 100, n2o_warn: 300,
-  o2d_good: 200, o2d_warn: 400,
-  qual_good: 20, qual_warn: 10,
+/* ── Prospect field map ── */
+const FIELDS = {
+  owner:{label:'Owner / Rep',headers:['Prospect: Owner Name','Owner Name','Owner']},
+  origin:{label:'Prospect Origin',headers:['Prospect Origin','Origin']},
+  tier:{label:'Tier',headers:['Tier']},
+  stage:{label:'Stage',headers:['Stage']},
+  pid:{label:'Prospect #',headers:['Prospect: Prospect','Prospect']},
+  contact:{label:'Contact',headers:['Contact']},
+  account:{label:'Account',headers:['Account','Account Name']},
+  icp:{label:'ICP',headers:['ICP (Account)','ICP']},
+  bizAge:{label:'Age (hours)',headers:['Business Age Hours','Business Age (Hours)']},
+  created:{label:'Created Date',headers:['Prospect: Created Date','Created Date']},
+  modified:{label:'Last Modified',headers:['Prospect: Last Modified Date']},
+  tNew:{label:'Total Time - New',headers:['Total Time - New']},
+  tOutreach:{label:'Total Time - Outreach',headers:['Total Time - Outreach']},
+  qualOpp:{label:'Qualified Opportunity',headers:['Qualified Opportunity']},
+  dqReason:{label:'Disqualified Reason',headers:['Disqualified Reason']},
+};
+/* ── Opportunity field map ── */
+const OPP_FIELDS = {
+  pid:{headers:['Prospect: Prospect','Prospect']},
+  oppName:{headers:['Qualified Opportunity: Opportunity Name','Opportunity Name']},
+  oppCreated:{headers:['Qualified Opportunity: Created Date']},
+  stage:{headers:['Qualified Opportunity: Stage','Stage']},
+  acv:{headers:['Qualified Opportunity: Annual Contract Value','Annual Contract Value','Amount']},
+  closeDate:{headers:['Qualified Opportunity: Close Date','Close Date']},
+  oppOwner:{headers:['Qualified Opportunity: Opportunity Owner','Opportunity Owner']},
 };
 
-// ── MONTH FILTER STATE ──
-let selectedMonths = new Set(MONTHS_ALL); // default: all
+const TIER_MAP={'Tier 1 (Inbound)':'T1','Tier 2 (Trade Show)':'T2','Tier 3 (Intent)':'T3','Tier 4 (Good Fit)':'T4'};
+const TIER_LABEL={T1:'Tier 1 (Inbound)',T2:'Tier 2 (Trade Show)',T3:'Tier 3 (Intent)',T4:'Tier 4 (Good Fit)'};
+const TIER_SHORT={T1:'T1 Inbound',T2:'T2 Trade Show',T3:'T3 Intent',T4:'T4 Good Fit'};
+const STAGE_MAP={'New':'NEW','Automation Started':'NEW','Research':'RES','Outreach':'OUT','Discovery':'DIS','On Hold':'HLD','Closed/Qualified':'CQ','Closed/Disqualified':'CD'};
+const STAGE_LABEL={NEW:'New',RES:'Research',OUT:'Outreach',DIS:'Discovery',HLD:'On Hold',CQ:'Closed/Qualified',CD:'Closed/Disqualified'};
+const OPEN_STAGES=['NEW','RES','OUT','DIS','HLD'];
+const ICP_MAP={'Enterprise ICP':'ENT','Strategic ICP':'STR','Mid-Market ICP':'MM','Non-ICP':'NIC'};
+const ICP_LABEL={ENT:'Enterprise ICP',STR:'Strategic ICP',MM:'Mid-Market ICP',NIC:'Non-ICP'};
+const ORIGIN_MAP={'Web - Demo Request':'Demo','Champify':'Champ','Attended Trade Show':'Trade','Web - High Lead Score':'HiScore','Life Insurance Expired':'LifeExp','Property Casualty Expired':'PropExp','Manually':'Manual','Other':'Other'};
+const ORIGIN_LABEL={Demo:'Web Demo',Champ:'Champify',Trade:'Trade Show',HiScore:'High Lead Score',LifeExp:'Life Ins. Expired',PropExp:'P&C Expired',Manual:'Manual',Other:'Other'};
+const DQ_FIX={'Unresonsive':'Unresponsive'};
 
-function setPreset(preset, btn) {
-  document.querySelectorAll('.month-btn.preset').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  document.querySelectorAll('.month-btn[data-month]').forEach(b=>b.classList.remove('active'));
-  if(preset==='all') selectedMonths = new Set(MONTHS_ALL);
-  else if(preset==='ytd') selectedMonths = new Set(MONTHS_ALL.filter(m=>m.startsWith('2026')));
-  else if(preset==='q1') selectedMonths = new Set(['2026-01','2026-02','2026-03']);
-  refreshAll();
+/* ── Brand-derived chart palette (Data Blue / Deep Space / Xanthous + tints) ── */
+const C = {blue:'#0076DE',blue2:'#3392E5',blue3:'#80BBEF',space:'#303650',space2:'#5B6075',space3:'#9A9DAC',gold:'#FFC44D',gold2:'#FFD071',gray:'#C9CCD6'};
+const TIER_COLOR={T1:C.blue,T2:C.space,T3:C.gold,T4:C.blue3};
+const ICP_COLOR={ENT:C.blue,STR:C.space,MM:C.gold,NIC:C.space3};
+const DQ_RAMP=[C.blue,C.space,C.gold,C.blue2,C.space2,C.gold2,C.blue3,C.space3,'#FFDD94',C.gray];
+const OPP_OPEN_ORDER=['Not Started','Opportunity Identified','Demo/Needs Analysis','Trial','Proposal Sent/Negotiating','Finalizing Contract'];
+const OPP_STAGE_COLOR={'Closed Won':C.blue,'Closed Lost':C.space,'Finalizing Contract':C.blue2,'Proposal Sent/Negotiating':C.blue3,'Trial':C.gold,'Demo/Needs Analysis':C.gold2,'Opportunity Identified':C.space3,'Not Started':C.gray};
+function oppStageColor(s){return OPP_STAGE_COLOR[s]||C.space3;}
+
+const STRAT_A=['Alexander Oakley','Cory Kozlin','Kris Hodgen','Dan King','Jose Delgado'];
+const STRAT_B=['Corey Monfordini','Shawn Young','Michael Roxin','Pedro Hurtado','James Biesinger','Cameron Collins','Lauren Barbour'];
+function teamFor(n){if(STRAT_A.includes(n))return'Strategic A';if(STRAT_B.includes(n))return'Strategic B';return'Mid Market';}
+const BENCH={n2o_good:100,n2o_warn:300,o2d_good:200,o2d_warn:400,qual_good:20,qual_warn:10};
+const LS_KEY='gs_dashboard_v6';
+
+/* ── State ── */
+let slots={prospect:null, opp:null}; // each: {name, rows, headers, map}
+let MODEL=null, selectedMonths=new Set(), charts={}, drillPage=0;
+const DRILL_PAGE_SIZE=50;
+
+/* ════════ INTAKE ════════ */
+function readFileSmart(file,cb,err){
+  const r=new FileReader();
+  r.onerror=()=>err('Could not read '+file.name);
+  r.onload=()=>{const b=r.result;let t;try{t=new TextDecoder('utf-8',{fatal:true}).decode(b);}catch(e){try{t=new TextDecoder('windows-1252').decode(b);}catch(e2){t=new TextDecoder().decode(b);}}cb(t);};
+  r.readAsArrayBuffer(file);
 }
-
-function toggleMonth(btn) {
-  // Clear preset buttons when manually selecting
-  document.querySelectorAll('.month-btn.preset').forEach(b=>b.classList.remove('active'));
-  const m = btn.dataset.month;
-  if(selectedMonths.has(m)) { selectedMonths.delete(m); btn.classList.remove('active'); }
-  else { selectedMonths.add(m); btn.classList.add('active'); }
-  if(selectedMonths.size===0) { selectedMonths=new Set(MONTHS_ALL); setPreset('all',document.querySelectorAll('.month-btn.preset')[0]); return; }
-  refreshAll();
+function norm(s){return (s||'').toLowerCase().replace(/\s+/g,' ').trim();}
+function autoMap(headers,fieldset){
+  const by={};headers.forEach(h=>by[norm(h)]=h);const m={};
+  for(const f in fieldset){m[f]=null;for(const c of fieldset[f].headers){if(by[norm(c)]){m[f]=by[norm(c)];break;}}}
+  return m;
 }
-
-function getFilteredMonths() { return MONTHS_ALL.filter(m=>selectedMonths.has(m)); }
-
-function aggregateMonths(months) {
-  const total={total:0,qual:0,dq:0,tiers:{},icps:{},dq_reasons:{}};
-  months.forEach(m=>{
-    const d=MONTHLY_DATA[m];
-    if(!d) return;
-    total.total+=d.total; total.qual+=d.qual; total.dq+=d.dq;
-    Object.entries(d.tiers||{}).forEach(([k,v])=>{total.tiers[k]=(total.tiers[k]||0)+v;});
-    Object.entries(d.icps||{}).forEach(([k,v])=>{total.icps[k]=(total.icps[k]||0)+v;});
-    Object.entries(d.dq_reasons||{}).forEach(([k,v])=>{total.dq_reasons[k]=(total.dq_reasons[k]||0)+v;});
+function detectType(headers){
+  const set=new Set(headers.map(norm));
+  if(set.has(norm('Qualified Opportunity: Annual Contract Value'))||(set.has(norm('Qualified Opportunity: Stage'))&&set.has(norm('Qualified Opportunity: Close Date')))) return 'opp';
+  if(set.has(norm('Disqualified Reason'))||(set.has('tier')&&set.has('stage'))||set.has(norm('Prospect: Created Date'))) return 'prospect';
+  return null;
+}
+function handleFiles(fileList){
+  clearModalNotices();
+  Array.from(fileList).forEach(file=>{
+    if(!/\.csv$/i.test(file.name)&&file.type!=='text/csv'){return addModalNotice('err','<strong>'+esc(file.name)+'</strong> isn\u2019t a .csv. Export as <strong>Details Only · .csv</strong>.');}
+    readFileSmart(file,text=>{
+      let parsed;try{parsed=Papa.parse(text,{header:true,skipEmptyLines:'greedy',transformHeader:h=>h.trim()});}catch(e){return addModalNotice('err','Couldn\u2019t parse '+esc(file.name));}
+      const rows=(parsed.data||[]).filter(r=>Object.values(r).some(v=>(v||'').toString().trim()!==''));
+      const headers=(parsed.meta&&parsed.meta.fields?parsed.meta.fields:Object.keys(rows[0]||{})).map(h=>h.trim());
+      const type=detectType(headers);
+      if(!type){return addModalNotice('err','Couldn\u2019t tell what <strong>'+esc(file.name)+'</strong> is. Expected a prospect or opportunity report.');}
+      if(type==='prospect') slots.prospect={name:file.name,rows,headers,map:autoMap(headers,FIELDS)};
+      else slots.opp={name:file.name,rows,headers,map:autoMap(headers,OPP_FIELDS)};
+      renderSlots();
+    },m=>addModalNotice('err',m));
   });
-  total.qual_pct = total.total ? Math.round(total.qual/total.total*1000)/10 : 0;
-  total.dq_pct   = total.total ? Math.round(total.dq/total.total*1000)/10 : 0;
-  return total;
+}
+function renderSlots(){
+  ['prospect','opp'].forEach(k=>{
+    const s=slots[k], slotEl=document.getElementById('slot-'+k), badge=document.getElementById('badge-'+k), meta=document.getElementById('meta-'+k), clr=document.getElementById('clear-'+k);
+    if(s){
+      slotEl.classList.add('filled');badge.className='badge badge-ok';badge.textContent='loaded';clr.classList.remove('hidden');
+      if(k==='prospect'){
+        const dates=s.rows.length;
+        meta.innerHTML='<strong>'+esc(s.name)+'</strong> · '+s.rows.length.toLocaleString()+' rows';
+      } else {
+        const acvH=s.map.acv, stH=s.map.stage;
+        let won=0,wonAcv=0;
+        s.rows.forEach(r=>{if((r[stH]||'').trim()==='Closed Won'){won++;wonAcv+=(parseFloat((r[acvH]||'0').replace(/[, $]/g,''))||0);}});
+        meta.innerHTML='<strong>'+esc(s.name)+'</strong> · '+s.rows.length.toLocaleString()+' opps · '+won+' won ($'+fmtMoney(wonAcv)+')';
+      }
+    } else {
+      slotEl.classList.remove('filled');badge.className='badge badge-wait';badge.textContent=(k==='prospect'?'needed':'optional');clr.classList.add('hidden');
+      meta.innerHTML=(k==='prospect'?'Pipeline, tiers, disqualification, speed, reps.':'Outcomes &amp; ACV. Unlocks the Opportunities &amp; ACV tab.');
+    }
+  });
+  // notices
+  clearModalNotices();
+  if(slots.prospect){
+    const fix=slots.prospect.rows.filter(r=>(r[slots.prospect.map.dqReason]||'').trim()==='Unresonsive').length;
+    if(fix) addModalNotice('info','Cleaned <strong>'+fix+'</strong> rows of the &ldquo;Unresonsive&rdquo; misspelling \u2192 Unresponsive.');
+  }
+  if(slots.prospect&&slots.opp){
+    const ppids=new Set(slots.prospect.rows.map(r=>(r[slots.prospect.map.pid]||'').trim()));
+    const match=slots.opp.rows.filter(r=>ppids.has((r[slots.opp.map.pid]||'').trim())).length;
+    addModalNotice('info','<strong>'+match.toLocaleString()+'</strong> of '+slots.opp.rows.length.toLocaleString()+' opportunities link to a prospect in the pipeline report (joined on Prospect #).');
+  }
+  if(slots.opp&&!slots.prospect) addModalNotice('warn','Add the <strong>prospect report</strong> too — most tabs need it. The opportunity report alone only fills the ACV tab.');
+  document.getElementById('refreshBtn').disabled = !(slots.prospect||slots.opp);
+}
+function clearSlot(k){slots[k]=null;document.getElementById('fileInput').value='';renderSlots();}
+
+/* ════════ MODAL ════════ */
+function openModal(){document.getElementById('uploadModal').classList.add('open');}
+function closeModal(){document.getElementById('uploadModal').classList.remove('open');}
+function addModalNotice(type,html){const d=document.createElement('div');d.className='notice notice-'+type;d.innerHTML='<span>'+(type==='err'?'\u26A0\uFE0F':type==='warn'?'\u26A0\uFE0F':'\u2139\uFE0F')+'</span><span>'+html+'</span>';document.getElementById('modalNotices').appendChild(d);}
+function clearModalNotices(){document.getElementById('modalNotices').innerHTML='';}
+
+/* ════════ MODEL ════════ */
+function parseDate(s){if(!s)return null;s=s.toString().trim();if(!s)return null;let m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);if(m)return new Date(+m[3],+m[1]-1,+m[2]);m=s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);if(m)return new Date(+m[1],+m[2]-1,+m[3]);const d=new Date(s);return isNaN(d.getTime())?null:d;}
+function ym(d){return d?d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'):null;}
+function monthLabel(c){const[y,mo]=c.split('-');return['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][+mo-1]+" '"+y.slice(2);}
+function num(v){const n=parseFloat((v||'').toString().replace(/[, $]/g,''));return isNaN(n)?null:n;}
+function fmtMoney(n){if(n==null)return'0';if(Math.abs(n)>=1e6)return(n/1e6).toFixed(2)+'M';if(Math.abs(n)>=1e3)return(n/1e3).toFixed(1)+'K';return Math.round(n).toLocaleString();}
+
+function buildModel(){
+  const M={prospects:[],opps:[],months:[],monthly:{},speed:{},reps:[],byPid:{},badDates:0,unresonsiveFix:0,asOf:null,hasProspects:false,hasOpps:false};
+
+  if(slots.prospect){
+    M.hasProspects=true;
+    const map=slots.prospect.map, g=(row,f)=>{const h=map[f];return h?(row[h]||'').toString().trim():'';};
+    slots.prospect.rows.forEach(row=>{
+      const created=parseDate(g(row,'created'));if(!created){M.badDates++;return;}
+      let dq=g(row,'dqReason');if(DQ_FIX[dq]){dq=DQ_FIX[dq];M.unresonsiveFix++;}
+      const rec={owner:g(row,'owner')||'\u2014',o:ORIGIN_MAP[g(row,'origin')]||'Other',t:TIER_MAP[g(row,'tier')]||null,s:STAGE_MAP[g(row,'stage')]||null,
+        pid:g(row,'pid'),contact:g(row,'contact'),account:g(row,'account')||'\u2014',i:ICP_MAP[g(row,'icp')]||null,ag:num(g(row,'bizAge')),
+        created,m:ym(created),modified:parseDate(g(row,'modified')),tNew:num(g(row,'tNew')),tOut:num(g(row,'tOutreach')),dq:dq||null,opp:g(row,'qualOpp')};
+      M.prospects.push(rec);if(rec.pid)M.byPid[rec.pid]=rec;
+    });
+  }
+
+  if(slots.opp){
+    M.hasOpps=true;
+    const map=slots.opp.map, g=(row,f)=>{const h=map[f];return h?(row[h]||'').toString().trim():'';};
+    slots.opp.rows.forEach(row=>{
+      const stage=g(row,'stage');const cls=stage==='Closed Won'?'WON':stage==='Closed Lost'?'LOST':'OPEN';
+      const pid=g(row,'pid');const pr=M.byPid[pid]||null;
+      M.opps.push({pid,name:g(row,'oppName'),stage,cls,acv:num(g(row,'acv'))||0,close:parseDate(g(row,'closeDate')),closeM:ym(parseDate(g(row,'closeDate'))),
+        created:parseDate(g(row,'oppCreated')),owner:g(row,'oppOwner'),t:pr?pr.t:null,i:pr?pr.i:null,matched:!!pr});
+    });
+  }
+
+  // months from prospect created (cohort axis)
+  M.months=[...new Set(M.prospects.map(r=>r.m))].sort();
+  M.months.forEach(m=>{M.monthly[m]={total:0,qual:0,dq:0,open:0,tiers:{},icps:{},dq_reasons:{}};});
+  const sp={};M.months.forEach(m=>sp[m]={n:[],o:[]});
+  M.prospects.forEach(r=>{const X=M.monthly[r.m];X.total++;if(r.s==='CQ')X.qual++;else if(r.s==='CD')X.dq++;if(OPEN_STAGES.includes(r.s))X.open++;
+    if(r.t){const l=TIER_LABEL[r.t];X.tiers[l]=(X.tiers[l]||0)+1;}if(r.i){const l=ICP_LABEL[r.i];X.icps[l]=(X.icps[l]||0)+1;}
+    if(r.s==='CD'&&r.dq)X.dq_reasons[r.dq]=(X.dq_reasons[r.dq]||0)+1;
+    if(r.tNew>0)sp[r.m].n.push(r.tNew);if(r.tOut>0)sp[r.m].o.push(r.tOut);});
+  M.months.forEach(m=>{const X=M.monthly[m];X.qual_pct=X.total?+(X.qual/X.total*100).toFixed(1):0;X.dq_pct=X.total?+(X.dq/X.total*100).toFixed(1):0;
+    const a=sp[m];M.speed[m]={n2o:a.n.length?+(a.n.reduce((x,y)=>x+y)/a.n.length).toFixed(1):null,o2d:a.o.length?+(a.o.reduce((x,y)=>x+y)/a.o.length).toFixed(1):null};});
+
+  M.prospects.forEach(r=>{const d=r.modified||r.created;if(d&&(!M.asOf||d>M.asOf))M.asOf=d;});
+  M.opps.forEach(o=>{const d=o.close||o.created;if(d&&(!M.asOf||d>M.asOf))M.asOf=d;});
+  return M;
 }
 
-const PROSPECTS_2026 = [];
-
-// Drill-down state (used by every chart)
-let drillActiveTitle = null;
-let drillFilteredRecs = [];
-let drillPage = 0;
-const DRILL_PAGE_SIZE = 50;
-
-// Display lookup tables
-const TIER_LABEL = {T1:'Tier 1 (Inbound)',T2:'Tier 2 (Trade Show)',T3:'Tier 3 (Intent)',T4:'Tier 4 (Good Fit)'};
-const ICP_LABEL  = {ENT:'Enterprise ICP',MM:'Mid-Market ICP',STR:'Strategic ICP',NIC:'Non-ICP'};
-const STAGE_LABEL = {NEW:'New',RES:'Research',OUT:'Outreach',DIS:'Discovery',HLD:'On Hold',CQ:'Closed/Qualified',CD:'Closed/Disqualified'};
-const ORIGIN_LABEL = {Demo:'Web - Demo Request',Champ:'Champify',Trade:'Trade Show',HiScore:'High Lead Score',LifeExp:'Life Insurance Expired',PropExp:'Property Casualty Expired',Manual:'Manually',Other:'Other'};
-const DQ_LABEL = {UR:'Unresponsive',FL:'False Lead',OT:'Other',NG:'Not Government Focused',ND:'Not a Decision Maker',OB:'Only Bids Focused',BG:'Budget',US:'Unsubscribed',CP:'Competitor'};
-const OPP_LABEL = {CW:'Closed Won',CL:'Closed Lost',DM:'Demo/Needs Analysis',OI:'Opportunity Identified',TR:'Trial',PR:'Proposal Sent/Negotiating',FN:'Finalizing Contract',NS:'Not Started'};
-const DQ_REASON_COLORS = {Unresponsive:'#E24B4A','Not Government Focused':'#BA7517','False Lead':'#378ADD',Other:'#888780','Not a Decision Maker':'#7F77DD','Only Bids Focused':'#1D9E75',Unsubscribed:'#D4537E',Budget:'#97C459',Competitor:'#F09595',Unknown:'#B4B2A9'};
-
-// ── CHART REGISTRY ──
-const charts = {};
-const TC = {x:{ticks:{color:'#64748B',font:{size:11}},grid:{color:'rgba(0,0,0,0.05)'}},y:{ticks:{color:'#64748B',font:{size:11}},grid:{color:'rgba(0,0,0,0.05)'}}};
-const noLeg = {plugins:{legend:{display:false}}};
-const base = {responsive:true,maintainAspectRatio:false};
-
-function mkChart(id,type,data,opts){
-  const ctx=document.getElementById(id); if(!ctx) return;
-  if(charts[id]){charts[id].destroy();}
-  charts[id]=new Chart(ctx,{type,data,options:{...base,...opts}});
-  return charts[id];
+/* ════════ REFRESH (commit) ════════ */
+function refreshDashboard(){
+  MODEL=buildModel();
+  try{localStorage.setItem(LS_KEY,JSON.stringify({slots:{prospect:slots.prospect,opp:slots.opp},ts:Date.now()}));}catch(e){}
+  closeModal();
+  document.getElementById('printBtn').style.display='';
+  selectedMonths=new Set(MODEL.months);
+  buildMonthBar();populateDrillFilters();
+  document.getElementById('headerStatus').innerHTML='As of <b>'+(MODEL.asOf?MODEL.asOf.toLocaleDateString():'\u2014')+'</b> · '+MODEL.prospects.length.toLocaleString()+' prospects'+(MODEL.hasOpps?' · '+MODEL.opps.length.toLocaleString()+' opps':'');
+  document.getElementById('footerNote').textContent='GovSpend Prospect & Opportunity Dashboard v6 · built '+new Date().toLocaleString()+' · '+MODEL.prospects.length.toLocaleString()+' prospects'+(MODEL.hasOpps?', '+MODEL.opps.length.toLocaleString()+' opportunities':'');
+  refreshAll();
 }
 
-// ── FILTER BANNER ──
-function updateBanner() {
-  const banner=document.getElementById('filterBanner');
-  const text=document.getElementById('filterBannerText');
-  const months=getFilteredMonths();
-  if(months.length===MONTHS_ALL.length){banner.classList.remove('visible');return;}
-  banner.classList.add('visible');
-  const labels=months.map(m=>MONTH_LABELS[m]).join(', ');
-  text.textContent=`Showing ${months.length} month${months.length>1?'s':''}: ${labels}`;
-}
+/* ════════ MONTH BAR / TABS ════════ */
+function buildMonthBar(){document.getElementById('monthBtns').innerHTML=MODEL.months.map(m=>`<button class="month-btn active" data-month="${m}" onclick="toggleMonth(this)">${monthLabel(m)}</button>`).join('');document.querySelectorAll('.month-btn.preset').forEach(b=>b.classList.toggle('active',b.dataset.preset==='all'));}
+function setPreset(p,btn){if(!MODEL)return;document.querySelectorAll('.month-btn.preset').forEach(b=>b.classList.remove('active'));btn.classList.add('active');selectedMonths=new Set(p==='ytd'?MODEL.months.filter(m=>m.startsWith('2026')):MODEL.months);syncMonths();refreshAll();}
+function toggleMonth(btn){document.querySelectorAll('.month-btn.preset').forEach(b=>b.classList.remove('active'));const m=btn.dataset.month;if(selectedMonths.has(m))selectedMonths.delete(m);else selectedMonths.add(m);if(!selectedMonths.size){selectedMonths=new Set(MODEL.months);document.querySelector('.month-btn.preset[data-preset="all"]').classList.add('active');}syncMonths();refreshAll();}
+function syncMonths(){document.querySelectorAll('.month-btn[data-month]').forEach(b=>b.classList.toggle('active',selectedMonths.has(b.dataset.month)));}
+function monthsArr(){return MODEL.months.filter(m=>selectedMonths.has(m));}
+function filteredRecs(){return MODEL.prospects.filter(r=>selectedMonths.has(r.m));}
+function isFiltered(){return MODEL.months.length&&selectedMonths.size<MODEL.months.length;}
+function showTab(id,el){document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));el.classList.add('active');document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));document.getElementById('section-'+id).classList.add('active');}
 
-// ── NAV ──
-function showTab(id,el){
-  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
-  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
-  document.getElementById('section-'+id).classList.add('active');
-  el.classList.add('active');
-}
+/* ════════ CHART HELPERS ════════ */
+function chart(id,cfg){if(charts[id]){charts[id].destroy();delete charts[id];}const ctx=document.getElementById(id);if(ctx)charts[id]=new Chart(ctx,cfg);}
+function destroyChart(id){if(charts[id]){charts[id].destroy();delete charts[id];}}
+Chart.defaults.font.family="'Lato',sans-serif";Chart.defaults.color='#5B6075';
+const GRID={color:'#EEF1F5'};
+const baseScales=(st=false)=>({x:{stacked:st,grid:{display:false},ticks:{font:{size:11}}},y:{stacked:st,beginAtZero:true,grid:GRID,ticks:{font:{size:11}}}});
+const legendTop={position:'top',labels:{font:{size:11},boxWidth:12,padding:12,usePointStyle:true,pointStyle:'rectRounded'}};
+function countBy(recs,k){const o={};recs.forEach(r=>{if(r[k])o[r[k]]=(o[r[k]]||0)+1;});return o;}
+function kpiCards(el,cards){document.getElementById(el).innerHTML=cards.map(c=>`<div class="metric-card ${c.cls||'blue'}"><div class="metric-label">${c.label}</div><div class="metric-value">${c.value}</div><div class="metric-sub">${c.sub||''}</div></div>`).join('');}
+function emptyKPI(el,msg){document.getElementById(el).innerHTML=`<div class="empty-state" style="grid-column:1/-1"><div class="es-icon">↑</div><h3>No data yet</h3><p>${msg}</p></div>`;}
 
-// ── REFRESH ALL CHARTS ──
+/* ════════ REFRESH ALL ════════ */
 function refreshAll(){
-  updateBanner();
-  const months = getFilteredMonths();
-  const agg = aggregateMonths(months);
+  if(!MODEL)return;
+  const recs=filteredRecs(),months=monthsArr();
+  const fb=document.getElementById('filterBanner');
+  if(isFiltered()){fb.classList.add('visible');document.getElementById('filterBannerText').textContent=months.map(monthLabel).join(', ')+' \u2014 '+recs.length.toLocaleString()+' prospects';}else fb.classList.remove('visible');
+  renderOverview(recs,months);renderFunnel(recs,months);renderDQ(recs,months);renderOpp();renderSpeed(months);renderReps();
+  drillPage=0;renderDrill();
+}
 
-  // Update overview metrics
-  document.getElementById('m-total').textContent = agg.total.toLocaleString();
-  document.getElementById('m-qual').textContent = agg.qual.toLocaleString();
-  document.getElementById('m-dq').textContent = agg.dq.toLocaleString();
-  document.getElementById('m-qual-pct-sub').textContent = agg.qual_pct + '% conversion';
-  document.getElementById('m-dq-pct-sub').textContent = agg.dq_pct + '% of all';
-  document.getElementById('dq-total').textContent = agg.dq.toLocaleString();
+/* ── OVERVIEW ── */
+function renderOverview(recs,months){
+  const oppWon=MODEL.opps.filter(o=>o.cls==='WON');
+  const wonCount=oppWon.length, wonAcv=oppWon.reduce((s,o)=>s+o.acv,0);
+  if(!MODEL.hasProspects){emptyKPI('overviewKPIs','Click <strong>Update data</strong> and upload the prospect report to populate this view.');
+    document.getElementById('execHeadline').textContent='Upload your reports to populate the dashboard.';document.getElementById('execBullets').innerHTML='';
+    ['chMonthly','chQualRate','chTier','chIcp'].forEach(destroyChart);return;}
+  const total=recs.length,qual=recs.filter(r=>r.s==='CQ').length,dq=recs.filter(r=>r.s==='CD').length,open=recs.filter(r=>OPEN_STAGES.includes(r.s)).length,ytd=recs.filter(r=>r.m&&r.m.startsWith('2026')).length;
+  const qPct=total?(qual/total*100).toFixed(1):0,dPct=total?(dq/total*100).toFixed(1):0;
+  const lost=MODEL.opps.filter(o=>o.cls==='LOST').length;const winRate=(wonCount+lost)?Math.round(wonCount/(wonCount+lost)*100):0;
+  const dqR={};recs.filter(r=>r.s==='CD'&&r.dq).forEach(r=>dqR[r.dq]=(dqR[r.dq]||0)+1);let topR='\u2014',tn=0;for(const k in dqR)if(dqR[k]>tn){tn=dqR[k];topR=k;}
 
-  const ytdMonths = months.filter(m=>m.startsWith('2026'));
-  const ytdAgg = aggregateMonths(ytdMonths);
-  document.getElementById('m-ytd').textContent = ytdAgg.total.toLocaleString();
+  document.getElementById('execHeadline').textContent=
+    `${total.toLocaleString()} prospects · ${qual.toLocaleString()} qualified (${qPct}%)`+
+    (MODEL.hasOpps?` · $${fmtMoney(wonAcv)} closed-won ACV from ${wonCount} deals · ${winRate}% win rate`:` · ${dq.toLocaleString()} disqualified (${dPct}%)`);
+  document.getElementById('execBullets').innerHTML=[
+    {l:'Open Pipeline',v:open.toLocaleString(),s:'Active prospects',c:C.blue3},
+    {l:'Qual. Rate',v:qPct+'%',s:'Closed/Qualified share',c:'#fff'},
+    MODEL.hasOpps?{l:'Closed-Won ACV',v:'$'+fmtMoney(wonAcv),s:wonCount+' deals · $'+fmtMoney(wonCount?wonAcv/wonCount:0)+' avg',c:C.gold}
+                 :{l:'Disqualified',v:dq.toLocaleString(),s:dPct+'% of all',c:C.gold},
+    {l:'Top DQ Reason',v:tn.toLocaleString(),s:topR,c:C.blue3},
+  ].map(b=>`<div class="exec-bullet"><div class="exec-bullet-label">${b.l}</div><div class="exec-bullet-val" style="color:${b.c}">${b.v}</div><div class="exec-bullet-sub">${b.s}</div></div>`).join('');
 
-  // Exec headline
-  document.getElementById('execHeadline').textContent =
-    `${agg.total.toLocaleString()} prospects · ${agg.qual.toLocaleString()} qualified (${agg.qual_pct}%) · $1.63M ACV from 75 Closed Won deals`;
-  document.getElementById('eb-qual-pct').textContent = agg.qual_pct + '%';
+  kpiCards('overviewKPIs',[
+    {label:'Total Prospects',value:total.toLocaleString(),sub:'In current view',cls:'blue'},
+    {label:'YTD 2026',value:ytd.toLocaleString(),sub:'Created in 2026',cls:'blue'},
+    {label:'Open Pipeline',value:open.toLocaleString(),sub:'Active stages',cls:'gold'},
+    {label:'Closed Qualified',value:qual.toLocaleString(),sub:qPct+'% conversion',cls:'blue'},
+    {label:'Disqualified',value:dq.toLocaleString(),sub:dPct+'% of all',cls:'dark'},
+    MODEL.hasOpps?{label:'Closed-Won ACV',value:'$'+fmtMoney(wonAcv),sub:wonCount+' deals',cls:'gold'}
+                 :{label:'Qualified w/ Opp',value:recs.filter(r=>r.s==='CQ'&&r.opp).length.toLocaleString(),sub:'linked',cls:'gold'},
+  ]);
 
-  // YTD donut
-  const ytdT = {t1:0,t2:0,t3:0,t4:0};
-  ytdMonths.forEach(m=>{
-    const t=MONTHLY_DATA[m]?.tiers||{};
-    ytdT.t1+=(t['Tier 1 (Inbound)']||0);
-    ytdT.t2+=(t['Tier 2 (Trade Show)']||0);
-    ytdT.t3+=(t['Tier 3 (Intent)']||0);
-    ytdT.t4+=(t['Tier 4 (Good Fit)']||0);
-  });
-  mkChart('c_ytd_donut','doughnut',{
-    labels:['T1 Inbound','T2 Trade Show','T3 Intent','T4 Good Fit'],
-    datasets:[{data:[ytdT.t1,ytdT.t2,ytdT.t3,ytdT.t4],backgroundColor:['#378ADD','#1D9E75','#BA7517','#7F77DD'],borderWidth:2,borderColor:'#fff'}]
-  },{cutout:'62%',...noLeg,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>{const tot=ytdT.t1+ytdT.t2+ytdT.t3+ytdT.t4;return ' '+c.label+': '+c.raw.toLocaleString()+' ('+(tot?Math.round(c.raw/tot*100):0)+'%)'}}}}});
+  chart('chMonthly',{type:'bar',data:{labels:months.map(monthLabel),datasets:[
+    {label:'Qualified',data:months.map(m=>MODEL.monthly[m].qual),backgroundColor:C.blue,stack:'s'},
+    {label:'Disqualified',data:months.map(m=>MODEL.monthly[m].dq),backgroundColor:C.space,stack:'s'},
+    {label:'Still open',data:months.map(m=>MODEL.monthly[m].open),backgroundColor:C.gold,stack:'s'}]},options:{maintainAspectRatio:false,plugins:{legend:legendTop},scales:baseScales(true)}});
+  chart('chQualRate',{type:'line',data:{labels:months.map(monthLabel),datasets:[
+    {label:'Qual %',data:months.map(m=>MODEL.monthly[m].qual_pct),borderColor:C.blue,backgroundColor:'rgba(0,118,222,0.08)',fill:true,tension:0.3,pointRadius:4,pointBackgroundColor:C.blue},
+    {label:'DQ %',data:months.map(m=>MODEL.monthly[m].dq_pct),borderColor:C.space,backgroundColor:'transparent',fill:false,tension:0.3,pointRadius:4,pointBackgroundColor:C.space}]},options:{maintainAspectRatio:false,plugins:{legend:legendTop},scales:{x:{grid:{display:false},ticks:{font:{size:11}}},y:{beginAtZero:true,grid:GRID,ticks:{callback:v=>v+'%',font:{size:11}}}}}});
+  const tc=countBy(recs,'t');chart('chTier',{type:'doughnut',data:{labels:['T1','T2','T3','T4'].map(t=>TIER_LABEL[t]),datasets:[{data:['T1','T2','T3','T4'].map(t=>tc[t]||0),backgroundColor:['T1','T2','T3','T4'].map(t=>TIER_COLOR[t]),borderWidth:2,borderColor:'#fff'}]},options:{maintainAspectRatio:false,cutout:'58%',plugins:{legend:{position:'right',labels:{font:{size:11},boxWidth:12,padding:10}}}}});
+  const ic=countBy(recs,'i');chart('chIcp',{type:'doughnut',data:{labels:['ENT','STR','MM','NIC'].map(i=>ICP_LABEL[i]),datasets:[{data:['ENT','STR','MM','NIC'].map(i=>ic[i]||0),backgroundColor:['ENT','STR','MM','NIC'].map(i=>ICP_COLOR[i]),borderWidth:2,borderColor:'#fff'}]},options:{maintainAspectRatio:false,cutout:'58%',plugins:{legend:{position:'right',labels:{font:{size:11},boxWidth:12,padding:10}}}}});
+}
 
-  // Monthly stacked tiers
-  mkChart('c_tier_month','bar',{
-    labels:months.map(m=>MONTH_LABELS[m]),
-    datasets:[
-      {label:'T1',data:months.map(m=>MONTHLY_DATA[m]?.tiers?.['Tier 1 (Inbound)']||0),backgroundColor:'#378ADD',stack:'s'},
-      {label:'T2',data:months.map(m=>MONTHLY_DATA[m]?.tiers?.['Tier 2 (Trade Show)']||0),backgroundColor:'#1D9E75',stack:'s'},
-      {label:'T3',data:months.map(m=>MONTHLY_DATA[m]?.tiers?.['Tier 3 (Intent)']||0),backgroundColor:'#BA7517',stack:'s'},
-      {label:'T4',data:months.map(m=>MONTHLY_DATA[m]?.tiers?.['Tier 4 (Good Fit)']||0),backgroundColor:'#7F77DD',stack:'s'},
-    ]
-  },{...noLeg,scales:{x:{...TC.x,stacked:true,ticks:{...TC.x.ticks,maxRotation:45,autoSkip:false}},y:{...TC.y,stacked:true}}});
+/* ── FUNNEL ── */
+function renderFunnel(recs,months){
+  if(!MODEL.hasProspects){emptyKPI('funnelKPIs','Upload the prospect report to see pipeline stages.');['chStage','chTierMonth','chTierRates'].forEach(destroyChart);return;}
+  const order=['NEW','RES','OUT','DIS','HLD','CQ','CD'];const sc=countBy(recs,'s');
+  kpiCards('funnelKPIs',order.slice(0,6).map(s=>({label:STAGE_LABEL[s],value:(sc[s]||0).toLocaleString(),sub:'',cls:s==='CQ'?'blue':s==='CD'?'dark':'gold'})));
+  chart('chStage',{type:'bar',data:{labels:order.map(s=>STAGE_LABEL[s]),datasets:[{label:'Prospects',data:order.map(s=>sc[s]||0),backgroundColor:[C.gold,C.gold2,C.blue2,C.blue3,C.space3,C.blue,C.space]}]},options:{indexAxis:'y',maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{beginAtZero:true,grid:GRID,ticks:{font:{size:11}}},y:{grid:{display:false},ticks:{font:{size:11}}}}}});
+  chart('chTierMonth',{type:'bar',data:{labels:months.map(monthLabel),datasets:['T1','T2','T3','T4'].map(t=>({label:TIER_SHORT[t],data:months.map(m=>MODEL.monthly[m].tiers[TIER_LABEL[t]]||0),backgroundColor:TIER_COLOR[t],stack:'s'}))},options:{maintainAspectRatio:false,plugins:{legend:legendTop},scales:baseScales(true)}});
+  const tiers=['T1','T2','T3','T4'];
+  const qr=tiers.map(t=>{const tot=recs.filter(r=>r.t===t).length;return tot?+(recs.filter(r=>r.t===t&&r.s==='CQ').length/tot*100).toFixed(1):0;});
+  const dr=tiers.map(t=>{const tot=recs.filter(r=>r.t===t).length;return tot?+(recs.filter(r=>r.t===t&&r.s==='CD').length/tot*100).toFixed(1):0;});
+  chart('chTierRates',{type:'bar',data:{labels:tiers.map(t=>TIER_SHORT[t]),datasets:[{label:'Qualified %',data:qr,backgroundColor:C.blue},{label:'Disqualified %',data:dr,backgroundColor:C.space}]},options:{maintainAspectRatio:false,plugins:{legend:legendTop},scales:{x:{grid:{display:false},ticks:{font:{size:11}}},y:{beginAtZero:true,grid:GRID,ticks:{callback:v=>v+'%',font:{size:11}}}}}});
+}
 
-  // Conversion charts
-  const tierKeys=['Tier 1 (Inbound)','Tier 2 (Trade Show)','Tier 3 (Intent)','Tier 4 (Good Fit)'];
-  const tierShort=['T1 Inbound','T2 Trade Show','T3 Intent','T4 Good Fit'];
-  function convByKey(keyFn,keys) {
-    return keys.map(k=>{
-      let tot=0,q=0,dq=0;
-      months.forEach(m=>{
-        const recs=MONTHLY_DATA[m]?.total||0;
-        // Approximate using overall ratios — exact monthly breakdown by tier/ICP not stored
-        // Use aggregate from all-time data
-      });
-      return {k};
-    });
+/* ── DQ ── */
+function renderDQ(recs,months){
+  if(!MODEL.hasProspects){emptyKPI('dqKPIs','Upload the prospect report to analyze disqualifications.');['chDqReasons','chDqMonth'].forEach(destroyChart);document.getElementById('drillBody').innerHTML='';document.getElementById('drillCount').textContent='';document.getElementById('drillPager').innerHTML='';return;}
+  const dqRecs=recs.filter(r=>r.s==='CD');const rc={};dqRecs.forEach(r=>{const k=r.dq||'Unknown';rc[k]=(rc[k]||0)+1;});
+  const sorted=Object.entries(rc).sort((a,b)=>b[1]-a[1]);const rate=recs.length?(dqRecs.length/recs.length*100).toFixed(1):0;
+  kpiCards('dqKPIs',[
+    {label:'Total Disqualified',value:dqRecs.length.toLocaleString(),sub:rate+'% of view',cls:'dark'},
+    {label:'Top Reason',value:sorted[0]?sorted[0][1].toLocaleString():'0',sub:sorted[0]?sorted[0][0]:'\u2014',cls:'dark'},
+    {label:'Unresponsive',value:(rc['Unresponsive']||0).toLocaleString(),sub:'incl. merged misspelling',cls:'gold'},
+    {label:'Distinct Reasons',value:sorted.length,sub:'categories',cls:'blue'},
+  ]);
+  chart('chDqReasons',{type:'bar',data:{labels:sorted.map(s=>s[0]),datasets:[{label:'Count',data:sorted.map(s=>s[1]),backgroundColor:sorted.map((s,i)=>DQ_RAMP[i%DQ_RAMP.length])}]},options:{indexAxis:'y',maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{beginAtZero:true,grid:GRID,ticks:{font:{size:11}}},y:{grid:{display:false},ticks:{font:{size:11}}}}}});
+  const top=sorted.slice(0,6).map(s=>s[0]);
+  chart('chDqMonth',{type:'bar',data:{labels:months.map(monthLabel),datasets:top.map((r,i)=>({label:r,data:months.map(m=>MODEL.monthly[m].dq_reasons[r]||0),backgroundColor:DQ_RAMP[i%DQ_RAMP.length],stack:'s'}))},options:{maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:10,padding:8}}},scales:baseScales(true)}});
+}
+function populateDrillFilters(){
+  const reps=[...new Set(MODEL.prospects.map(r=>r.owner))].sort();
+  const reasons=[...new Set(MODEL.prospects.filter(r=>r.s==='CD'&&r.dq).map(r=>r.dq))].sort();
+  document.getElementById('drillRep').innerHTML='<option value="">All reps</option>'+reps.map(r=>`<option>${esc(r)}</option>`).join('');
+  document.getElementById('drillReason').innerHTML='<option value="">All DQ reasons</option>'+reasons.map(r=>`<option>${esc(r)}</option>`).join('');
+  document.getElementById('drillTier').innerHTML='<option value="">All tiers</option>'+['T1','T2','T3','T4'].map(t=>`<option value="${t}">${TIER_LABEL[t]}</option>`).join('');
+}
+function getDrillRecs(){const s=(document.getElementById('drillSearch').value||'').toLowerCase(),rep=document.getElementById('drillRep').value,rs=document.getElementById('drillReason').value,ti=document.getElementById('drillTier').value;
+  return filteredRecs().filter(r=>r.s==='CD').filter(r=>!rep||r.owner===rep).filter(r=>!rs||r.dq===rs).filter(r=>!ti||r.t===ti).filter(r=>!s||(r.account+' '+r.contact).toLowerCase().includes(s));}
+function renderDrill(){
+  if(!MODEL||!MODEL.hasProspects)return;
+  const recs=getDrillRecs();const pages=Math.max(1,Math.ceil(recs.length/DRILL_PAGE_SIZE));if(drillPage>=pages)drillPage=pages-1;
+  const slice=recs.slice(drillPage*DRILL_PAGE_SIZE,(drillPage+1)*DRILL_PAGE_SIZE);
+  document.getElementById('drillBody').innerHTML=slice.map(r=>{const ac=(r.ag==null)?'var(--text2)':r.ag>300?'var(--deep-space)':'var(--text2)';
+    return `<tr><td><strong>${esc(r.account)}</strong></td><td style="color:var(--text2)">${esc(r.contact)||'\u2014'}</td><td>${esc(r.owner)}</td>
+      <td>${r.t?`<span class="pill pill-blue">${r.t}</span>`:'\u2014'}</td><td>${r.i?ICP_LABEL[r.i]:'\u2014'}</td><td style="color:var(--text2)">${r.o?ORIGIN_LABEL[r.o]:'\u2014'}</td>
+      <td><span class="pill pill-dark">${esc(r.dq)||'\u2014'}</span></td><td style="color:${ac};font-weight:${r.ag>300?'700':'400'}">${r.ag!=null?Math.round(r.ag)+'h':'\u2014'}</td>
+      <td style="font-size:11px;color:var(--muted);white-space:nowrap">${r.created?r.created.toLocaleDateString():'\u2014'}</td></tr>`;}).join('')
+    ||'<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:24px">No disqualified prospects match these filters.</td></tr>';
+  document.getElementById('drillCount').textContent=recs.length.toLocaleString()+' disqualified';
+  document.getElementById('drillPager').innerHTML=`<button ${drillPage===0?'disabled':''} onclick="drillPage=0;renderDrill()">« First</button><button ${drillPage===0?'disabled':''} onclick="drillPage--;renderDrill()">‹ Prev</button><span style="font-size:12px;color:var(--muted)">${drillPage+1} / ${pages}</span><button ${drillPage>=pages-1?'disabled':''} onclick="drillPage++;renderDrill()">Next ›</button><button ${drillPage>=pages-1?'disabled':''} onclick="drillPage=${pages-1};renderDrill()">Last »</button>`;
+}
+function esc(s){return(s==null?'':s.toString()).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+
+/* ── OPPORTUNITIES & ACV ── */
+function renderOpp(){
+  const note=document.getElementById('oppNote');
+  if(!MODEL.hasOpps){
+    note.style.display='none';
+    emptyKPI('oppKPIs','Upload the <strong>opportunity report</strong> via Update data to unlock outcomes &amp; ACV (Closed-Won value, win rate, ACV by stage and tier).');
+    ['chOppStage','chOppAcv','chWonTrend','chWonTier'].forEach(destroyChart);return;
   }
-  // Tier conversion (use static rates — monthly decomposition not available per-tier)
-  const tierQual=[29.7, 16.8, 0.0, 2.8];
-  const tierDQ=[55.2, 31.4, 0.0, 68.2];
-  function convChart(id,labels,qual,dq){
-    mkChart(id,'bar',{labels,datasets:[{label:'Qual %',data:qual,backgroundColor:'#1D9E75'},{label:'DQ %',data:dq,backgroundColor:'#E24B4A'}]},{...noLeg,scales:{x:{...TC.x,ticks:{...TC.x.ticks,maxRotation:0,font:{size:10}}},y:{...TC.y,max:85,ticks:{...TC.y.ticks,callback:v=>v+'%'}}}});
+  const opps=MODEL.opps;
+  note.style.display='flex';
+  const matched=opps.filter(o=>o.matched).length;
+  note.innerHTML='<span>\u2139\uFE0F</span><span>Opportunities are shown across <strong>all close dates</strong> (independent of the created-month filter above). <strong>'+matched.toLocaleString()+'</strong> of '+opps.length.toLocaleString()+' are joined to a pipeline prospect, enabling the tier breakdown.</span>';
+  const won=opps.filter(o=>o.cls==='WON'),lost=opps.filter(o=>o.cls==='LOST'),open=opps.filter(o=>o.cls==='OPEN');
+  const wonAcv=won.reduce((s,o)=>s+o.acv,0),openAcv=open.reduce((s,o)=>s+o.acv,0);
+  const winRate=(won.length+lost.length)?Math.round(won.length/(won.length+lost.length)*100):0;
+  kpiCards('oppKPIs',[
+    {label:'Total Opportunities',value:opps.length.toLocaleString(),sub:'All from qualified prospects',cls:'blue'},
+    {label:'Closed-Won ACV',value:'$'+fmtMoney(wonAcv),sub:won.length+' deals',cls:'gold'},
+    {label:'Avg Won Deal',value:'$'+fmtMoney(won.length?wonAcv/won.length:0),sub:'annual contract value',cls:'gold'},
+    {label:'Win Rate',value:winRate+'%',sub:won.length+' won / '+lost.length+' lost',cls:'blue'},
+    {label:'Open Opps',value:open.length.toLocaleString(),sub:'$'+fmtMoney(openAcv)+' in pipeline',cls:'dark'},
+  ]);
+  // stage funnel
+  const stageCounts={};opps.forEach(o=>stageCounts[o.stage]=(stageCounts[o.stage]||0)+1);
+  const stageOrder=[...OPP_OPEN_ORDER.filter(s=>stageCounts[s]),'Closed Won','Closed Lost'].filter(s=>stageCounts[s]!=null);
+  Object.keys(stageCounts).forEach(s=>{if(!stageOrder.includes(s))stageOrder.splice(stageOrder.length-2,0,s);});
+  chart('chOppStage',{type:'bar',data:{labels:stageOrder,datasets:[{label:'Opportunities',data:stageOrder.map(s=>stageCounts[s]||0),backgroundColor:stageOrder.map(oppStageColor)}]},options:{indexAxis:'y',maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{beginAtZero:true,grid:GRID,ticks:{font:{size:11}}},y:{grid:{display:false},ticks:{font:{size:11}}}}}});
+  // acv by stage
+  const acvByStage={};opps.forEach(o=>acvByStage[o.stage]=(acvByStage[o.stage]||0)+o.acv);
+  chart('chOppAcv',{type:'bar',data:{labels:stageOrder,datasets:[{label:'ACV',data:stageOrder.map(s=>Math.round(acvByStage[s]||0)),backgroundColor:stageOrder.map(oppStageColor)}]},options:{indexAxis:'y',maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>'$'+c.raw.toLocaleString()}}},scales:{x:{beginAtZero:true,grid:GRID,ticks:{callback:v=>'$'+fmtMoney(v),font:{size:11}}},y:{grid:{display:false},ticks:{font:{size:11}}}}}});
+  // won by close month
+  const wonByM={};won.forEach(o=>{if(o.closeM)wonByM[o.closeM]=(wonByM[o.closeM]||0)+o.acv;});
+  const wm=Object.keys(wonByM).sort();
+  chart('chWonTrend',{type:'bar',data:{labels:wm.map(monthLabel),datasets:[{label:'Closed-Won ACV',data:wm.map(m=>Math.round(wonByM[m])),backgroundColor:C.blue}]},options:{maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>'$'+c.raw.toLocaleString()}}},scales:{x:{grid:{display:false},ticks:{font:{size:11}}},y:{beginAtZero:true,grid:GRID,ticks:{callback:v=>'$'+fmtMoney(v),font:{size:11}}}}}});
+  // won acv by tier (joined)
+  const tiers=['T1','T2','T3','T4'];const wonByTier=tiers.map(t=>Math.round(won.filter(o=>o.t===t).reduce((s,o)=>s+o.acv,0)));
+  const unmTier=Math.round(won.filter(o=>!o.t).reduce((s,o)=>s+o.acv,0));
+  chart('chWonTier',{type:'bar',data:{labels:[...tiers.map(t=>TIER_SHORT[t]),'Unmatched'],datasets:[{label:'Closed-Won ACV',data:[...wonByTier,unmTier],backgroundColor:[...tiers.map(t=>TIER_COLOR[t]),C.gray]}]},options:{maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>'$'+c.raw.toLocaleString()}}},scales:{x:{grid:{display:false},ticks:{font:{size:11}}},y:{beginAtZero:true,grid:GRID,ticks:{callback:v=>'$'+fmtMoney(v),font:{size:11}}}}}});
+}
+
+/* ── SPEED ── */
+function renderSpeed(months){
+  if(!MODEL.hasProspects){emptyKPI('speedKPIs','Upload the prospect report to see speed-to-lead.');['chN2O','chO2D'].forEach(destroyChart);return;}
+  const sN=months.map(m=>MODEL.speed[m]?MODEL.speed[m].n2o:null),sO=months.map(m=>MODEL.speed[m]?MODEL.speed[m].o2d:null);
+  const avg=a=>{const v=a.filter(x=>x!=null);return v.length?Math.round(v.reduce((x,y)=>x+y)/v.length):null;};const an=avg(sN),ao=avg(sO);
+  kpiCards('speedKPIs',[
+    {label:'Avg New→Outreach',value:an!=null?an+'h':'\u2014',sub:'Target < '+BENCH.n2o_good+'h',cls:an==null?'blue':an<=BENCH.n2o_good?'blue':an<=BENCH.n2o_warn?'gold':'dark'},
+    {label:'Avg Outreach→Disc',value:ao!=null?ao+'h':'\u2014',sub:'Target < '+BENCH.o2d_good+'h',cls:ao==null?'blue':ao<=BENCH.o2d_good?'blue':ao<=BENCH.o2d_warn?'gold':'dark'},
+    {label:'Months tracked',value:months.length,sub:'In current view',cls:'blue'},
+  ]);
+  chart('chN2O',{type:'line',data:{labels:months.map(monthLabel),datasets:[{label:'Avg hrs',data:sN,borderColor:C.blue,backgroundColor:'rgba(0,118,222,0.08)',fill:true,tension:0.3,pointRadius:4,pointBackgroundColor:C.blue,spanGaps:true}]},options:{maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:11}}},y:{beginAtZero:true,grid:GRID,ticks:{font:{size:11}}}}}});
+  chart('chO2D',{type:'line',data:{labels:months.map(monthLabel),datasets:[{label:'Avg hrs',data:sO,borderColor:C.space,backgroundColor:'rgba(48,54,80,0.08)',fill:true,tension:0.3,pointRadius:4,pointBackgroundColor:C.space,spanGaps:true}]},options:{maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:11}}},y:{beginAtZero:true,grid:GRID,ticks:{font:{size:11}}}}}});
+}
+
+/* ── REPS ── */
+function renderReps(){
+  if(!MODEL.hasProspects){document.getElementById('repBody').innerHTML='<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:28px">Upload the prospect report to see rep performance.</td></tr>';return;}
+  const recs=filteredRecs(),acc={};
+  recs.forEach(r=>{const k=r.owner;if(!acc[k])acc[k]={name:k,team:teamFor(k),total:0,qual:0,dqCount:0,n:[],o:[],dqR:{}};const R=acc[k];R.total++;if(r.s==='CQ')R.qual++;if(r.s==='CD'){R.dqCount++;if(r.dq)R.dqR[r.dq]=(R.dqR[r.dq]||0)+1;}if(r.tNew>0)R.n.push(r.tNew);if(r.tOut>0)R.o.push(r.tOut);});
+  const reps=Object.values(acc).map(R=>{let top='\u2014',tn=0;for(const k in R.dqR)if(R.dqR[k]>tn){tn=R.dqR[k];top=k;}return{name:R.name,team:R.team,total:R.total,qual:R.qual,qualPct:R.total?Math.round(R.qual/R.total*100):0,n2o:R.n.length?Math.round(R.n.reduce((x,y)=>x+y)/R.n.length):null,o2d:R.o.length?Math.round(R.o.reduce((x,y)=>x+y)/R.o.length):null,dq_top:top,dq_pct:R.total?Math.round(R.dqCount/R.total*100):0};});
+  const order={'Mid Market':0,'Strategic A':1,'Strategic B':2};reps.sort((a,b)=>(order[a.team]-order[b.team])||(b.total-a.total));
+  let last=null,html='';
+  reps.forEach(r=>{if(r.team!==last){html+=`<tr><td colspan="9" style="background:var(--ds-100);font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:0.06em;color:var(--text2)">${r.team}</td></tr>`;last=r.team;}
+    const qcls=r.qualPct>=BENCH.qual_good?'pill-blue':r.qualPct>=BENCH.qual_warn?'pill-gold':'pill-dark';
+    html+=`<tr><td><strong>${esc(r.name)}</strong></td><td style="color:var(--text2)">${r.team}</td><td>${r.total.toLocaleString()}</td><td>${r.qual.toLocaleString()}</td><td><span class="pill ${qcls}">${r.qualPct}%</span></td><td>${r.n2o!=null?r.n2o:'\u2014'}</td><td>${r.o2d!=null?r.o2d:'\u2014'}</td><td style="color:var(--text2)">${esc(r.dq_top)}</td><td style="color:var(--deep-space);font-weight:700">${r.dq_pct}%</td></tr>`;});
+  document.getElementById('repBody').innerHTML=html||'<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:24px">No reps in this view.</td></tr>';
+}
+
+/* ════════ WIRING ════════ */
+const dz=document.getElementById('dropzone'),fi=document.getElementById('fileInput');
+dz.addEventListener('click',()=>fi.click());
+dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('drag');});
+dz.addEventListener('dragleave',()=>dz.classList.remove('drag'));
+dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('drag');if(e.dataTransfer.files.length)handleFiles(e.dataTransfer.files);});
+fi.addEventListener('change',e=>{if(e.target.files.length)handleFiles(e.target.files);});
+['drillSearch','drillRep','drillReason','drillTier'].forEach(id=>{const el=document.getElementById(id);el.addEventListener(id==='drillSearch'?'input':'change',()=>{drillPage=0;renderDrill();});});
+document.getElementById('uploadModal').addEventListener('click',e=>{if(e.target.id==='uploadModal')closeModal();});
+
+/* On open: try restore; else show empty dashboard + open modal */
+(function init(){
+  let restored=false;
+  try{
+    const raw=localStorage.getItem(LS_KEY);
+    if(raw){const saved=JSON.parse(raw);if(saved&&saved.slots&&(saved.slots.prospect||saved.slots.opp)){slots=saved.slots;renderSlots();refreshDashboard();restored=true;}}
+  }catch(e){}
+  if(!restored){
+    MODEL=buildModel(); // empty model
+    refreshAll();        // paints empty states
+    openModal();         // prompt upload
   }
-  convChart('c_conv_tier',tierShort,tierQual,tierDQ);
-  convChart('c_conv_icp',['Enterprise','Mid-Market','Strategic','Non-ICP'],[12.4, 39.0, 17.0, 14.5],[40.4, 45.9, 42.6, 67.9]);
-  convChart('c_conv_tier2',tierShort,tierQual,tierDQ);
-  convChart('c_conv_icp2',['Enterprise','Mid-Market','Strategic','Non-ICP'],[12.4, 39.0, 17.0, 14.5],[40.4, 45.9, 42.6, 67.9]);
-  mkChart('c_conv_origin','bar',{
-    labels:['Web Demo','Champify','Trade Show','High Score','Life Ins.','P&C'],
-    datasets:[{label:'Qual %',data:[29.7, 2.9, 16.8, 0.0, 0.0, 3.6],backgroundColor:['#378ADD','#7F77DD','#1D9E75','#BA7517','#E24B4A','#888780']}]
-  },{...noLeg,scales:{x:{...TC.x,ticks:{...TC.x.ticks,maxRotation:20,font:{size:10}}},y:{...TC.y,max:40,ticks:{...TC.y.ticks,callback:v=>v+'%'}}}});
-
-  // DQ chart
-  const dqReasons=['Unresponsive','Not Government Focused','False Lead','Other','Not a Decision Maker','Only Bids Focused','Unsubscribed','Budget','Competitor'];
-  const dqCols=['#E24B4A','#BA7517','#378ADD','#888780','#7F77DD','#1D9E75','#D4537E','#97C459','#F09595'];
-  const dqTotals = dqReasons.map(r=>months.reduce((s,m)=>{
-    const v=MONTHLY_DATA[m]?.dq_reasons?.[r]||0;
-    return s+(r==='Unresponsive'?(v+(MONTHLY_DATA[m]?.dq_reasons?.['Unresonsive']||0)):v);
-  },0));
-  const dqDonutChart = mkChart('c_dq_donut','doughnut',{labels:dqReasons,datasets:[{data:dqTotals,backgroundColor:dqCols,borderWidth:2,borderColor:'#fff'}]},{cutout:'58%',...noLeg,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>{const t=dqTotals.reduce((a,b)=>a+b,0);return ` ${c.label}: ${c.raw} (${t?Math.round(c.raw/t*100):0}%). Click to drill in →`}}}}});
-  if(dqDonutChart){
-    document.getElementById('c_dq_donut').onclick = (e) => {
-      const pts = dqDonutChart.getElementsAtEventForMode(e,'nearest',{intersect:true},true);
-      if(pts.length) { openDrillDown(dqReasons[pts[0].index]); }
-    };
-  }
-  mkChart('c_dq_mom','bar',{
-    labels:months.map(m=>MONTH_LABELS[m]),
-    datasets:dqReasons.map((r,i)=>({label:r,data:months.map(m=>(MONTHLY_DATA[m]?.dq_reasons?.[r]||0)+(r==='Unresponsive'?(MONTHLY_DATA[m]?.dq_reasons?.['Unresonsive']||0):0)),backgroundColor:dqCols[i],stack:'s'}))
-  },{...noLeg,scales:{x:{...TC.x,stacked:true,ticks:{...TC.x.ticks,maxRotation:45,autoSkip:false}},y:{...TC.y,stacked:true}}});
-  mkChart('c_dq_unresponsive','line',{
-    labels:months.map(m=>MONTH_LABELS[m]),
-    datasets:[{label:'Unresponsive',data:months.map(m=>(MONTHLY_DATA[m]?.dq_reasons?.['Unresponsive']||0)+(MONTHLY_DATA[m]?.dq_reasons?.['Unresonsive']||0)),borderColor:'#E24B4A',backgroundColor:'rgba(226,75,74,0.08)',fill:true,tension:0.3,pointRadius:4,pointBackgroundColor:'#E24B4A'}]
-  },{...noLeg,scales:{x:{...TC.x,ticks:{...TC.x.ticks,maxRotation:45,autoSkip:false}},y:{...TC.y}}});
-
-  // Speed
-  mkChart('c_speed_n2o','line',{
-    labels:months.map(m=>MONTH_LABELS[m]),
-    datasets:[{label:'Avg hrs',data:months.map(m=>SPEED_DATA[m]?.n2o||null),borderColor:'#378ADD',backgroundColor:'rgba(55,138,221,0.08)',fill:true,tension:0.3,pointRadius:4,pointBackgroundColor:'#378ADD',spanGaps:true}]
-  },{...noLeg,scales:{x:{...TC.x,ticks:{...TC.x.ticks,maxRotation:45,autoSkip:false}},y:{...TC.y,ticks:{...TC.y.ticks,callback:v=>v+'h'}}}});
-  mkChart('c_speed_o2d','line',{
-    labels:months.map(m=>MONTH_LABELS[m]),
-    datasets:[{label:'Avg hrs',data:months.map(m=>SPEED_DATA[m]?.o2d||null),borderColor:'#7F77DD',backgroundColor:'rgba(127,119,221,0.08)',fill:true,tension:0.3,pointRadius:4,pointBackgroundColor:'#7F77DD',spanGaps:true}]
-  },{...noLeg,scales:{x:{...TC.x,ticks:{...TC.x.ticks,maxRotation:45,autoSkip:false}},y:{...TC.y,ticks:{...TC.y.ticks,callback:v=>v+'h'}}}});
-
-  // Conversion table
-  const cb = document.getElementById('convTableBody');
-  const cvData=[
-    {seg:"T1 Inbound",type:"Tier",total:1494,qual:443,qualPct:29.7,dqPct:55.2},
-    {seg:"T2 Trade Show",type:"Tier",total:280,qual:47,qualPct:16.8,dqPct:31.4},
-    {seg:"T3 Intent",type:"Tier",total:0,qual:0,qualPct:0.0,dqPct:0.0},
-    {seg:"T4 Good Fit",type:"Tier",total:1580,qual:44,qualPct:2.8,dqPct:68.2},
-    {seg:"Enterprise ICP",type:"ICP",total:282,qual:35,qualPct:12.4,dqPct:40.4},
-    {seg:"Strategic ICP",type:"ICP",total:700,qual:119,qualPct:17.0,dqPct:42.6},
-    {seg:"Mid-Market ICP",type:"ICP",total:146,qual:57,qualPct:39.0,dqPct:45.9},
-    {seg:"Non-ICP",type:"ICP",total:2225,qual:323,qualPct:14.5,dqPct:67.9},
-  ];
-  cb.innerHTML='';
-  cvData.forEach(r=>{
-    const dq=Math.round(r.dqPct/100*r.total);
-    cb.innerHTML+=`<tr><td><strong>${r.seg}</strong></td><td><span class="pill ${r.type==='Tier'?'pill-blue':'pill-teal'}">${r.type}</span></td><td>${r.total.toLocaleString()}</td><td>${r.qual.toLocaleString()}</td><td><strong style="color:#0D8C72">${r.qualPct}%</strong></td><td>${dq.toLocaleString()}</td><td style="color:#D63B3B">${r.dqPct}%</td><td style="color:#64748B">${Math.max(0,r.total-r.qual-dq).toLocaleString()}</td></tr>`;
-  });
-
-  // Rep table
-  renderRepTable();
-  renderCoachingCards('all');
-
-
-  // ── Wire drill-down on dynamic charts ──
-  const monthCodes2 = months;
-  attachClickDrill('c_ytd_donut',
-    (idx)=>{const t=['T1','T2','T3','T4'][idx];return r=>r.t===t&&r.cr&&r.cr.startsWith('2026');},
-    (idx)=>'YTD 2026 — '+['T1 Inbound','T2 Trade Show','T3 Intent','T4 Good Fit'][idx],
-    (idx)=>['T1 Inbound','T2 Trade Show','T3 Intent','T4 Good Fit'][idx]+' prospects created in 2026');
-  attachClickDrill('c_tier_month',
-    (idx,ds)=>{const m=monthCodes2[idx]; const t=['T1','T2','T3','T4'][ds]; return r=>r.m===m&&r.t===t;},
-    (idx,ds)=>MONTH_LABELS[monthCodes2[idx]]+' — '+['T1 Inbound','T2 Trade Show','T3 Intent','T4 Good Fit'][ds],
-    (idx,ds)=>['T1 Inbound','T2 Trade Show','T3 Intent','T4 Good Fit'][ds]+' prospects created in '+MONTH_LABELS[monthCodes2[idx]]);
-
-  const tierConvCodes=['T1','T2','T3','T4'];
-  const icpConvCodes=['ENT','MM','STR','NIC'];
-  const icpConvLabels=['Enterprise','Mid-Market','Strategic','Non-ICP'];
-  function convFilter(seg, segCode, ds) {
-    if(seg==='tier') return r => r.t===segCode && (ds===0?r.s==='CQ':r.s==='CD');
-    if(seg==='icp')  return r => r.i===segCode && (ds===0?r.s==='CQ':r.s==='CD');
-  }
-  ['c_conv_tier','c_conv_tier2'].forEach(id=>attachClickDrill(id,
-    (idx,ds)=>convFilter('tier',tierConvCodes[idx],ds),
-    (idx,ds)=>['T1 Inbound','T2 Trade Show','T3 Intent','T4 Good Fit'][idx]+' — '+(ds===0?'Qualified':'Disqualified'),
-    (idx,ds)=>(ds===0?'Closed/Qualified':'Closed/Disqualified')+' in '+['T1 Inbound','T2 Trade Show','T3 Intent','T4 Good Fit'][idx]));
-  ['c_conv_icp','c_conv_icp2'].forEach(id=>attachClickDrill(id,
-    (idx,ds)=>convFilter('icp',icpConvCodes[idx],ds),
-    (idx,ds)=>icpConvLabels[idx]+' ICP — '+(ds===0?'Qualified':'Disqualified'),
-    (idx,ds)=>(ds===0?'Closed/Qualified':'Closed/Disqualified')+' in '+icpConvLabels[idx]+' ICP'));
-  const convOriginKeys=['Demo','Champ','Trade','HiScore','LifeExp','PropExp'];
-  const convOriginLabels=['Web Demo','Champify','Trade Show','High Score','Life Ins.','P&C'];
-  attachClickDrill('c_conv_origin',
-    (idx)=>{const o=convOriginKeys[idx];return r=>r.o===o&&r.s==='CQ';},
-    (idx)=>convOriginLabels[idx]+' — Qualified',
-    (idx)=>'Closed/Qualified prospects from '+convOriginLabels[idx]+' origin');
-
-  const dqLabelToCode = {'Unresponsive':'UR','Not Government Focused':'NG','False Lead':'FL','Other':'OT','Not a Decision Maker':'ND','Only Bids Focused':'OB','Unsubscribed':'US','Budget':'BG','Competitor':'CP'};
-  attachClickDrill('c_dq_mom',
-    (idx,ds)=>{const m=monthCodes2[idx]; const code=dqLabelToCode[dqReasons[ds]]; return r=>r.s==='CD'&&r.dq===code&&(r.m===m||r.mc===m);},
-    (idx,ds)=>MONTH_LABELS[monthCodes2[idx]]+' — '+dqReasons[ds],
-    (idx,ds)=>dqReasons[ds]+' DQs in '+MONTH_LABELS[monthCodes2[idx]]);
-  attachClickDrill('c_dq_unresponsive',
-    (idx)=>{const m=monthCodes2[idx]; return r=>r.s==='CD'&&r.dq==='UR'&&(r.m===m||r.mc===m);},
-    (idx)=>MONTH_LABELS[monthCodes2[idx]]+' — Unresponsive DQs',
-    (idx)=>'Unresponsive DQs in '+MONTH_LABELS[monthCodes2[idx]]);
-
-  attachClickDrill('c_speed_n2o',
-    (idx)=>{const m=monthCodes2[idx]; return r=>r.m===m&&r.tn!=null;},
-    (idx)=>MONTH_LABELS[monthCodes2[idx]]+' — New→Outreach cohort',
-    (idx)=>'Prospects created in '+MONTH_LABELS[monthCodes2[idx]]);
-  attachClickDrill('c_speed_o2d',
-    (idx)=>{const m=monthCodes2[idx]; return r=>r.m===m&&r.to!=null;},
-    (idx)=>MONTH_LABELS[monthCodes2[idx]]+' — Outreach duration cohort',
-    (idx)=>'Prospects created in '+MONTH_LABELS[monthCodes2[idx]]+' that reached Outreach');
-
-}
-
-// ── STATIC CHARTS (not month-filtered) ──
-function buildStaticCharts() {
-  // Pipeline
-  mkChart('c_pipeline_stage','bar',{labels:['New','Research','Outreach','Discovery','On Hold'],datasets:[{label:'Records',data:[237, 339, 183, 55, 12],backgroundColor:['#378ADD','#7F77DD','#1D9E75','#BA7517','#888780']}]},{...noLeg,indexAxis:'y',scales:{x:{...TC.x},y:{...TC.y,ticks:{...TC.y.ticks,font:{size:12}}}}});
-  const ptierKeys=['Tier 1 (Inbound)','Tier 2 (Trade Show)','Tier 3 (Intent)','Tier 4 (Good Fit)'];
-  const ptierShort=['T1','T2','T3','T4'];
-  const ptierData={"Tier 1 (Inbound)":{"New": 98, "Research": 26, "Outreach": 48, "Discovery": 45, "On Hold": 6},"Tier 2 (Trade Show)":{"New": 103, "Research": 25, "Outreach": 14, "Discovery": 2, "On Hold": 1},"Tier 3 (Intent)":{"New": 0, "Research": 0, "Outreach": 0, "Discovery": 0, "On Hold": 0},"Tier 4 (Good Fit)":{"New": 36, "Research": 288, "Outreach": 121, "Discovery": 8, "On Hold": 5}};
-  const stageNames=['New','Research','Outreach','Discovery','On Hold'];
-  const stageCols=['#378ADD','#7F77DD','#1D9E75','#BA7517','#888780'];
-  mkChart('c_pipeline_tier','bar',{labels:ptierShort,datasets:stageNames.map((s,i)=>({label:s,data:ptierKeys.map(t=>ptierData[t][s]||0),backgroundColor:stageCols[i],stack:'s'}))},{...noLeg,scales:{x:{...TC.x,stacked:true},y:{...TC.y,stacked:true}}});
-
-  // Stage % by tier
-  const allStages=['New','Research','Outreach','Discovery','On Hold','Closed/Qualified','Closed/Disqualified'];
-  const stageColors={'New':'#378ADD','Research':'#7F77DD','Outreach':'#1D9E75','Discovery':'#BA7517','On Hold':'#888780','Closed/Qualified':'#639922','Closed/Disqualified':'#E24B4A'};
-  const stagePctTier={"Tier 1 (Inbound)":{"New": 6.6, "Research": 1.7, "Outreach": 3.2, "Discovery": 3.0, "On Hold": 0.4, "Closed/Qualified": 29.7, "Closed/Disqualified": 55.2},"Tier 2 (Trade Show)":{"New": 36.8, "Research": 8.9, "Outreach": 5.0, "Discovery": 0.7, "On Hold": 0.4, "Closed/Qualified": 16.8, "Closed/Disqualified": 31.4},"Tier 3 (Intent)":{"New": 0.0, "Research": 0.0, "Outreach": 0.0, "Discovery": 0.0, "On Hold": 0.0, "Closed/Qualified": 0.0, "Closed/Disqualified": 0.0},"Tier 4 (Good Fit)":{"New": 2.3, "Research": 18.2, "Outreach": 7.7, "Discovery": 0.5, "On Hold": 0.3, "Closed/Qualified": 2.8, "Closed/Disqualified": 68.2}};
-  mkChart('c_stage_pct_tier','bar',{labels:['T1','T2','T3','T4'],datasets:allStages.map(s=>({label:s,data:ptierKeys.map(t=>stagePctTier[t]?.[s]||0),backgroundColor:stageColors[s],stack:'s'}))},{...noLeg,scales:{x:{...TC.x,stacked:true},y:{...TC.y,stacked:true,max:100,ticks:{...TC.y.ticks,callback:v=>v+'%'}}}});
-  const stagePctICP={"Enterprise ICP":{"New": 12.1, "Research": 22.7, "Outreach": 8.2, "Discovery": 3.9, "On Hold": 0.4, "Closed/Qualified": 12.4, "Closed/Disqualified": 40.4},"Strategic ICP":{"New": 13.0, "Research": 18.6, "Outreach": 7.9, "Discovery": 0.6, "On Hold": 0.3, "Closed/Qualified": 17.0, "Closed/Disqualified": 42.6},"Mid-Market ICP":{"New": 5.5, "Research": 2.1, "Outreach": 6.2, "Discovery": 0.7, "On Hold": 0.7, "Closed/Qualified": 39.0, "Closed/Disqualified": 45.9},"Non-ICP":{"New": 4.7, "Research": 6.3, "Outreach": 4.3, "Discovery": 1.8, "On Hold": 0.4, "Closed/Qualified": 14.5, "Closed/Disqualified": 67.9}};
-  mkChart('c_stage_pct_icp','bar',{labels:['Enterprise','Mid-Market','Strategic','Non-ICP'],datasets:allStages.map(s=>({label:s,data:['Enterprise ICP','Mid-Market ICP','Strategic ICP','Non-ICP'].map(k=>stagePctICP[k]?.[s]||0),backgroundColor:stageColors[s],stack:'s'}))},{...noLeg,scales:{x:{...TC.x,stacked:true},y:{...TC.y,stacked:true,max:100,ticks:{...TC.y.ticks,callback:v=>v+'%'}}}});
-
-  // ACV
-  mkChart('c_acv_tier','bar',{labels:['T1 Inbound','T2 Trade Show','T3 Intent','T4 Good Fit'],datasets:[{label:'ACV',data:[1478425, 101775, 0, 96600],backgroundColor:['#378ADD','#1D9E75','#BA7517','#7F77DD']}]},{...noLeg,scales:{x:{...TC.x},y:{...TC.y,ticks:{...TC.y.ticks,callback:v=>'$'+Math.round(v/1000)+'K'}}}});
-  mkChart('c_acv_icp','bar',{labels:['Enterprise ICP','Mid-Market ICP','Non-ICP','Strategic ICP'],datasets:[{label:'ACV',data:[125000, 156750, 704050, 691000],backgroundColor:['#378ADD','#1D9E75','#888780','#7F77DD']}]},{...noLeg,scales:{x:{...TC.x,ticks:{...TC.x.ticks,font:{size:10}}},y:{...TC.y,ticks:{...TC.y.ticks,callback:v=>'$'+Math.round(v/1000)+'K'}}}});
-
-  // Speed by origin
-  mkChart('c_speed_origin','bar',{labels:['Web Demo','Champify','Trade Show','High Score','Life Ins.','P&C'],datasets:[{label:'New→Outreach',data:[132.6,331.6,715.3,507.2,84.9,131.2],backgroundColor:'#378ADD'},{label:'Outreach duration',data:[243.5,224.2,772.9,916.2,238.7,151.6],backgroundColor:'#7F77DD'}]},{...noLeg,scales:{x:{...TC.x,ticks:{...TC.x.ticks,font:{size:10},maxRotation:20}},y:{...TC.y,ticks:{...TC.y.ticks,callback:v=>v+'h'}}}});
-
-  // ACV table
-  const acvTableData=[
-    {seg:"T1 Inbound",type:"Tier",deals:68,acv:1478425,qualRate:29.7,total:1494},
-    {seg:"T2 Trade Show",type:"Tier",deals:3,acv:101775,qualRate:16.8,total:280},
-    {seg:"T3 Intent",type:"Tier",deals:0,acv:0,qualRate:0.0,total:0},
-    {seg:"T4 Good Fit",type:"Tier",deals:4,acv:96600,qualRate:2.8,total:1580},
-    {seg:"Enterprise ICP",type:"ICP",deals:3,acv:125000,qualRate:12.4,total:282},
-    {seg:"Strategic ICP",type:"ICP",deals:17,acv:691000,qualRate:17.0,total:700},
-    {seg:"Mid-Market ICP",type:"ICP",deals:13,acv:156750,qualRate:39.0,total:146},
-    {seg:"Non-ICP",type:"ICP",deals:42,acv:704050,qualRate:14.5,total:2225},
-  ];
-  const ab=document.getElementById('acvTableBody');
-  ab.innerHTML='';
-  acvTableData.forEach(r=>{
-    const avg=r.deals?Math.round(r.acv/r.deals):0;
-    const eff=r.total?Math.round(r.acv/r.total):0;
-    ab.innerHTML+=`<tr><td><strong>${r.seg}</strong></td><td><span class="pill ${r.type==='Tier'?'pill-blue':'pill-teal'}">${r.type}</span></td><td>${r.deals}</td><td><strong>$${r.acv.toLocaleString()}</strong></td><td>$${avg.toLocaleString()}</td><td style="color:#0D8C72">${r.qualRate}%</td><td style="color:#475569">$${eff}</td></tr>`;
-  });
-
-  // ── New: Qualified prospects → Opp Outcome ──
-  const qualOppData = (() => {
-    const cw=[], cl=[], op=[], no=[];
-    PROSPECTS_2026.forEach(r=>{
-      if(r.s!=='CQ') return;
-      if(r.op==='CW') cw.push(r);
-      else if(r.op==='CL') cl.push(r);
-      else if(['DM','OI','TR','PR','FN','NS'].includes(r.op)) op.push(r);
-      else no.push(r);
-    });
-    return {cw,cl,op,no};
-  })();
-  const qOPPLabels = ['Closed Won','Closed Lost','Open opp','No opp linked'];
-  const qOPPCounts = [qualOppData.cw.length,qualOppData.cl.length,qualOppData.op.length,qualOppData.no.length];
-  const qOPPColors = ['#0D8C72','#D63B3B','#1A6DC0','#94A3B8'];
-  const qOPPAcv = [
-    qualOppData.cw.reduce((s,r)=>s+(r.am||0),0),
-    qualOppData.cl.reduce((s,r)=>s+(r.am||0),0),
-    qualOppData.op.reduce((s,r)=>s+(r.am||0),0),
-    0
-  ];
-  mkChart('c_qual_opp_outcome','doughnut',{
-    labels:qOPPLabels,
-    datasets:[{data:qOPPCounts,backgroundColor:qOPPColors,borderWidth:2,borderColor:'#fff'}]
-  },{cutout:'58%',plugins:{legend:{position:'right',labels:{color:'#475569',font:{size:11}}},tooltip:{callbacks:{label:c=>{const tot=qOPPCounts.reduce((a,b)=>a+b,0);const acv=qOPPAcv[c.dataIndex];return ' '+c.label+': '+c.raw+' ('+(tot?Math.round(c.raw/tot*100):0)+'%)'+(acv?' · $'+(acv/1000).toFixed(0)+'K ACV':'');}}}}});
-  attachClickDrill('c_qual_opp_outcome',
-    (idx)=>{
-      if(idx===0) return r=>r.s==='CQ'&&r.op==='CW';
-      if(idx===1) return r=>r.s==='CQ'&&r.op==='CL';
-      if(idx===2) return r=>r.s==='CQ'&&['DM','OI','TR','PR','FN','NS'].includes(r.op);
-      if(idx===3) return r=>r.s==='CQ'&&!r.op;
-    },
-    (idx)=>'Qualified — '+qOPPLabels[idx],
-    (idx)=>'Closed/Qualified prospects with this opp outcome'
-  );
-
-  // ── New: Opp outcome by tier (stacked) ──
-  const tierKeys2 = ['T1','T2','T3','T4'];
-  const tierShort2 = ['T1 Inbound','T2 Trade Show','T3 Intent','T4 Good Fit'];
-  const oppGroups = ['CW','CL','OPEN','NONE'];
-  const oppGroupLabels = ['Closed Won','Closed Lost','Open opp','No opp linked'];
-  const oppGroupColors = ['#0D8C72','#D63B3B','#1A6DC0','#94A3B8'];
-  function isOpenOpp(r){return ['DM','OI','TR','PR','FN','NS'].includes(r.op);}
-  const oppByTier = tierKeys2.map(t=>{
-    const recs = PROSPECTS_2026.filter(r=>r.s==='CQ'&&r.t===t);
-    return {
-      CW: recs.filter(r=>r.op==='CW').length,
-      CL: recs.filter(r=>r.op==='CL').length,
-      OPEN: recs.filter(isOpenOpp).length,
-      NONE: recs.filter(r=>!r.op).length,
-    };
-  });
-  mkChart('c_opp_tier','bar',{
-    labels:tierShort2,
-    datasets:oppGroups.map((g,i)=>({label:oppGroupLabels[i],data:oppByTier.map(o=>o[g]),backgroundColor:oppGroupColors[i],stack:'s'}))
-  },{plugins:{legend:{position:'top',labels:{color:'#475569',font:{size:11},boxWidth:12}}},scales:{x:{...TC.x,stacked:true},y:{...TC.y,stacked:true}}});
-  attachClickDrill('c_opp_tier',
-    (idx,ds)=>{
-      const tier=tierKeys2[idx]; const grp=oppGroups[ds];
-      return r=>r.s==='CQ'&&r.t===tier && (
-        grp==='CW'?r.op==='CW':grp==='CL'?r.op==='CL':grp==='OPEN'?isOpenOpp(r):!r.op
-      );
-    },
-    (idx,ds)=>tierShort2[idx]+' — '+oppGroupLabels[ds],
-    (idx,ds)=>'Closed/Qualified prospects in '+tierShort2[idx]+' with outcome '+oppGroupLabels[ds]
-  );
-
-  // ── Drill on existing static charts ──
-  attachClickDrill('c_pipeline_stage',
-    (idx)=>{const s=['NEW','RES','OUT','DIS','HLD'][idx];return r=>r.s===s;},
-    (idx)=>'Pipeline — '+['New','Research','Outreach','Discovery','On Hold'][idx],
-    (idx)=>'Currently in '+['New','Research','Outreach','Discovery','On Hold'][idx]+' stage');
-  attachClickDrill('c_pipeline_tier',
-    (idx,ds)=>{const t=tierKeys2[idx]; const s=['NEW','RES','OUT','DIS','HLD'][ds]; return r=>r.t===t&&r.s===s;},
-    (idx,ds)=>tierShort2[idx]+' — '+['New','Research','Outreach','Discovery','On Hold'][ds],
-    (idx,ds)=>'Open '+['New','Research','Outreach','Discovery','On Hold'][ds]+' prospects in '+tierShort2[idx]);
-  const stageCodesAll=['NEW','RES','OUT','DIS','HLD','CQ','CD'];
-  attachClickDrill('c_stage_pct_tier',
-    (idx,ds)=>{const t=tierKeys2[idx]; const s=stageCodesAll[ds]; return r=>r.t===t&&r.s===s;},
-    (idx,ds)=>tierShort2[idx]+' — '+(STAGE_LABEL[stageCodesAll[ds]]||stageCodesAll[ds]),
-    (idx,ds)=>'All-time '+(STAGE_LABEL[stageCodesAll[ds]]||stageCodesAll[ds])+' in '+tierShort2[idx]);
-  const icpKeys2=['ENT','MM','STR','NIC'];
-  const icpShort2=['Enterprise','Mid-Market','Strategic','Non-ICP'];
-  attachClickDrill('c_stage_pct_icp',
-    (idx,ds)=>{const i=icpKeys2[idx]; const s=stageCodesAll[ds]; return r=>r.i===i&&r.s===s;},
-    (idx,ds)=>icpShort2[idx]+' ICP — '+(STAGE_LABEL[stageCodesAll[ds]]||stageCodesAll[ds]),
-    (idx,ds)=>'All-time '+(STAGE_LABEL[stageCodesAll[ds]]||stageCodesAll[ds])+' in '+icpShort2[idx]+' ICP');
-  attachClickDrill('c_acv_tier',
-    (idx)=>{const t=tierKeys2[idx]; return r=>r.s==='CQ'&&r.t===t&&r.op==='CW';},
-    (idx)=>tierShort2[idx]+' — Closed Won deals',
-    (idx)=>'Closed Won opportunities sourced from '+tierShort2[idx]);
-  const acvIcpKeys=['ENT','MM','NIC','STR'];
-  const acvIcpLabels=['Enterprise ICP','Mid-Market ICP','Non-ICP','Strategic ICP'];
-  attachClickDrill('c_acv_icp',
-    (idx)=>{const i=acvIcpKeys[idx]; return r=>r.s==='CQ'&&r.i===i&&r.op==='CW';},
-    (idx)=>acvIcpLabels[idx]+' — Closed Won deals',
-    (idx)=>'Closed Won opportunities from '+acvIcpLabels[idx]);
-  const originKeys=['Demo','Champ','Trade','HiScore','LifeExp','PropExp'];
-  const originLabelsShort=['Web Demo','Champify','Trade Show','High Score','Life Ins.','P&C'];
-  attachClickDrill('c_speed_origin',
-    (idx)=>{const o=originKeys[idx]; return r=>r.o===o;},
-    (idx)=>originLabelsShort[idx]+' — Speed cohort',
-    (idx)=>'All prospects from '+originLabelsShort[idx]+' origin');
-
-}
-
-// ── REP TABLE ──
-let activeRepTeam = 'all';
-function filterReps(team, btn) {
-  activeRepTeam=team;
-  document.querySelectorAll('#section-reps .filter-btn').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  renderRepTable();
-}
-function renderRepTable(){
-  const months = getFilteredMonths();
-  const data = activeRepTeam==='all' ? REP_DATA : REP_DATA.filter(r=>r.team===activeRepTeam);
-  const maxN2O = Math.max(...REP_DATA.map(r=>r.n2o));
-  const maxO2D = Math.max(...REP_DATA.map(r=>r.o2d));
-  const teamPill = t=>t==='Mid Market'?'pill-blue':t==='Strategic A'?'pill-teal':'pill-coral';
-  const tbody = document.getElementById('repTableBody');
-  tbody.innerHTML='';
-  data.forEach(r=>{
-    const qualPct = r.total ? Math.round(r.qual/r.total*100) : 0;
-    tbody.innerHTML+=`<tr>
-      <td><strong>${r.name}</strong></td>
-      <td><span class="pill ${teamPill(r.team)}">${r.team}</span></td>
-      <td>${r.total.toLocaleString()}</td>
-      <td>${r.qual}</td>
-      <td><strong style="color:${qualPct>=20?'#0D8C72':qualPct>=12?'#9A6200':'#D63B3B'}">${qualPct}%</strong></td>
-      <td>${r.n2o.toFixed(1)}h</td>
-      <td><span class="mini-bar-bg"><span class="mini-bar-fill" style="width:${Math.round(r.n2o/maxN2O*100)}%;background:#378ADD"></span></span></td>
-      <td>${r.o2d.toFixed(1)}h</td>
-      <td><span class="mini-bar-bg"><span class="mini-bar-fill" style="width:${Math.round(r.o2d/maxO2D*100)}%;background:#7F77DD"></span></span></td>
-    </tr>`;
-  });
-}
-
-// ── COACHING ──
-const TEAM_COLORS = {'Mid Market':'#1A6DC0','Strategic A':'#0D8C72','Strategic B':'#6B5FD4'};
-const TEAM_BENCH_QUAL = {'Mid Market':28,'Strategic A':25,'Strategic B':22};
-
-function generateCoachingTips(rep, months) {
-  const tips = [];
-  const qualPct = rep.total ? Math.round(rep.qual/rep.total*100) : 0;
-  const teamBench = TEAM_BENCH_QUAL[rep.team] || 20;
-
-  // Speed tips
-  if(rep.n2o > BENCH.n2o_warn) tips.push({type:'alert',text:`<strong>Slow first touch:</strong> Avg ${rep.n2o.toFixed(0)}h before outreach — well above the ${BENCH.n2o_warn}h threshold. Review whether new records are being assigned and actioned promptly.`});
-  else if(rep.n2o > BENCH.n2o_good) tips.push({type:'warn',text:`<strong>Outreach lag:</strong> ${rep.n2o.toFixed(0)}h avg to first touch. Targeting sub-${BENCH.n2o_good}h would align with top performers. Consider blocking daily time for new record review.`});
-  else tips.push({type:'good',text:`<strong>Fast first touch:</strong> ${rep.n2o.toFixed(0)}h avg New→Outreach — top-tier speed. Keep it up and ensure follow-through quality matches the pace.`});
-
-  if(rep.o2d > BENCH.o2d_warn) tips.push({type:'warn',text:`<strong>Long outreach cycle:</strong> ${rep.o2d.toFixed(0)}h avg in Outreach stage. Explore whether prospects are being worked consistently or sitting idle between touches.`});
-  else if(rep.o2d <= BENCH.o2d_good) tips.push({type:'good',text:`<strong>Efficient outreach:</strong> ${rep.o2d.toFixed(0)}h avg outreach duration — moving prospects through the funnel quickly.`});
-
-  // Qual rate
-  if(qualPct >= teamBench + 10) tips.push({type:'good',text:`<strong>Strong qual rate:</strong> ${qualPct}% — ${qualPct-teamBench}pts above team benchmark (${teamBench}%). Review which lead sources or talk tracks are driving this and document for team sharing.`});
-  else if(qualPct < teamBench - 8) tips.push({type:'alert',text:`<strong>Below-benchmark qual rate:</strong> ${qualPct}% vs team average ~${teamBench}%. Focus discovery questions on qualifying ICP fit earlier to reduce DQ churn.`});
-  else tips.push({type:'info',text:`<strong>Qual rate on track:</strong> ${qualPct}% — near team benchmark of ~${teamBench}%. Incremental improvement on ICP-targeting could push this higher.`});
-
-  // DQ pattern
-  if(rep.dq_top === 'Unresponsive' && rep.dq_pct > 60) tips.push({type:'warn',text:`<strong>High unresponsive rate (${rep.dq_pct}% of DQs):</strong> Consider tightening contact cadence, diversifying channels (LinkedIn + email + phone), and ensuring initial outreach personalizes the GovSpend value prop.`});
-  if(rep.dq_top === 'Not Govt Focused') tips.push({type:'info',text:`<strong>Lead quality signal:</strong> "Not Government Focused" is a top DQ reason. Work with SDR/BDR team to tighten ICP filters at the top of funnel for your territory.`});
-  if(rep.dq_top === 'False Lead') tips.push({type:'info',text:`<strong>"False Lead" trending:</strong> High false lead DQs can indicate over-assignment of low-intent prospects. Flag patterns to operations for routing review.`});
-
-  // Volume
-  if(rep.total >= 400) tips.push({type:'info',text:`<strong>High volume carrier:</strong> ${rep.total.toLocaleString()} records — one of the top by volume. Ensure sufficient capacity to work all accounts; consider prioritizing by ICP tier.`});
-  else if(rep.total < 50) tips.push({type:'info',text:`<strong>Lower volume territory:</strong> ${rep.total} records. Opportunity to maximize qual rate by focusing deeply on each account's GovSpend fit before advancing.`});
-
-  return tips.slice(0, 4);
-}
-
-let activeCoachTeam = 'all';
-function filterCoaching(team, btn) {
-  activeCoachTeam = team;
-  document.querySelectorAll('#section-coaching .filter-btn').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  renderCoachingCards(team);
-}
-function renderCoachingCards(team) {
-  const months = getFilteredMonths();
-  const data = team==='all' ? REP_DATA : REP_DATA.filter(r=>r.team===team);
-  const grid = document.getElementById('coachingGrid');
-  grid.innerHTML = '';
-  data.forEach(rep => {
-    const qualPct = rep.total ? Math.round(rep.qual/rep.total*100) : 0;
-    const tips = generateCoachingTips(rep, months);
-    const initials = rep.name.split(' ').map(n=>n[0]).join('').slice(0,2);
-    const color = TEAM_COLORS[rep.team] || '#888';
-    const iconMap = {alert:'⚠','warn':'⚡','good':'✓','info':'💡'};
-    const iconClass = {alert:'tip-icon-alert',warn:'tip-icon-warn',good:'tip-icon-good',info:'tip-icon-info'};
-
-    const teamPillColor = rep.team==='Mid Market'?'pill-blue':rep.team==='Strategic A'?'pill-teal':'pill-coral';
-    const tipsHtml = tips.length ? tips.map(t=>`
-      <div class="coach-tip">
-        <span class="tip-icon ${iconClass[t.type]}">${iconMap[t.type]||'•'}</span>
-        <span class="tip-text">${t.text}</span>
-      </div>`).join('') : '<div class="coach-no-data">No specific coaching flags for this period.</div>';
-
-    const qualColor = qualPct>=25?'#0D8C72':qualPct>=15?'#9A6200':'#D63B3B';
-    const n2oColor = rep.n2o<=100?'#0D8C72':rep.n2o<=300?'#9A6200':'#D63B3B';
-    const o2dColor = rep.o2d<=200?'#0D8C72':rep.o2d<=400?'#9A6200':'#D63B3B';
-
-    grid.innerHTML += `
-      <div class="coach-card">
-        <div class="coach-card-header">
-          <div class="coach-avatar" style="background:${color}">${initials}</div>
-          <div>
-            <div class="coach-name">${rep.name}</div>
-            <div class="coach-meta"><span class="pill ${teamPillColor}" style="font-size:10px">${rep.team}</span> &nbsp; ${rep.total} records</div>
-          </div>
-        </div>
-        <div class="coach-stats">
-          <div class="coach-stat"><div class="coach-stat-val" style="color:${qualColor}">${qualPct}%</div><div class="coach-stat-label">Qual Rate</div></div>
-          <div class="coach-stat"><div class="coach-stat-val" style="color:${n2oColor}">${rep.n2o.toFixed(0)}h</div><div class="coach-stat-label">N→Outreach</div></div>
-          <div class="coach-stat"><div class="coach-stat-val" style="color:${o2dColor}">${rep.o2d.toFixed(0)}h</div><div class="coach-stat-label">Outreach Dur.</div></div>
-        </div>
-        <div class="coach-tips">${tipsHtml}</div>
-      </div>`;
-  });
-}
-
-// ── INIT ──
-buildStaticCharts();
-refreshAll();
-
-
-
-function openDrillDown(reason) {
-  // legacy DQ entry point — keep working for DQ donut click compatibility
-  const reasonCode = Object.entries(DQ_LABEL).find(([k,v])=>v===reason)?.[0];
-  if(!reasonCode) return;
-  openProspectDrill(
-    r => r.s==='CD' && r.dq===reasonCode,
-    'Disqualified — ' + reason,
-    'Closed/Disqualified prospects with this DQ reason'
-  );
-}
-
-function openProspectDrill(filterFn, title, subtitle) {
-  const months = getFilteredMonths();
-  drillActiveTitle = title;
-  drillPage = 0;
-  let recs = PROSPECTS_2026.filter(filterFn);
-  if(months.length !== MONTHS_ALL.length) {
-    recs = recs.filter(r => months.includes(r.m) || months.includes(r.mc));
-  }
-  drillFilteredRecs = recs;
-  document.getElementById('dqDrillTitle').textContent = title;
-  document.getElementById('dqDrillSub').textContent = (subtitle || '') + ' — ' + recs.length + ' record' + (recs.length===1?'':'s');
-
-  const reps = [...new Set(recs.map(r=>r.rep).filter(Boolean))].sort();
-  const sel = document.getElementById('dqRepFilter');
-  sel.innerHTML = '<option value="">All reps</option>' + reps.map(rep=>`<option value="${rep}">${rep}</option>`).join('');
-  document.getElementById('dqSearch').value = '';
-
-  const withEmails = recs.filter(r=>(r.em||0)>0).length;
-  const withEngage = recs.filter(r=>(r.en||0)>0).length;
-  const avgEmails = recs.length ? (recs.reduce((s,r)=>s+(r.em||0),0)/recs.length).toFixed(1) : '0';
-  const avgAge = recs.length ? Math.round(recs.reduce((s,r)=>s+(r.ag||0),0)/recs.length) : 0;
-  const wonCount = recs.filter(r=>r.op==='CW').length;
-  const wonAcv = recs.filter(r=>r.op==='CW').reduce((s,r)=>s+(r.am||0),0);
-  const lostCount = recs.filter(r=>r.op==='CL').length;
-  const openCount = recs.filter(r=>['DM','OI','TR','PR','FN','NS'].includes(r.op)).length;
-
-  let stats = `<span>📧 Avg emails: <strong>${avgEmails}</strong></span>`
-    + `<span>📬 With email: <strong>${withEmails} (${recs.length?Math.round(withEmails/recs.length*100):0}%)</strong></span>`
-    + `<span>🤝 With engage: <strong>${withEngage} (${recs.length?Math.round(withEngage/recs.length*100):0}%)</strong></span>`
-    + `<span>🕐 Avg age: <strong>${avgAge}h</strong></span>`;
-  if(wonCount||lostCount||openCount) {
-    stats += `<span style="color:#0D8C72">🏆 Won: <strong>${wonCount}${wonAcv?' ($'+(wonAcv/1000).toFixed(0)+'K)':''}</strong></span>`
-      + `<span style="color:#D63B3B">💔 Lost: <strong>${lostCount}</strong></span>`
-      + `<span style="color:#1A6DC0">📈 Open: <strong>${openCount}</strong></span>`;
-  }
-  document.getElementById('dqDrillStats').innerHTML = stats;
-
-  document.getElementById('dqDrillPanel').style.display = 'block';
-  renderDrillTable();
-  document.getElementById('dqDrillPanel').scrollIntoView({behavior:'smooth', block:'nearest'});
-}
-
-function renderDrillTable() {
-  const search = (document.getElementById('dqSearch').value || '').toLowerCase();
-  const repFilter = document.getElementById('dqRepFilter').value;
-
-  let recs = drillFilteredRecs;
-  if (repFilter) recs = recs.filter(r => r.rep === repFilter);
-  if (search) recs = recs.filter(r =>
-    (r.n||'').toLowerCase().includes(search) ||
-    (r.a||'').toLowerCase().includes(search) ||
-    (r.rep||'').toLowerCase().includes(search)
-  );
-
-  const total = recs.length;
-  const pages = Math.ceil(total / DRILL_PAGE_SIZE);
-  if (drillPage >= pages) drillPage = Math.max(0, pages-1);
-  const slice = recs.slice(drillPage*DRILL_PAGE_SIZE, (drillPage+1)*DRILL_PAGE_SIZE);
-
-  const tierColor = t => t==='T1'?'pill-blue':t==='T2'?'pill-teal':t==='T3'?'pill-amber':'pill-purple';
-  const icpColor = i => i==='ENT'?'pill-blue':i==='STR'?'pill-teal':i==='MM'?'pill-purple':'pill-gray';
-  const stageColor = s => (s==='CQ')?'pill-teal':(s==='CD')?'pill-coral':'pill-blue';
-  const oppColor = op => op==='CW'?'#0D8C72':op==='CL'?'#D63B3B':op?'#1A6DC0':'#94A3B8';
-
-  const tbody = document.getElementById('dqDrillBody');
-  tbody.innerHTML = '';
-  slice.forEach(r => {
-    const emailBadge = (r.em||0) > 0 ? `<span style="background:#EFF6FF;color:#1A6DC0;border-radius:10px;padding:2px 7px;font-size:11px;font-weight:500">${r.em}</span>` : '<span style="color:var(--gs-muted)">—</span>';
-    const engBadge = (r.en||0) > 0 ? `<span style="background:#F0FDF4;color:#166534;border-radius:10px;padding:2px 7px;font-size:11px;font-weight:500">${r.en}</span>` : '<span style="color:var(--gs-muted)">—</span>';
-    const ageColor = (r.ag||0) > 300 ? '#D63B3B' : (r.ag||0) > 100 ? '#9A6200' : '#0D8C72';
-    const oppHtml = r.op ? `<span style="color:${oppColor(r.op)};font-weight:500">${OPP_LABEL[r.op]||r.op}</span>${r.am?` <span style="color:#64748B;font-size:11px">$${(r.am/1000).toFixed(0)}K</span>`:''}` : '<span style="color:var(--gs-muted)">—</span>';
-    const dqHtml = r.dq ? (DQ_LABEL[r.dq]||r.dq) : '—';
-    tbody.innerHTML += `<tr>
-      <td><strong>${r.n}</strong></td>
-      <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r.a||''}">${r.a || '—'}</td>
-      <td style="white-space:nowrap">${r.rep || '—'}</td>
-      <td><span class="pill ${tierColor(r.t)}" style="font-size:10px">${r.t||'?'}</span></td>
-      <td><span class="pill ${icpColor(r.i)}" style="font-size:10px">${r.i||'?'}</span></td>
-      <td style="font-size:11px;color:var(--gs-muted)">${ORIGIN_LABEL[r.o]||r.o||'—'}</td>
-      <td><span class="pill ${stageColor(r.s)}" style="font-size:10px">${STAGE_LABEL[r.s]||r.s||'?'}</span></td>
-      <td style="font-size:11px;color:var(--gs-muted)">${dqHtml}</td>
-      <td style="font-size:11px;color:var(--gs-muted)">${oppHtml}</td>
-      <td style="color:${ageColor};font-weight:500">${r.ag!=null?r.ag+'h':'—'}</td>
-      <td style="font-size:11px;color:var(--gs-muted);white-space:nowrap">${r.cr||'—'}</td>
-      <td style="text-align:center">${emailBadge}</td>
-      <td style="text-align:center">${engBadge}</td>
-    </tr>`;
-  });
-
-  document.getElementById('dqDrillCount').textContent = `Showing ${slice.length} of ${total} records`;
-  document.getElementById('dqPageInfo').textContent = `Page ${drillPage+1} of ${Math.max(1,pages)}`;
-  document.getElementById('dqPrevBtn').disabled = drillPage === 0;
-  document.getElementById('dqNextBtn').disabled = drillPage >= pages-1;
-}
-
-function dqChangePage(dir) {
-  drillPage = Math.max(0, drillPage + dir);
-  renderDrillTable();
-  document.getElementById('dqDrillPanel').scrollIntoView({behavior:'smooth', block:'nearest'});
-}
-
-function closeDrillDown() {
-  document.getElementById('dqDrillPanel').style.display = 'none';
-  drillActiveTitle = null;
-}
-
-document.getElementById('dqSearch').addEventListener('input', () => { drillPage=0; renderDrillTable(); });
-
-// Generic chart click → drill helper
-function attachClickDrill(chartId, indexToFilter, titleFn, subtitleFn) {
-  const ch = charts[chartId];
-  if(!ch) return;
-  const cv = document.getElementById(chartId);
-  if(!cv) return;
-  cv.style.cursor = 'pointer';
-  cv.onclick = (e) => {
-    const pts = ch.getElementsAtEventForMode(e,'nearest',{intersect:true},true);
-    if(!pts.length) return;
-    const p = pts[0];
-    const filter = indexToFilter(p.index, p.datasetIndex);
-    if(!filter) return;
-    openProspectDrill(filter, titleFn(p.index, p.datasetIndex), subtitleFn?subtitleFn(p.index,p.datasetIndex):'');
-  };
-}
-
+})();
 </script>
 </body>
 </html>
