@@ -283,7 +283,7 @@
 
 <script id="gtm-state" type="application/json">
 {
-  "meetingDate": "2026-06-30",
+  "meetingDate": "2026-07-07",
   "products": [
     {
       "id": "mcp",
@@ -291,8 +291,8 @@
       "priority": true,
       "targetDate": "Jun 16 — LAUNCHED",
       "launch": 100,
-      "adoption": 35,
-      "notes": "Launched Jun 16; adoption-building now. Entitlements backfilled and enforced (Sam). Use-case video campaign live - 2 videos/week, plus Nate's '90 seconds with Nate' series; Pam posted branding PDFs. Launch marketing landed: 608 media placements, 7,000+ views, +20% homepage traffic. 8-week MCP usage trending up but not yet widespread (dashboard shows records returned, not calls). Goaling is blocked on normalizing usage data across platforms - no 'North Star' benchmark yet. Permissions moving to login-based OAuth (more secure, but permissions an entire org at once).",
+      "adoption": 38,
+      "notes": "Landing well - RM leaders and SEs actively demoing; IC training essentially complete. TRANSPARENCY ISSUE surfaced: MCP returns only ~20-50 records by default and customers aren't told they can ask for more. Debate unresolved (Sam: LLM default behavior; Octavio: Elastic backend caps; Evan: just flag 'showing top 25 of X') - escalating to tech leadership (Brian/Sergeant) to confirm cause, then craft transparent customer messaging (no 'vaporware'). Goaling still wait-and-see: need service-addressable-market definition and usage-data normalization first. Sales use-case training is built but rollout HELD by Adam until sales bandwidth recovers post-June/federal.",
       "tasks": [
         {
           "task": "Commercial All Hands",
@@ -377,7 +377,7 @@
           "due": "Jul (after data normalization)",
           "link": "",
           "status": "At risk",
-          "notes": "Blocked on normalizing usage data across platforms before benchmarks can be set; no North Star yet (6/30).",
+          "notes": "Still wait-and-see (7/7): need to define service-addressable market first, and it's blocked on the usage-data normalization BE project (~2 wks). No North Star yet.",
           "completedDate": "",
           "completedBy": "",
           "addedWeek": ""
@@ -388,7 +388,7 @@
           "due": "Jun 23",
           "link": "",
           "status": "On track",
-          "notes": "Ryan working with engineers; good feedback Monday/Tuesday but still WIP on their end. Emphasis on strong discovery before pulling engineers in. Sam to gather successful use cases/strategies from Sutton.",
+          "notes": "Training built (Ryan Jackson + engineers) and near-ready, but rollout intentionally HELD by Adam - sales inundated after a big June + federal. SEs are covering MCP demos in the meantime.",
           "completedDate": "",
           "completedBy": "",
           "addedWeek": ""
@@ -398,10 +398,10 @@
           "owner": "Daniel / JB / Adam",
           "due": "Jun 20",
           "link": "https://govspend.learnupon.com/content-details/5083657/0",
-          "status": "On track",
-          "notes": "~10 still outstanding as of 6/30 - team putting them on blast. Daniel to send the not-completed list; Luke to Slack-nudge individuals. Sales-team course is ready but Adam held release to ~start of July.",
-          "completedDate": "",
-          "completedBy": "",
+          "status": "Done",
+          "notes": "Looking strong; marked done 7/7. A few stragglers being picked off one-by-one.",
+          "completedDate": "Jul 7",
+          "completedBy": "Daniel / Luke",
           "addedWeek": ""
         },
         {
@@ -431,10 +431,10 @@
           "owner": "Daniel / Adam",
           "due": "Jun 17",
           "link": "",
-          "status": "On track",
+          "status": "Done",
           "notes": "Daniel pulls the report; Adam/JB name the not-yet-complete reps in the sales thread. Daniel sending the not-completed list to leadership (6/30).",
-          "completedDate": "",
-          "completedBy": "",
+          "completedDate": "Jul 7",
+          "completedBy": "Daniel / Adam",
           "addedWeek": "2026-06-16"
         },
         {
@@ -442,10 +442,10 @@
           "owner": "Daniel",
           "due": "Ongoing",
           "link": "",
-          "status": "On track",
+          "status": "Done",
           "notes": "Running daily LMS reports; sending reminders.",
-          "completedDate": "",
-          "completedBy": "",
+          "completedDate": "Jul 7",
+          "completedBy": "Daniel",
           "addedWeek": "2026-06-16"
         },
         {
@@ -453,11 +453,44 @@
           "owner": "Luke",
           "due": "Jul 1",
           "link": "",
-          "status": "On track",
+          "status": "Done",
           "notes": "~10 individuals left; message them directly via Slack to close out. Pairs with Daniel sending the not-completed list.",
+          "completedDate": "Jul 7",
+          "completedBy": "Luke",
+          "addedWeek": "2026-06-30"
+        },
+        {
+          "task": "Escalate MCP record-limit question to tech leadership",
+          "owner": "Octavio / JB",
+          "due": "ASAP",
+          "link": "",
+          "status": "On track",
+          "notes": "Confirm whether the ~20-50 record default is a backend Elastic cap or LLM default behavior (Brian/Sergeant). Gate customer messaging on the answer.",
           "completedDate": "",
           "completedBy": "",
-          "addedWeek": "2026-06-30"
+          "addedWeek": "2026-07-07"
+        },
+        {
+          "task": "Draft transparent client messaging on MCP record limits",
+          "owner": "Tiffany / group",
+          "due": "After escalation",
+          "link": "",
+          "status": "Not started",
+          "notes": "Once tech confirms the cause, define customer-facing language so we're not overselling full-dataset access.",
+          "completedDate": "",
+          "completedBy": "",
+          "addedWeek": "2026-07-07"
+        },
+        {
+          "task": "Update prompting help article with record-limit + query-specificity tips",
+          "owner": "Lindsay",
+          "due": "This week",
+          "link": "",
+          "status": "On track",
+          "notes": "Add: if you only see N records, be specific / ask for more. Tips-and-tricks prompting article for GovSpend.",
+          "completedDate": "",
+          "completedBy": "",
+          "addedWeek": "2026-07-07"
         }
       ]
     },
@@ -468,7 +501,7 @@
       "targetDate": "5 orgs ~Jun 23 → marketplace ~Sept",
       "launch": 85,
       "adoption": 12,
-      "notes": "Submitted to the Slack marketplace for review ~Jun 30 (Sam) - ~10-week clock, so public availability ~September. App de-cluttered (Lindsay). Reached 5 active orgs via the AI-search button/popup + the webinar (380 registrants, >50% live). Slack-specific adoption still can't be separated from AI search usage - awaiting that metric. Commercial training is ready but release held until after July 4.",
+      "notes": "Full push POSTPONED to align with marketplace publication (~end of July); revisit 3rd/4th week of July (Luke/Tiffany/JB). In-product user-flow button was taken down after hitting the 5 orgs (too many buttons); the webinar drove more engagement than the in-product flow. Engagement numbers exist but are hard to extract (Sam). Help article stays in the beta section until the Slack integration is fully live. App is submitted; ~10-week review -> public availability ~September.",
       "tasks": [
         {
           "task": "UAT follow-up",
@@ -542,7 +575,7 @@
           "due": "After Jul 4",
           "link": "https://govspend.learnupon.com/content-details/4994330/0",
           "status": "Not started",
-          "notes": "Course ready; release held until after the July 4th holiday (Adam). Not dependent on marketplace status.",
+          "notes": "Full push postponed to align with marketplace publication (~end of July); revisit 3rd/4th week of July. Course ready when we re-engage.",
           "completedDate": "",
           "completedBy": "",
           "addedWeek": ""
@@ -567,7 +600,7 @@
       "targetDate": "Rolling — 90% by end of Sept",
       "launch": 100,
       "adoption": 60,
-      "notes": "60% of active clients are using the module. Pilot concern: of the 53 enabled accounts, only 12 have interacted in the last 8 weeks. Decision (6/30): PAUSE mass enablement and rely on manual, user-initiated onboarding. Low adoption traced to keyword-generation and territory-setting confusion; profile must be set correctly up front. Kate built a CS rebuttal doc; self-booking links beat phone outreach for feedback.",
+      "notes": "Moderate increases in active usage overall, but the original 53-account tranche still lags. Cluvio vs Claude discrepancy explained: Cluvio counts landing-page hits (many accounts set the opp module as their landing page) = page views, not data consumption. Normalizing usage across AI/Opp/MCP/API/traditional modules (BE project) - progress in ~2 weeks. Profile restructuring in UAT this week.",
       "tasks": [
         {
           "task": "Opp Module goaling",
@@ -634,6 +667,17 @@
           "completedDate": "",
           "completedBy": "",
           "addedWeek": "2026-06-30"
+        },
+        {
+          "task": "Profile restructuring - UAT + commercial LMS training before customer exposure",
+          "owner": "Kathryn / Daniel",
+          "due": "UAT this week; timeline next week",
+          "link": "",
+          "status": "On track",
+          "notes": "Promoted from suggestive: now dated. Restructures the opp profile (keyword/territory setup that drove low pilot adoption). LMS training for commercial before exposing changes to customers.",
+          "completedDate": "",
+          "completedBy": "",
+          "addedWeek": "2026-07-07"
         }
       ]
     },
@@ -642,9 +686,9 @@
       "name": "GovSpend Federal",
       "priority": false,
       "targetDate": "Search migration deadline Jul 31",
-      "launch": 50,
+      "launch": 62,
       "adoption": 5,
-      "notes": "Module re-releases end of July - FPDS data moves from the legacy system into Spending Analytics. Timeline (Lindsay): new data stops feeding legacy on Jul 31; historical data removed Aug 31. Notify via in-product popup (not banner). Risk: functionality gaps during transition (advanced search, keyword highlighting). Migration meetings being consolidated with Deepo to avoid redundancy. Federal re-engagement campaign kicks off after July 4.",
+      "notes": "The active fire. It's a COPY, not a migration: 4,214 saved searches tied to trials + 2,238 without = 6,452 (list shrank after removing legacy searches). Marc expects the copy done ~Jul 14-15. Comms plan (Lindsay): emails ASAP / Jul 23 / Jul 31 / Aug 18 / Aug 31, a Jul 30 newsletter call-out, and in-platform notices; two-touch call campaign (Jul 23 & Aug 18) to 30/60/90-day active users + saved-search owners. Old data cuts over Jul 31 and is removed Aug 31. Order of ops: copy searches first -> train RM teams -> support via office hours. SEs confirmed up to date.",
       "tasks": [
         {
           "task": "Federal bifurcation account/user list (reengagement)",
@@ -662,10 +706,10 @@
           "owner": "JB",
           "due": "-> RM call (early Jul)",
           "link": "",
-          "status": "On track",
-          "notes": "Feeding the end-of-July re-release plan; Peter to present migration-search data at the RM team call.",
-          "completedDate": "",
-          "completedBy": "",
+          "status": "Done",
+          "notes": "Resolved via Peter's saved-search list with account names.",
+          "completedDate": "Jul 7",
+          "completedBy": "JB / Peter",
           "addedWeek": "2026-06-16"
         },
         {
@@ -673,10 +717,10 @@
           "owner": "Deepak",
           "due": "Jun 19",
           "link": "",
-          "status": "On track",
-          "notes": "~6,000 first-cut searches; counts feeding the RM call.",
-          "completedDate": "",
-          "completedBy": "",
+          "status": "Done",
+          "notes": "Counts finalized: copy (not migrate) 4,214 trial-tied + 2,238 non-trial = 6,452; list reduced after removing legacy searches.",
+          "completedDate": "Jul 7",
+          "completedBy": "Matt Beard / Peter",
           "addedWeek": "2026-06-16"
         },
         {
@@ -685,7 +729,7 @@
           "due": "After Jul 4",
           "link": "",
           "status": "Not started",
-          "notes": "Concrete: legacy stops feeding Jul 31, historical removed Aug 31. Popup (not banner) starts when migration begins (~after Jul 4).",
+          "notes": "In-platform messaging now sequenced with the email campaign: 'coming' notice, Jul 31 change notice, Aug 31 removal reminder. (Lindsay)",
           "completedDate": "",
           "completedBy": "",
           "addedWeek": "2026-06-16"
@@ -707,7 +751,7 @@
           "due": "",
           "link": "",
           "status": "Not started",
-          "notes": "Re-engage federal training after July 4 (JB).",
+          "notes": "Federal selling course already released. Migration-navigation course now in progress (Daniel) - see below.",
           "completedDate": "",
           "completedBy": "",
           "addedWeek": ""
@@ -724,12 +768,12 @@
           "addedWeek": "2026-06-30"
         },
         {
-          "task": "Present search-migration data at the RM team call",
-          "owner": "Peter",
-          "due": "RM call (early Jul)",
+          "task": "RM-team migration overview at next RM meeting",
+          "owner": "Kelly / Shannon",
+          "due": "Wk of Jul 14",
           "link": "",
-          "status": "On track",
-          "notes": "Share easy-vs-complex search counts with RMs so they can plan manual migrations.",
+          "status": "Not started",
+          "notes": "Kelly and/or Shannon to do a once-over for the RM teams alongside the LMS. Not this week - next week.",
           "completedDate": "",
           "completedBy": "",
           "addedWeek": "2026-06-30"
@@ -755,11 +799,113 @@
           "completedDate": "",
           "completedBy": "",
           "addedWeek": "2026-06-30"
+        },
+        {
+          "task": "Flag & distribute the copyable saved-search list (w/ account names)",
+          "owner": "Peter",
+          "due": "This week",
+          "link": "",
+          "status": "On track",
+          "notes": "Flag which searches the data platform will copy vs won't on the shared spreadsheet, then distribute the filtered list (with account names) to stakeholders.",
+          "completedDate": "",
+          "completedBy": "",
+          "addedWeek": "2026-07-07"
+        },
+        {
+          "task": "Execute migration email campaign",
+          "owner": "Lindsay",
+          "due": "Starts ASAP",
+          "link": "",
+          "status": "On track",
+          "notes": "Sequence: email ASAP, then Jul 23, Jul 31, Aug 18, Aug 31; Jul 30 newsletter call-out; in-platform notices throughout.",
+          "completedDate": "",
+          "completedBy": "",
+          "addedWeek": "2026-07-07"
+        },
+        {
+          "task": "Run migration call campaign",
+          "owner": "CS / RM",
+          "due": "Jul 23 & Aug 18",
+          "link": "",
+          "status": "Not started",
+          "notes": "Two touches (marry to the Jul 23 email + Aug 18 reminder), targeting users with usage in the last 30/60/90 days and saved-search owners.",
+          "completedDate": "",
+          "completedBy": "",
+          "addedWeek": "2026-07-07"
+        },
+        {
+          "task": "Build & release FPDS->SAM.gov migration course",
+          "owner": "Daniel",
+          "due": "Pending Peter review",
+          "link": "",
+          "status": "On track",
+          "notes": "Covers why FPDS is going away, timeline, what changes (Spending Analytics vs Spending/POs), and objection handling. Peter reviewing; add the help-site article link; release after his OK.",
+          "completedDate": "",
+          "completedBy": "",
+          "addedWeek": "2026-07-07"
+        },
+        {
+          "task": "Schedule migration office hours for commercial teams",
+          "owner": "Peter / Debbuck",
+          "due": "From ~Jul 10",
+          "link": "",
+          "status": "Not started",
+          "notes": "Drop-in hours so commercial can ask account-specific and general search-creation questions. Peter to coordinate with Lindsay (~Thu).",
+          "completedDate": "",
+          "completedBy": "",
+          "addedWeek": "2026-07-07"
         }
       ]
     }
   ],
   "weeklies": [
+    {
+      "date": "Jul 7, 2026",
+      "summary": "MCP is landing well - RM leaders and SEs are actively demoing - and IC training is essentially complete (marked done, stragglers picked off individually). But a transparency issue surfaced: MCP returns only ~20-50 records by default and customers aren't told they can ask for more. A long debate (Sam: LLM default behavior; Octavio: Elastic backend caps; Evan: just show a 'top 25 of X' flag) ended with a decision to escalate to tech leadership to confirm the real cause, then craft transparent messaging so we're not selling 'vaporware.' Goaling stays wait-and-see - blocked on defining service-addressable market and on normalizing usage data across modules. Sales use-case training is built but Adam is holding rollout until bandwidth recovers post-June/federal. Slack: full push postponed to align with marketplace publication (~end of July, revisit 3rd/4th week); the in-product button came down after hitting 5 orgs and the webinar drove more engagement; help article stays in beta until Slack is fully live. Opportunities: moderate usage gains but the original 53 still lag; Cluvio over-counts because many accounts set the opp module as their landing page (hits, not consumption); profile restructuring hits UAT this week with LMS training before customer exposure. Federal is the active fire: a COPY (not migration) of 4,214 trial-tied + 2,238 non-trial saved searches, copy expected done ~Jul 14-15. Comms plan runs emails ASAP/Jul 23/Jul 31/Aug 18/Aug 31 + a Jul 30 newsletter + in-platform notices, with a two-touch call campaign (Jul 23 & Aug 18) to 30/60/90-day active users; Daniel is building an FPDS-to-SAM.gov course (Peter reviewing) and Peter/Debbuck will run office hours. Old data cuts over Jul 31, removed Aug 31. (Octavio, on the call: 'compliments on this dashboard, it's very sexy.')",
+      "added": [
+        {
+          "task": "Escalate MCP record-limit question to tech leadership",
+          "product": "MCP"
+        },
+        {
+          "task": "Draft transparent client messaging on MCP record limits",
+          "product": "MCP"
+        },
+        {
+          "task": "Update prompting help article with record-limit + query-specificity tips",
+          "product": "MCP"
+        },
+        {
+          "task": "Profile restructuring - UAT + commercial LMS training before customer exposure",
+          "product": "Opportunities Module"
+        },
+        {
+          "task": "Flag & distribute the copyable saved-search list (w/ account names)",
+          "product": "GovSpend Federal"
+        },
+        {
+          "task": "Execute migration email campaign",
+          "product": "GovSpend Federal"
+        },
+        {
+          "task": "Run migration call campaign",
+          "product": "GovSpend Federal"
+        },
+        {
+          "task": "Build & release FPDS->SAM.gov migration course",
+          "product": "GovSpend Federal"
+        },
+        {
+          "task": "Schedule migration office hours for commercial teams",
+          "product": "GovSpend Federal"
+        }
+      ],
+      "suggestive": [
+        "Bring the prompt library INTO Claude via an onboarding wizard (downloadable prompt package) - Sam vibe-coding a POC, Adam sponsoring. Sam explicitly said 'don't put it on the board yet' - feasibility unconfirmed, no dev, no date.",
+        "Normalize usage data across all modules (AI / Opp / MCP / API / traditional) so reporting is apples-to-apples - BE project, ~2 weeks. Underpins MCP + opp goaling; no single owner/date yet.",
+        "Add a 'showing top N of many' flag/notification to capped MCP query results (Evan's idea) - pending the technical escalation outcome."
+      ]
+    },
     {
       "date": "Jun 30, 2026",
       "summary": "Two weeks post-launch, focus is on adoption and benchmarking. Entitlements backfilled and enforced; use-case video campaign running (2/week + Nate's '90 seconds' series); launch marketing landed (608 placements, 7,000+ views, +20% homepage traffic; webinar 380 registrants, >50% live). MCP usage trending up but not widespread, and goaling is blocked on normalizing usage data across platforms - no North Star yet. AI search at ~1,300 of 2,400 accounts active in 90 days. Slack cleared its big hurdle: submitted to the marketplace (~10-week clock -> ~Sept) after reaching 5 orgs; training held until after July 4. Opportunities: 60% of active clients use it, but only 12 of the 53 pilot accounts engaged in 8 weeks, so the team paused mass enablement for manual onboarding and is fixing profile/keyword/territory confusion. Federal: re-release end of July - legacy data stops Jul 31, historical removed Aug 31; popup not banner; meetings consolidated with Deepo; reengagement after July 4. Also: 148 prospects since the takeover at ~20% conversion (sales to follow up), a customer renewed 6 months early at +$4,000, and you're on the hook to upload this tracker to the Netlify app.",
