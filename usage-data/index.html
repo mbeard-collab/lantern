@@ -222,7 +222,7 @@ const MOD = {
 const W = D.weeks.length;
 const PAGE = 150;
 const state = {owner:'ALL', tf:30, mods:['core'], trial:false, ovOrg:null,
-  orgSort:{key:'m:core', dir:-1}, userSort:{key:'m:core', dir:-1}};
+  orgSort:{key:'d:core', dir:-1}, userSort:{key:'d:core', dir:-1}};
 let orgShow=PAGE, userShow=PAGE, trendChart=null;
 
 // ---- build per-entity weekly arrays (aligned to D.weeks) ----
@@ -239,15 +239,22 @@ function windows(){const n=tfWeeks(); const cur=[],prev=[];
   for(let i=W-n;i<W;i++) if(i>=0) cur.push(i);
   for(let i=W-2*n;i<W-n;i++) if(i>=0) prev.push(i);
   return {cur,prev};}
+// Comparison windows for "movement" (Δ hits). For 7d/30d this is the current window vs the
+// equal-length window immediately before it. For 90d there is no prior 90-day window in the
+// data, so we compare the recent half of the window against the earlier half.
+function deltaWindows(){const n=tfWeeks(); const curD=[],prevD=[];
+  if(W-2*n>=0){ for(let i=W-n;i<W;i++) curD.push(i); for(let i=W-2*n;i<W-n;i++) prevD.push(i); }
+  else { const half=Math.max(1,Math.floor(W/2)); for(let i=0;i<half;i++) prevD.push(i); for(let i=W-half;i<W;i++) curD.push(i); }
+  return {curD,prevD};}
 function sumW(arr,idxs){let s=0; for(const i of idxs) s+=arr[i]||0; return s;}
 
 // metrics cache keyed by tf
 let metCache={};
 function metrics(){
   const k=state.tf; if(metCache[k]) return metCache[k];
-  const {cur,prev}=windows();
+  const {cur}=windows(); const {curD,prevD}=deltaWindows();
   const mk=(WArr)=>WArr.map(x=>{const m={};
-    for(const mod of MODS){const c=sumW(x[mod],cur), p=sumW(x[mod],prev); m[mod]=c; m['d'+mod]=c-p;}
+    for(const mod of MODS){m[mod]=sumW(x[mod],cur); m['d'+mod]=sumW(x[mod],curD)-sumW(x[mod],prevD);}
     return m;});
   const r={org:mk(orgW), user:mk(userW)};
   metCache[k]=r; return r;}
@@ -276,22 +283,43 @@ document.getElementById('trialChk').onchange=e=>{state.trial=e.target.checked;re
 function segOn(id,btn){document.querySelectorAll('#'+id+' button').forEach(x=>x.classList.remove('on'));btn.classList.add('on');}
 
 // ---- sort UI (injected into each table's header bar) ----
+// Every module is always offered (movement first, then total) for every time frame,
+// so the mover ranking is reachable for Core, AI and Opportunities regardless of which
+// module tiles are currently active.
 function sortOptions(isOrg){
   const opts=[];
-  state.mods.forEach(m=>{opts.push(['m:'+m, MOD[m].full+' — usage']); opts.push(['d:'+m, MOD[m].full+' — change']);});
+  MODS.forEach(m=>{opts.push(['d:'+m, MOD[m].full+' · movement (Δ hits)']); opts.push(['m:'+m, MOD[m].full+' · total hits']);});
   if(isOrg){opts.push(['acv','ACV']); opts.push(['nu','Active users']);}
   opts.push(['name','Name (A–Z)']);
   return opts;
+}
+// Direction button text depends on what is being ranked. For a movement (Δ) key it reads
+// as the sign of the change; for a total key it reads as high/low volume.
+function dirLabel(key,dir){
+  if(key==='name') return dir<0?'Z–A':'A–Z';
+  if(key[0]==='d') return dir<0?'▲ Biggest increase':'▼ Biggest decrease';
+  return dir<0?'▼ Highest':'▲ Lowest';
+}
+// If a ranking targets a module whose column is hidden, reveal that module so the numbers
+// being ranked are visible (keeps KPIs / trend / leaderboard in sync too).
+function ensureModuleShown(key){
+  const parts=key.split(':');
+  if((parts[0]==='m'||parts[0]==='d') && MODS.includes(parts[1]) && !state.mods.includes(parts[1])){
+    state.mods.push(parts[1]); state.mods=MODS.filter(x=>state.mods.includes(x));
+    document.querySelectorAll('#modSeg button').forEach(x=>x.classList.toggle('on', state.mods.includes(x.dataset.mod)));
+    return true;
+  }
+  return false;
 }
 function buildSortUI(){
   [['orgSortBar',true,state.orgSort],['userSortBar',false,state.userSort]].forEach(([id,isOrg,s])=>{
     const bar=document.getElementById(id); if(!bar) return;
     const opts=sortOptions(isOrg);
     if(!opts.find(o=>o[0]===s.key)) s.key=opts[0][0];
-    bar.innerHTML='<span class="sortlab">Sort</span>'+
+    bar.innerHTML='<span class="sortlab">Rank by</span>'+
       '<select class="sortsel">'+opts.map(o=>'<option value="'+o[0]+'"'+(o[0]===s.key?' selected':'')+'>'+o[1]+'</option>').join('')+'</select>'+
-      '<button class="dirbtn">'+(s.dir<0?'▼ Most':'▲ Least')+'</button>';
-    bar.querySelector('.sortsel').onchange=e=>{s.key=e.target.value; if(s.key==='name')s.dir=1; isOrg?renderOrgs():renderUsers();};
+      '<button class="dirbtn">'+dirLabel(s.key,s.dir)+'</button>';
+    bar.querySelector('.sortsel').onchange=e=>{s.key=e.target.value; if(s.key==='name')s.dir=1; ensureModuleShown(s.key); buildSortUI(); render();};
     bar.querySelector('.dirbtn').onclick=()=>{s.dir=-s.dir; buildSortUI(); isOrg?renderOrgs():renderUsers();};
   });
 }
@@ -490,7 +518,9 @@ function syncTrial(){const w=document.getElementById('trialWrap');
   if(state.owner==='ALL'){w.classList.remove('dis');} else {w.classList.add('dis');document.getElementById('trialChk').checked=false;state.trial=false;}}
 document.getElementById('foot').innerHTML=
   '<b>Source:</b> CrateDB <code>analytics</code> schema, loaded from <code>usage_data.js</code>. Tables, leaderboard, and KPIs recompute for the selected <b>time frame</b> '+
-  'using weekly buckets (7d ≈ latest week, 30d ≈ last 4 weeks, 90d = full window); <b>change</b> compares each window to the one before it. '+
+  'using weekly buckets (7d ≈ latest week, 30d ≈ last 4 weeks, 90d = full window). <b>Rank by → movement (Δ hits)</b> orders accounts by how much activity rose or fell, so '+
+  '<b>Biggest increase</b> surfaces the fastest-growing accounts and <b>Biggest decrease</b> the fastest-declining, per module. Movement compares the current window to the equal '+
+  'period just before it (7d, 30d); for 90d there is no prior 90-day window, so it compares the recent half of the window to the earlier half. <b>Total hits</b> ranks by raw volume instead. '+
   '<b>Core</b> is an export-weighted score, so single-day spikes can be one-off exports — the 7-day average is the truer trend. '+
   'User-level figures cover provisioned external users only (~2–3% below org-level by design). Module mix is 30-day rolling at org level. Owner trends/totals are exact across all paying orgs.';
 
