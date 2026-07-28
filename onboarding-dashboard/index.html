@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GovSpend — CI Onboarding Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --blue:#0076DE; --space:#303650; --xan:#FFC44D; --green:#35A36A;
+    --light:#F4F7FB; --gray:#5B6473; --line:#E2E7F0; --white:#fff;
+    --red:#E0483D; --amber:#F2A63B;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Lato',-apple-system,Segoe UI,Roboto,sans-serif;color:var(--space);background:var(--light);line-height:1.45}
+  a{color:var(--blue);text-decoration:none}
+  code{background:#eef1f7;padding:1px 4px;border-radius:4px;font-size:.92em}
+  .wrap{max-width:1240px;margin:0 auto;padding:0 24px 64px}
+
+  header{background:var(--space);color:#fff;padding:22px 0 20px}
+  .head-in{max-width:1240px;margin:0 auto;padding:0 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px}
+  header svg{height:34px;width:auto;display:block}
+  .head-r{text-align:right}
+  .head-r .t{font-weight:900;font-size:18px;letter-spacing:.2px}
+  .head-r .s{font-size:12.5px;color:#b7c0d6}
+  .sub{background:#272c42;color:#c7cfe2;font-size:13px}
+  .sub-in{max-width:1240px;margin:0 auto;padding:9px 24px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;align-items:center}
+  .sub-r{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  .sla-badge{background:var(--blue);color:#fff;font-weight:700;font-size:12px;padding:4px 11px;border-radius:20px}
+  .repfilter{display:flex;align-items:center;gap:8px}
+  .repfilter label{color:#c7cfe2;font-size:12px;font-weight:700}
+  .repfilter select{font-family:inherit;font-size:12.5px;font-weight:700;color:#fff;background:#39405e;border:1px solid #4a5273;border-radius:7px;padding:5px 10px;cursor:pointer}
+
+  h2{font-size:16px;font-weight:900;margin:34px 0 4px;color:var(--space);display:flex;align-items:center;gap:9px}
+  h2 .bar{width:5px;height:17px;background:var(--blue);border-radius:2px;display:inline-block}
+  .desc{color:var(--gray);font-size:13px;margin-bottom:14px;max-width:840px}
+
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:18px}
+  .kpi{background:#fff;border:1px solid var(--line);border-radius:12px;padding:15px 16px;position:relative;overflow:hidden}
+  .kpi .lab{font-size:11.5px;color:var(--gray);font-weight:700;text-transform:uppercase;letter-spacing:.4px}
+  .kpi .big{font-size:30px;font-weight:900;margin-top:5px;line-height:1}
+  .kpi .note{font-size:11.5px;color:var(--gray);margin-top:5px}
+  .kpi.accent .big{color:var(--blue)} .kpi.warn .big{color:var(--red)} .kpi.good .big{color:var(--green)}
+  .kpi::after{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--line)}
+  .kpi.accent::after{background:var(--blue)} .kpi.warn::after{background:var(--red)}
+  .kpi.good::after{background:var(--green)} .kpi.amberc::after{background:var(--amber)}
+
+  .card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:20px 22px;margin-top:16px}
+
+  .slamodel{display:flex;margin-top:6px;border-radius:10px;overflow:hidden;border:1px solid var(--line)}
+  .slaseg{flex-grow:1;padding:12px 14px;color:#fff;position:relative}
+  .slaseg .n{font-size:12px;font-weight:900;letter-spacing:.2px}
+  .slaseg .d{font-size:11.5px;opacity:.92;margin-top:2px}
+  .slaseg .c{position:absolute;right:8px;top:8px;font-size:10.5px;background:rgba(255,255,255,.22);padding:1px 6px;border-radius:9px;font-weight:700}
+
+  .pipe{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-top:6px}
+  .pcol{background:var(--light);border:1px solid var(--line);border-radius:10px;padding:14px;text-align:center;position:relative}
+  .pcol .stg{font-size:11.5px;font-weight:700;color:var(--space);min-height:30px;display:flex;align-items:center;justify-content:center}
+  .pcol .cnt{font-size:34px;font-weight:900;color:var(--blue);line-height:1}
+  .pcol .bud{font-size:11px;color:var(--gray);margin-top:4px}
+  .pcol.hot{background:#FFF6E6;border-color:#F5D98A} .pcol.hot .cnt{color:#C77B00}
+  .pcol .tag{position:absolute;top:8px;right:8px;font-size:9.5px;background:var(--xan);color:#5a4300;font-weight:800;padding:1px 6px;border-radius:8px}
+
+  table{width:100%;border-collapse:collapse;font-size:13px;margin-top:4px}
+  th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--gray);font-weight:800;padding:9px 10px;border-bottom:2px solid var(--line)}
+  td{padding:10px;border-bottom:1px solid var(--line);vertical-align:middle}
+  tr:last-child td{border-bottom:none}
+  td.num{font-variant-numeric:tabular-nums;font-weight:700}
+  .who{font-weight:700} .muted{color:var(--gray)}
+  .chip{display:inline-block;font-size:11px;font-weight:800;padding:2px 9px;border-radius:20px;white-space:nowrap}
+  .c-green{background:#E5F4EC;color:#1F7A4D} .c-amber{background:#FDF0DA;color:#9A6512}
+  .c-red{background:#FBE6E4;color:#B23127} .c-blue{background:#E3F0FC;color:#0B5CAB} .c-gray{background:#EDF0F5;color:#4B5468}
+  .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:middle}
+  .stage-chip{background:#EDF0F5;color:#303650;font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px}
+  .empty{padding:22px;text-align:center;color:var(--gray);font-style:italic;font-size:13px}
+
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .grid2-3{display:grid;grid-template-columns:1.35fr 1fr;gap:16px}
+
+  .tl-row{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--line)}
+  .tl-row:last-child{border-bottom:none}
+  .tl-row .leg{flex:1;font-size:13px;font-weight:700}
+  .tl-row .leg small{display:block;font-weight:400;color:var(--gray);font-size:11.5px}
+  .tl-row .met{font-variant-numeric:tabular-nums;font-size:13px;color:var(--gray);width:64px;text-align:center}
+  .tl-row .met b{display:block;color:var(--space);font-size:15px}
+  .tl-total{background:var(--light);border-radius:8px;padding:11px 12px;margin-top:6px}
+
+  .queue{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:4px}
+  .qcol{background:var(--light);border:1px solid var(--line);border-radius:10px;padding:12px}
+  .qcol h4{font-size:12px;font-weight:900;color:var(--space);display:flex;justify-content:space-between;align-items:center;margin-bottom:9px}
+  .qcol h4 span{background:var(--space);color:#fff;font-size:11px;border-radius:20px;padding:1px 8px}
+  .qitem{background:#fff;border:1px solid var(--line);border-radius:7px;padding:7px 9px;font-size:12px;font-weight:700;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;gap:6px}
+  .qitem:last-child{margin-bottom:0} .qitem small{font-weight:400;color:var(--gray)}
+  .qempty{font-size:12px;color:var(--gray);font-style:italic;padding:6px 2px}
+
+  .months{display:flex;gap:20px;align-items:flex-end;height:180px;padding:10px 4px 0;border-bottom:2px solid var(--line);margin-top:6px}
+  .mcol{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;height:100%;justify-content:flex-end}
+  .mbars{display:flex;gap:5px;align-items:flex-end;height:100%}
+  .mbar{width:26px;border-radius:5px 5px 0 0;position:relative;min-height:3px}
+  .mbar.s{background:var(--blue)} .mbar.c{background:var(--xan)}
+  .mbar span{position:absolute;top:-18px;left:0;right:0;text-align:center;font-size:11px;font-weight:800}
+  .mlab{font-size:11.5px;color:var(--gray);font-weight:700}
+  .legend{display:flex;gap:16px;font-size:12px;margin-top:12px;color:var(--gray)}
+  .legend i{width:11px;height:11px;border-radius:3px;display:inline-block;margin-right:5px;vertical-align:middle}
+
+  .seed{background:#FFF9EC;border:1px solid #F3DFA6;border-radius:10px;padding:12px 14px;font-size:12.5px;color:#7a5a12;margin-top:12px}
+  .seed b{color:#5a4300}
+
+  .cardhd{font-size:13px;font-weight:900;margin-bottom:12px;display:flex;justify-content:space-between;align-items:baseline;color:var(--space)}
+  .cardhd small{font-weight:400;color:var(--gray);font-size:11px}
+  .mrow{display:flex;align-items:center;gap:12px;padding:6px 0}
+  .mrow .ml{width:158px;font-size:12.5px;font-weight:700;display:flex;align-items:center;gap:7px}
+  .mrow .ml i{width:9px;height:9px;border-radius:2px;display:inline-block;flex:none}
+  .mrow .mtrack{flex:1;background:var(--light);border-radius:6px;height:20px;overflow:hidden}
+  .mrow .mfill{height:100%;border-radius:6px;min-width:2px}
+  .mrow .mv{width:118px;text-align:right;font-size:12px;font-variant-numeric:tabular-nums;color:var(--gray)}
+  .mrow .mv b{color:var(--space);font-size:13px}
+  .arow{display:flex;align-items:center;gap:10px;padding:6px 0;font-size:12.5px}
+  .arow .an{width:150px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .arow .at{flex:1;background:var(--light);border-radius:6px;height:16px;overflow:hidden}
+  .arow .af{height:100%;background:var(--blue);border-radius:6px;min-width:2px}
+  .arow .av{width:70px;text-align:right;font-variant-numeric:tabular-nums;font-weight:700}
+  #usagetbl td.num, #usagetbl th{text-align:right}
+  #usagetbl td:first-child,#usagetbl th:first-child{text-align:left}
+  .np{font-size:11px;color:var(--gray);font-style:italic}
+
+  /* clickable + drill modal */
+  .kpi.clickable,.pcol.clickable{cursor:pointer;transition:transform .08s,box-shadow .12s}
+  .kpi.clickable:hover,.pcol.clickable:hover{transform:translateY(-1px);box-shadow:0 5px 16px rgba(48,54,80,.14)}
+  .kpi .drillhint{font-size:10px;color:var(--blue);font-weight:800;margin-top:6px;text-transform:uppercase;letter-spacing:.3px}
+  .drill-modal{display:none;position:fixed;inset:0;background:rgba(20,24,40,.55);z-index:100;align-items:flex-start;justify-content:center;padding:44px 16px}
+  .drill-box{background:#fff;border-radius:14px;max-width:960px;width:100%;max-height:84vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+  .drill-hd{display:flex;justify-content:space-between;align-items:center;padding:15px 20px;border-bottom:1px solid var(--line);font-weight:900;font-size:15px;color:var(--space)}
+  .drill-hd button{border:none;background:var(--light);width:30px;height:30px;border-radius:8px;cursor:pointer;font-size:14px;color:var(--gray)}
+  .drill-scroll{overflow:auto;padding:4px 20px 18px}
+  .drill-scroll th{position:sticky;top:0;background:#fff}
+
+  .toggle{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;margin-left:auto}
+  .toggle button{border:none;background:#fff;padding:5px 14px;font-family:inherit;font-size:12px;font-weight:800;color:var(--gray);cursor:pointer}
+  .toggle button.on{background:var(--blue);color:#fff}
+
+  footer{margin-top:40px;padding-top:20px;border-top:1px solid var(--line);font-size:11.5px;color:var(--gray)}
+  footer b{color:var(--space)}
+  .foot-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:8px}
+  @media(max-width:900px){.kpis{grid-template-columns:repeat(2,1fr)}.pipe{grid-template-columns:repeat(2,1fr)}.queue{grid-template-columns:repeat(2,1fr)}.grid2,.grid2-3,.foot-grid{grid-template-columns:1fr}.slamodel{flex-wrap:wrap}.slaseg{flex-basis:45%}}
+</style>
+</head>
+<body>
+<header>
+  <div class="head-in">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 301.3 65.8"><g><path fill="#0076de" d="M138.8.2v8c5.6,1.3,9.3,4.5,11.6,9.5l-10.5,5.7c-1.1-1.7-4.5-3.4-7.5-3.4-1.5,0-6.5.3-6.5,3,0,1.3,1.9,2,7,2.7,7.3,1,19.4,2.6,19.4,16.1,0,9.8-7.2,14.7-13.5,15.8-2,.4-5.2.6-5.2.6l5.2,2.1v5.3c15-3.1,26.2-16.6,26.2-32.7.1-16.2-11.1-29.4-26.2-32.7h0Z"/><path fill="#fff" d="M24,21.1c-2.4-2.1-6.3-3-9.6-3-8.2,0-14.4,6.2-14.4,14.4s6.1,14.5,14.5,14.5c2.5,0,5-.7,7.5-2.3l.4-.2v1.2c0,3.4-2.6,5.8-6.4,5.8-2.3,0-4.9-.9-5.8-3H1c1.5,6.7,7.1,10.7,15.2,10.7,9.5,0,15.4-5.7,15.4-14.8v-25.8h-6.2s-1.4,2.5-1.4,2.5ZM16.2,38.9c-1.9,0-3.6-.7-4.8-2-1.2-1.2-1.7-2.9-1.6-4.7,0-3.9,2.7-6.6,6.4-6.6s6.5,2.7,6.5,6.7-2.6,6.6-6.5,6.6h0Z"/><path fill="#fff" d="M50.3,17.6c-9.4,0-16.1,6.5-16.1,15.5s6.8,15.5,16.2,15.5,16-6.6,16-15.5-6.8-15.5-16.1-15.5ZM50.3,39.8c-3.8,0-6.7-2.8-6.7-6.8s2.8-6.8,6.7-6.8,6.7,2.8,6.7,6.8-2.8,6.8-6.7,6.8Z"/><polygon fill="#fff" points="75 18.6 64.6 18.6 76.4 47.5 85.2 47.5 96.8 18.6 86.4 18.6 80.9 36.6 75 18.6"/><path fill="#fff" d="M132.2,45.9c1.2,0,7.3-.1,7.3-3.9,0-1.6-2.7-2.9-7.9-3.5-6.9-.8-18.4-2.2-18.4-15.3,0-7.6,5.2-13.2,13.2-14.9,1.7-.4,5.3-.4,5.3-.4l-5.3-2.2V0c-15.8,2.6-27.9,16.2-27.9,32.9s12.1,30.3,27.9,32.9l.1-7.6c-6.8-1.2-11.8-5.2-14.4-10.9l10.9-6c1.6,2.4,5.4,4.6,9.2,4.6h0Z"/><path fill="#0076de" d="M186.7,17.7c-3.5,0-6.6,1-9,3.1l-.2.2-1.4-2.4h-6.5v39.6h9.5v-11.9l.4.2c2.1,1.3,4.5,2,7.1,2,8.9,0,15.1-6.3,15.1-15.5,0-4.5-1.6-8.4-4.4-11.2-2.7-2.6-6.5-4.1-10.6-4.1h0ZM185.3,40.1c-3.8,0-6.8-3.1-6.8-7s2.8-7,6.8-7,6.8,3.1,6.8,7-3,7-6.8,7Z"/><path fill="#0076de" d="M220.3,17.8h-.4c-9.1,0-15.8,6.4-15.8,15.2s6.6,15.5,15.8,15.5c7,0,12.9-4.1,15.1-10.4h-9.5c-1.1,1.7-3.1,2.7-5.5,2.7-3.3,0-5.4-1.8-6.1-5.3l-.1-.3h21.9c0-.4,0-.8.1-1.2,0-.4.1-.9.1-1.3,0-4.1-1.6-7.9-4.4-10.6-3.1-2.8-7-4.3-11.2-4.3h0ZM213.5,30.1l.1-.3c1-3.1,3.1-4.8,6.1-4.7,3.3,0,5.5,1.7,6.3,4.7l.1.3h-12.6Z"/><path fill="#0076de" d="M255.6,17.6c-3.5,0-6.9.9-9,3.3l-.2.3-1.5-2.6h-6.7v28.9h9.7v-15.4c0-3.8,2-6.1,5.1-6.1,1.9,0,4,.9,4,5.4v16.2h9.7v-17.7c.1-7.4-4.2-12.1-11.1-12.3h0Z"/><path fill="#0076de" d="M292,19.6c-2.1-1.3-4.9-2-7.6-2-8.9,0-15.1,6.4-15.1,15.5s6.2,15.5,15.1,15.5c3.4,0,6.3-1,8.7-3l.2-.2,1.1,2.2h6.9V7.9h-9.3v11.7h0ZM285.9,40.1c-3.8,0-6.8-3.1-6.8-7s2.8-7,6.8-7,6.8,3.1,6.8,7-3,7-6.8,7Z"/></g></svg>
+    <div class="head-r">
+      <div class="t">Customer Implementation — Onboarding Dashboard</div>
+      <div class="s">Reporting layer for CI Specialists · Account Plan → Onboarding</div>
+    </div>
+  </div>
+</header>
+<div class="sub"><div class="sub-in">
+  <div><span id="snapdate"></span> · Cohort: Closed-Won new business since Jun 1 · Salesforce + CrateDB</div>
+  <div class="sub-r">
+    <div class="repfilter"><label for="mgrfilter">Manager:</label>
+      <select id="mgrfilter"></select></div>
+    <div class="repfilter"><label for="monthfilter">Close month:</label>
+      <select id="monthfilter"></select></div>
+    <div class="repfilter"><label for="repfilter">Rep (account owner):</label>
+      <select id="repfilter"></select></div>
+    <div class="repfilter"><label for="cifilter">CI specialist:</label>
+      <select id="cifilter"></select></div>
+    <span class="sla-badge">SLA target: 30 days end-to-end</span>
+  </div>
+</div></div>
+
+<div class="wrap">
+
+  <h2><span class="bar"></span>30-Day SLA — how the target is split by stage</h2>
+  <div class="desc">The 30-day onboarding SLA is distributed across the five stages below, weighted toward the build-heavy Master Search and Training work. Each segment shows the days allowed <b>in that stage</b>; the pill shows the cumulative day the stage should be finished by.</div>
+  <div class="slamodel" id="slamodel"></div>
+
+  <h2><span class="bar"></span>Executive snapshot</h2>
+  <div class="kpis" id="kpis"></div>
+  <div class="seed" id="seednote"></div>
+
+  <h2><span class="bar"></span>Onboarding pipeline — where customers are today</h2>
+  <div class="desc">Count of cohort accounts whose current (first incomplete) stage is each of the five milestones. The hottest column is where the queue is backing up.</div>
+  <div class="card"><div class="pipe" id="pipe"></div></div>
+
+  <h2><span class="bar"></span>Active onboardings</h2>
+  <div class="desc">Every account in the cohort still onboarding, with current stage, owner, elapsed time, and the next action to clear. <b>Click a customer name to open its Salesforce Account Plan.</b></div>
+  <div class="card"><table id="activetbl"><thead><tr>
+    <th>Customer</th><th>ACV</th><th>Focus</th><th>Current stage</th><th>CI / RM owner</th>
+    <th>Days in onboarding</th><th>Next action</th><th>SLA status</th>
+  </tr></thead><tbody></tbody></table><div id="activeempty"></div></div>
+
+  <h2><span class="bar"></span>Platform usage — onboarding cohort</h2>
+  <div class="desc">Are onboarding customers actually activating? Overall unweighted hits and the module mix, pulled from the usage warehouse (CrateDB) for the accounts above. Early, broad usage is the leading indicator that onboarding is landing.</div>
+  <div class="kpis" id="usagekpis"></div>
+  <div class="grid2-3" style="margin-top:16px">
+    <div class="card">
+      <div class="cardhd">Hits by module <small>share of classified hits</small></div>
+      <div id="modbars"></div>
+    </div>
+    <div class="card">
+      <div class="cardhd">Overall hits by account <small>unweighted</small></div>
+      <div id="acctusage"></div>
+    </div>
+  </div>
+  <div class="card" style="margin-top:16px">
+    <div class="cardhd">Usage by account &amp; module</div>
+    <table id="usagetbl"><thead><tr>
+      <th>Customer</th><th>Overall hits</th><th>Bids</th><th>Contracts</th><th>Meeting&nbsp;Intel</th>
+      <th>Spending</th><th>Contacts</th><th>Federal</th><th>AI</th><th>Opp&nbsp;Module</th><th>Health</th>
+    </tr></thead><tbody></tbody></table>
+  </div>
+  <div class="seed" id="usageseed"></div>
+
+  <div class="grid2-3">
+    <div>
+      <h2><span class="bar"></span>SLA monitoring</h2>
+      <div class="desc">Elapsed time vs. the cumulative SLA target for each account's current stage.</div>
+      <div class="card" style="margin-top:6px"><table id="slatbl"><thead><tr>
+        <th>Customer</th><th>Stage</th><th>Elapsed</th><th>Target</th><th>Owner</th><th>Status</th>
+      </tr></thead><tbody></tbody></table><div id="slaempty"></div></div>
+    </div>
+    <div>
+      <h2><span class="bar"></span>Onboarding timeline</h2>
+      <div class="desc">Average time between milestones (populates as stages are completed with real dates).</div>
+      <div class="card" id="timeline" style="margin-top:6px"></div>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <div>
+      <h2><span class="bar"></span>Monthly performance</h2>
+      <div class="desc">Onboardings started vs. completed by month.</div>
+      <div class="card" style="margin-top:6px">
+        <div class="months" id="months"></div>
+        <div class="legend"><span><i style="background:var(--blue)"></i>Started</span><span><i style="background:var(--xan)"></i>Completed</span></div>
+      </div>
+    </div>
+    <div>
+      <h2><span class="bar"></span>Team performance
+        <span class="toggle"><button id="tCI" class="on" onclick="setTeam('ci')">By CI</button><button id="tRM" onclick="setTeam('rm')">By RM</button></span>
+      </h2>
+      <div class="desc">Active load, overdue accounts, and average time in onboarding per owner.</div>
+      <div class="card" style="margin-top:6px"><table id="teamtbl"><thead><tr>
+        <th id="ownhdr">CI Specialist</th><th>Active</th><th>Overdue</th><th>Avg days</th>
+      </tr></thead><tbody></tbody></table></div>
+    </div>
+  </div>
+
+  <footer>
+    <b>Methodology &amp; assumptions</b>
+    <div class="foot-grid">
+      <div>
+        <p style="margin-bottom:7px">· <b>Cohort:</b> every account with a Closed-Won <b>New Business</b> opportunity closing on/after Jun 1, 2026 — regardless of whether the Account Plan onboarding tab has been activated. The cohort grows through the year as new deals close.</p>
+        <p style="margin-bottom:7px">· <b>Rep filter</b> = the Account Plan <b>Owner</b> (account owner). Every section above respects the selected rep.</p>
+        <p style="margin-bottom:7px">· <b>Current stage</b> = first incomplete milestone in Sales Handoff → Opp Module Setup → GS Master Search Creation → GS Fullsuite Training → Post-Onboarding.</p>
+        <p>· <b>Days in onboarding</b> = snapshot date − the new-business close/won date (the onboarding SLA clock starts when the deal closes).</p>
+      </div>
+      <div>
+        <p style="margin-bottom:7px">· <b>SLA split (30 days):</b> Sales Handoff 3 · Opp Module Setup 6 · Master Search 9 · Fullsuite Training 7 · Post-Onboarding 5. Status = elapsed vs. current stage's cumulative target (Green &lt;70%, Amber 70–100%, Red &gt;100%).</p>
+        <p style="margin-bottom:7px">· <b>Usage:</b> core 6 modules + overall hits from CrateDB <code>user_module_usage_daily</code>; AI + Opp Module from <code>feature_usage_monthly_history</code>. Matched to accounts by CRM ID.</p>
+        <p>· <b>Refresh:</b> run the <code>onboarding-dashboard-refresh</code> skill daily/bi-daily — it re-queries Salesforce + CrateDB and rewrites the DATA block below. <b>Snapshot fills in as CIs work the new fields.</b></p>
+      </div>
+    </div>
+  </footer>
+</div>
+
+<div id="drill" class="drill-modal" onclick="if(event.target===this)closeDrill()">
+  <div class="drill-box">
+    <div class="drill-hd"><span id="drillTitle"></span><button onclick="closeDrill()">✕</button></div>
+    <div class="drill-scroll"><table id="drillTbl"><thead><tr>
+      <th>Customer</th><th>ACV</th><th>Owner</th><th>CI</th><th>Manager</th><th>Stage</th><th>Days</th><th>SLA</th>
+    </tr></thead><tbody></tbody></table></div>
+  </div>
+</div>
+
+<script>
+/* ===DATA:START — auto-generated by the onboarding-dashboard-refresh skill; do not hand-edit=== */
+const SNAPSHOT = "2026-07-28";
+const USAGE_WINDOW = "Jun 28 – Jul 28, 2026";
+const POP = {cohort:67, activated:4};
+const ACCOUNTS = [
+  {name:"Threatcop", owner:"Stephanie Zuluaga", url:"https://govspend.lightning.force.com/lightning/r/AccountPlan/252VP00000wj2aYYAQ/view", focus:null, status:"Not activated", rm:"Stephanie Zuluaga", ci:null, start:"2026-07-27", expected:null, acv:7500, newAcv:7500, sh:0, oms:0, msc:0, ft:0, po:0, test:false, usage:{hits:1390,bids:179,contracts:118,mi:2,spending:915,contacts:28,federal:2,ai:0,opp:0,health:"—"}},
+  {name:"Summus Industries, Inc", owner:"Kelly Weed", url:"https://govspend.lightning.force.com/lightning/r/AccountPlan/252VP00000whbJ5YAI/view", focus:null, status:"Not activated", rm:"Kelly Weed", ci:"Jacob Carrillo", start:"2026-07-27", expected:null, acv:18500, newAcv:18500, sh:0, oms:0, msc:0, ft:0, po:0, test:false, usage:{hits:105,bids:11,contracts:11,mi:3,spending:42,contacts:1,federal:0,ai:7,opp:3,health:"Red"}},
+  {name:"LumberJacks", owner:"Jake Affeldt", url:"https://govspend.lightning.force.com/lightning/r/AccountPlan/252VP00000whwXDYAY/view", focus:null, status:"Not activated", rm:null, ci:null, start:"2026-07-27", expected:null, acv:7500, newAcv:15500, sh:0, oms:0, msc:0, ft:0, po:0, test:false, usage:{hits:421,bids:242,contracts:28,mi:19,spending:43,contacts:2,federal:0,ai:29,opp:51,health:"—"}},
+  {name:"Sundt", owner:"Kelly Weed", url:"https://govspend.lightning.force.com/lightning/r/AccountPlan/252VP00000wiahVYAQ/view", focus:null, status:"Not activated", rm:"Kelly Weed", ci:"Jacob Carrillo", start:"2026-07-27", expected:null, acv:25000, newAcv:25000, sh:0, oms:0, msc:0, ft:0, po:0, test:false, usage:{hits:0,bids:0,contracts:0,mi:0,spending:0,contacts:0,federal:0,ai:42,opp:19,health:"—"}},
+  {name:"Concentra", owner:"Kelly Weed", url:"https://govspend.lightning.force.com/lightning/r/AccountPlan/252VP00000wjusfYAA/view", focus:null, status:"Not activated", rm:"Kelly Weed", ci:"Jacob Carrillo", start:"2026-07-27", expected:null, acv:35000, newAcv:35000, sh:0, oms:0, msc:0, ft:0, po:0, test:false, usage:{hits:0,bids:0,contracts:0,mi:0,spending:0,contacts:0,federal:0,ai:73,opp:98,health:"—"}},
+  {name:"FSH Technologies", owner:"Kelly Weed", url:"https://govspend.lightning.force.com/lightning/r/AccountPlan/252VP00000wYuWDYA0/view", focus:null, status:"Not activated", rm:"Kelly Weed", ci:null, start:"2026-07-24", expected:null, acv:0, newAcv:13500, sh:0, oms:0, msc:0, ft:0, po:0, test:false, usage:{hits:220,bids:65,contracts:45,mi:10,spending:53,contacts:0,federal:0,ai:0,opp:0,health:"Red"}},
+  {name:"SchoolDog Solutions", owner:"Stephanie Zuluaga", url:"https://govspend.lightning.force.com/lightning/r/AccountPlan/252VP00000wYpgDYAS/view", focus:null, status:"Not activated", rm:"Stephanie Zuluaga", ci:null, start:"2026-07-24", expected:null, acv:0, newAcv:15000, sh:0, oms:0, msc:0, ft:0, po:0, test:false, usage:{hits:655,bids:115,contracts:62,mi:49,spending:246,contacts:31,federal:0,ai:0,opp:0,health:"Red"}},
+  {name:"Isos Technology", owner:"Nate Van De Graff", url:"https://govspend.lightning.force.com/lightning/r/AccountPlan/252VP00000wUgA6YAK/view", focus:null, status:"Not activated", rm:"Nate Van De Graff", ci:"Jacob Carrillo", start:"2026-07-23", expected:null, acv:0, newAcv:29600, sh:0, oms:0, msc:0, ft:0, po:0, test:false, usage:{hits:44,bids:0,contracts:0,mi:0,spending:12,contacts:0,federal:23,ai:7,opp:1,health:"Red"}},
+  {name:"Pantropic Power Products", owner:"Kayla Maldonado", url:"https://govspend.lightning.force.com/lightning/r/AccountPlan/252VP00000wNra6YAC/view", focus:null, status:"Not activated", rm:"Kayla Maldonado", ci:null, start:"2026-07-22", expected:null, acv:12000, newAcv:12000, sh:0, oms:0, msc:0, ft:0, po:0, test:false, usage:{hits:514,bids:155,contracts:14,mi:69,spending:8,contacts:4,federal:8,ai:0,opp:0,health:"Red"}},
+  {name:"Equans", owner:"Kayla Maldonado", url:"https://govspend.lightning.force.com/lightning/r/AccountPlan/252VP00000wOy86YAC/view", focus:null, status:"Not activated", rm:"Kayla Maldonado", ci:null, start:"2026-07-22", expected:null, acv:0, newAcv:16500, sh:0, oms:0, msc:0, ft:0, po:0, test:false, usage:{hits:40,bids:6,contracts:2,mi:3,spending:0,contacts:0,federal:0,ai:14,opp:27,health:"Red"}},
+  {name:"LawVu", owner:"Nate Van De Graff", url:"https://govspend.lightning.force.com/lightning/r/AccountPlan/252VP00000wK2PFYA0/view", focus:null, status:"Not activated", rm:"Nate Van De Graff", ci:null, start:"2026-07-21", expected:null, acv:0, newAcv:10000, sh:0, oms:0, msc:0, ft:0, po:0, test:false, usage:{hits:14,bids:0,contracts:0,mi:0,spending:0,contacts:0,federal:0,ai:0,opp:0,health:"Red"}},
+  {name:"MV Transportation", owner:"Jessica Thompson", url:"https://govspend.lightning.force.com/lightning/r/AccountPlan/252VP00000wG0FZYA0/view", focus:null, status:"Not activated", rm:"Jessica Thompson", ci:null, start:"2026-07-20", expected:null, acv:45000, newAcv:45000, sh:0, oms:0, msc:0, ft:0, po:0, test:false, usage:{hits:0,bids:0,contracts:0,mi:0,spending:0,contacts:0,federal:0,ai:0,opp:0,health:"Red"}},
+  {name:"Vidir Solutions", owner:"Brian Mooney", url:"https://govspend.lightning.force.com/lightning/r/AccountPlan/252VP00000w4H8vYAE/view", focus:null, status:"Not activated", rm:null, ci:null, start:"2026-07-17", expected:null, acv:7000, newAcv:14250, sh:0, oms:0, msc:0, ft:0, po:0, test:false, usage:{hits:1117,bids:425,contracts:49,mi:81,spending:394,contacts:23,federal:15,ai:0,opp:0,health:"Red"}},
+  {name:"CREW", owner:"Nate Van De Graff", url:"https://govspend.lightning.force.com/lightning/r/AccountPlan/252VP00000vyIfaYAE/view", focus:null, status:"Not activated", rm:null, ci:null, start:"2026-07-16", expected:null, acv:8000, newAcv:17000, sh:0, oms:0, msc:0, ft:0, po:0, test:false, usage:{hits:1508,bids:485,contracts:83,mi:38,spending:465,contacts:0,federal:0,ai:47,opp:1,health:"Green"}},
+  {name:"Denison Parking", owner:"Kayla Maldonado", url:"https://govspend.lightning.force.com/lightning/r/AccountPlan/252VP00000vxJLyYAM/view", focus:null, status:"Not activated", rm:"Kayla Maldonado", ci:null, start:"2026-07-16", expected:null, acv:30000, newAcv:30000, sh:0, oms:0, msc:0, ft:0, po:0, test:false, usage:{hits:761,bids:232,contracts:190,mi:90,spending:107,contacts:0,federal:0,ai:24,opp:8,health:"Yellow"}},
+  {name:"International Motors, LLC", owner:"Mayra Ramirez", url:"https://govspend.lightning.force.com/lightning/r/AccountPlan/252VP00000vxSylYAE/view", focus:null, status:"Not activated", rm:"Mayra Ramirez", ci:"Mayra Ramirez", start:"2026-07-16", expected:null, acv:48500, newAcv:48500, sh:0, oms:0, msc:0, ft:0, po:0, test:false, usage:{hits:0,bids:0,contracts:0,mi:0,spending:0,contacts:0,federal:0,ai:0,opp:0,health:"Red"}},
+  {name:"Nobi llc", owner:"Brian Mooney", url:"https://govspend.lightning.force.com/lightning/r/AccountPlan/252VP00000vo3ecYAA/view", focus:null, status:"Not activated", rm:null, ci:null, start:"2026-07-14", expected:null, acv:0, newAcv:16750, sh:0, oms:0, msc:0, ft:0, po:0, test:false, usage:{hits:975,bids:10,contracts:5,mi:33,spending:459,contacts:417,federal:0,ai:0,opp:0,health:"Red"}},
+  {name:"University of California-Berkeley", owner:"Erika Flynn", url:"https://govspend.lightning.force.com/lightning/r/AccountPlan/252VP00000vjuLNYAY/view", focus:null, status:"Not activated", rm:null, ci:null, start:"2026-07-13", expected:null, acv:0, newAcv:5000, sh:0, oms:0, msc:0, ft:0, po:0, test:false, usage:{hits:242,bids:0,contracts:0,mi:0,spending:242,contacts:0,federal:0,ai:0,opp:0,health:"Red"}},
+  {name:"Audacy Operations, Inc.", owner:"Jace Short", url:"https://govspend.lightning.force.com/lightning/r/AccountPlan/252VP00000vUun7YAC/view", focus:null, status:"Not activated", rm:"Jace Short", ci:"Michelle Vasquez", start:"2026-07-10", expected:null, acv:29975, newAcv:63275, sh:0, oms:0, msc:0, ft:0, po:0, test:false, usage:{hits:515,bids:285,contracts:50,mi:2,spending:11,contacts:2,federal:50,ai:23,opp:27,health:"Green"}},
+  {name:"Iowa Prison Industries", owner:"Erika Flynn", url:"https://govspend.lightning.force.com/lightning/r/AccountPlan/252VP00000vVoMHYA0/view", focus:null, status:"Not activated", rm:null, ci:null, start:"2026-07-10", expected:null, acv:0, newAcv:10000, sh:0, oms:0, msc:0, ft:0, po:0, test:false, usage:{hits:1,bids:0,contracts:0,mi:0,spending:0,contacts:1,federal:0,ai:0,opp:0,health:"Red"}},
+  {name:"Boot Barn", owner:"Jessica Thompson", url:"https://govspend.lightning.force.com/lightning/r/AccountPlan/252VP00000vP7S5YAK/view", focus:null, status:"Not activated", rm:"Jessica Thompson", ci:null, start:"2026-07-09", expected:null, acv:19450, newAcv:38900, sh:0, oms:0, msc:0, ft:0, po:0, test:false, usage:{hits:177,bids:39,contracts:0,mi:0,spending:0,contacts:0,federal:0,ai:0,opp:0,health:"Yellow"}},
+  {name:"Maxxess Systems", owner:"Stephanie Zuluaga", url:"https://govspend.lightning.force.com/lightning/r/AccountPlan/252VP00000uNdZuYAK/view", focus:null, status:"Not activated", rm:"Stephanie Zuluaga", ci:null, start:"2026-07-07", expected:null, acv:9000, newAcv:18000, sh:0, oms:0, msc:0, ft:0, po:0, test:false, usage:{hits:174,bids:14,contracts:7,mi:0,spending:52,contacts:22,federal:0,ai:7,opp:41,health:"Green"}},
+  {name:"Citron Hygiene", owner:"Erika Flynn", url:"https://govspend.lightning.force.com/lightning/r/AccountPlan/252VP00000usAuzYAE/view", focus:null, status:"Not activated", rm:"Erika Flynn", ci:null, start:"2026-07-02", expected:null, acv:8000, newAcv:17000, sh:0, oms:0, msc:0, ft:0, po:0, test:false, usage:{hits:1400,bids:223,contracts:128,mi:73,spending:344,contacts:53,federal:46,ai:0,opp:0,health:"Green"}},
+  {name:"Hol-Mac Corporation", owner:"Brian Mooney", url:"https://govspend.lightning.force.com/lightning/r/AccountPlan/252VP00000uhhsgYAA/view", focus:null, status:"Not activated", rm:"Brian Mooney", ci:null, start:"2026-06-30", expected:null, acv:13000, newAcv:13000, sh:0, oms:0, msc:0, ft:0, po:0, test:false, usage:{hits:915,bids:244,contracts:73,mi:139,spending:358,contacts:2,federal:0,ai:28,opp:24,health:"Yellow"}},
+  {name:"Vialytics", owner:"Blake Cornett", url:"https://govspend.lightning.force.com/lightning/r/AccountPlan/252VP00000uhdqfYAA/view", focus:null, status:"Not activated", rm:null, ci:null, start:"2026-06-30", expected:null, acv:12000, newAcv:12000, sh:0, oms:0, msc:0, ft:0, po:0, test:false, usage:{hits:1011,bids:59,contracts:106,mi:352,spending:265,contacts:11,federal:0,ai:0,opp:0,health:"Green"}},
+  {name:"Volt", owner:"Stephanie Zuluaga", url:"https://govspend.lightning.force.com/lightning/r/AccountPlan/252VP00000uhrnBYAQ/view", focus:"Full GovSpend Suite", status:"In-Progress", rm:"Stephanie Zuluaga", ci:null, start:"2026-06-30", expected:null, acv:8000, newAcv:18000, sh:1, oms:1, msc:0, ft:0, po:0, test:false, usage:{hits:610,bids:57,contracts:14,mi:60,spending:158,contacts:100,federal:0,ai:0,opp:4,health:"Green"}},
+  {name:"Diversified Facility Solutions", owner:"Steven Miner", url:"https://govspend.lightning.force.com/lightning/r/AccountPlan/252VP00000uhP2vYAE/view", focus:null, status:"Not activated", rm:null, ci:null, start:"2026-06-30", expected:null, acv:5400, newAcv:11800, sh:0, oms:0, msc:0, ft:0, po:0, test:false, usage:{hits:51,bids:0,contracts:0,mi:0,spending:0,contacts:12,federal:0,ai:0,opp:0,health:"Yellow"}},
+  {name:"Indeed", owner:"Baxter Knight", url:"https://govspend.lightning.force.com/lightning/r/AccountPlan/252VP00000uhrK9YAI/view", focus:null, status:"Not activated", rm:"Baxter Knight", ci:"Michelle Vasquez", start:"2026-06-30", expected:null, acv:57600, newAcv:57600, sh:0, oms:0, msc:0, ft:0, po:0, test:false, usage:{hits:718,bids:52,contracts:81,mi:74,spending:301,contacts:28,federal:5,ai:14,opp:0,health:"Yellow"}},
+  {name:"Barracuda Networks", owner:"Baxter Knight", url:"https://govspend.lightning.force.com/lightning/r/AccountPlan/252VP00000ugSZ7YAM/view", focus:null, status:"Not activated", rm:"Baxter Knight", ci:"Michelle Vasquez", start:"2026-06-30", expected:null, acv:42000, newAcv:129000, sh:0, oms:0, msc:0, ft:0, po:0, test:false, usage:{hits:1595,bids:392,contracts:74,mi:606,spending:287,contacts:24,federal:0,ai:31,opp:0,health:"Green"}},
+  {name:"CVS Caremark", owner:"Jonathan Silverstone", url:"https://govspend.lightning.force.com/lightning/r/AccountPlan/252VP00000ufr4wYAA/view", focus:null, status:"Not activated", rm:"Kayla Maldonado", ci:"Michelle Vasquez", start:"2026-06-30", expected:null, acv:70000, newAcv:210000, sh:0, oms:0, msc:0, ft:0, po:0, test:false, usage:{hits:55,bids:7,contracts:0,mi:0,spending:4,contacts:0,federal:0,ai:0,opp:0,health:"Red"}},
+  {name:"GM", owner:"Jonathan Silverstone", url:"https://govspend.lightning.force.com/lightning/r/AccountPlan/252VP00000uhsMfYAI/view", focus:null, status:"Not activated", rm:"Jonathan Silverstone", ci:"Michelle Vasquez", start:"2026-06-30", expected:null, acv:116000, newAcv:348000, sh:0, oms:0, msc:0, ft:0, po:0, test:false, usage:{hits:158,bids:25,contracts:27,mi:6,spending:2,contacts:18,federal:0,ai:0,opp:0,health:"Red"}},
+  {name:"North Carolina Department of Health and Human Services", owner:"Erika Flynn", url:"https://govspend.lightning.force.com/lightning/r/AccountPlan/252VP00000ub5i2YAA/view", focus:null, status:"Not activated", rm:"Erika Flynn", ci:null, start:"2026-06-29", expected:null, acv:10000, newAcv:10000, sh:0, oms:0, msc:0, ft:0, po:0, test:false, usage:{hits:432,bids:64,contracts:68,mi:15,spending:63,contacts:23,federal:0,ai:1,opp:0,health:"Green"}},
+  {name:"Sunbelt Rentals", owner:"Kayla Maldonado", url:"https://govspend.lightning.force.com/lightning/r/AccountPlan/252VP00000uaLdZYAU/view", focus:null, status:"Not activated", rm:"Kayla Maldonado", ci:"Michelle Vasquez", start:"2026-06-29", expected:null, acv:0, newAcv:90000, sh:0, oms:0, msc:0, ft:0, po:0, test:false, usage:{hits:341,bids:154,contracts:15,mi:11,spending:0,contacts:2,federal:2,ai:0,opp:0,health:"Red"}},
+  {name:"StarTech.com", owner:"Stephanie Zuluaga", url:"https://govspend.lightning.force.com/lightning/r/AccountPlan/252VP00000ubmQQYAY/view", focus:"Full GovSpend Suite", status:"In-Progress", rm:null, ci:"Michelle Vasquez", start:"2026-06-29", expected:null, acv:40500, newAcv:40500, sh:1, oms:0, msc:0, ft:0, po:0, test:false, usage:{hits:60,bids:24,contracts:0,mi:0,spending:6,contacts:4,federal:2,ai:24,opp:0,health:"Red"}},
+  {name:"Acquia", owner:"Jace Short", url:"https://govspend.lightning.force.com/lightning/r/AccountPlan/252VP00000uc5UhYAI/view", focus:null, status:"Not activated", rm:"Jace Short", ci:"Michelle Vasquez", start:"2026-06-29", expected:null, acv:55000, newAcv:55000, sh:0, oms:0, msc:0, ft:0, po:0, test:false, usage:{hits:615,bids:134,contracts:92,mi:4,spending:163,contacts:50,federal:0,ai:0,opp:0,health:"Red"}},
+  {name:"Khan Academy", owner:"Steven Miner", url:"https://govspend.lightning.force.com/lightning/r/AccountPlan/252VP00000uM9cIYAS/view", focus:null, status:"Not activated", rm:null, ci:null, start:"2026-06-26", expected:null, acv:14000, newAcv:14000, sh:0, oms:0, msc:0, ft:0, po:0, test:false, usage:{hits:70,bids:2,contracts:0,mi:0,spending:21,contacts:0,federal:0,ai:0,opp:1,health:"Red"}},
+  {name:"Rich Ford", owner:"Steven Miner", url:"https://govspend.lightning.force.com/lightning/r/AccountPlan/252VP00000uJH1jYAG/view", focus:null, status:"Not activated", rm:null, ci:null, start:"2026-06-25", expected:null, acv:6500, newAcv:6500, sh:0, oms:0, msc:0, ft:0, po:0, test:false, usage:{hits:403,bids:12,contracts:10,mi:0,spending:0,contacts:0,federal:0,ai:4,opp:35,health:"Green"}},
+  {name:"Cloudvice", owner:"Jessica Thompson", url:"https://govspend.lightning.force.com/lightning/r/AccountPlan/252VP00000uGfTZYA0/view", focus:null, status:"Not activated", rm:"Jessica Thompson", ci:null, start:"2026-06-25", expected:null, acv:8000, newAcv:8000, sh:0, oms:0, msc:0, ft:0, po:0, test:false, usage:{hits:907,bids:23,contracts:2,mi:0,spending:6,contacts:746,federal:0,ai:0,opp:4,health:"Green"}},
+  {name:"All Campus Security", owner:"Nate Van De Graff", url:"https://govspend.lightning.force.com/lightning/r/AccountPlan/252VP00000u6Iq3YAE/view", focus:null, status:"Not activated", rm:null, ci:null, start:"2026-06-23", expected:null, acv:7500, newAcv:7500, sh:0, oms:0, msc:0, ft:0, po:0, test:false, usage:{hits:1758,bids:763,contracts:51,mi:34,spending:368,contacts:61,federal:0,ai:26,opp:5,health:"Green"}},
+  {name:"Tiger Companies", owner:"Jessica Thompson", url:"https://govspend.lightning.force.com/lightning/r/AccountPlan/252VP00000u04ZdYAI/view", focus:null, status:"Not activated", rm:null, ci:null, start:"2026-06-22", expected:null, acv:7500, newAcv:7500, sh:0, oms:0, msc:0, ft:0, po:0, test:false, usage:{hits:313,bids:282,contracts:0,mi:0,spending:29,contacts:0,federal:0,ai:6,opp:0,health:"Yellow"}},
+  {name:"South Dakota Department of Corrections", owner:"Kelly Weed", url:"https://govspend.lightning.force.com/lightning/r/AccountPlan/252VP00000tn2QpYAI/view", focus:null, status:"Not activated", rm:"Kelly Weed", ci:"Jacob Carrillo", start:"2026-06-19", expected:null, acv:6500, newAcv:25000, sh:0, oms:0, msc:0, ft:0, po:0, test:false, usage:{hits:652,bids:90,contracts:124,mi:0,spending:33,contacts:2,federal:141,ai:1,opp:18,health:"Yellow"}},
+  {name:"KPMG (MAIN)", owner:"Alexander Oakley", url:"https://govspend.lightning.force.com/lightning/r/AccountPlan/252VP00000tmAztYAE/view", focus:null, status:"Not activated", rm:null, ci:null, start:"2026-06-19", expected:null, acv:0, newAcv:5000, sh:0, oms:0, msc:0, ft:0, po:0, test:false, usage:{hits:1975,bids:0,contracts:1700,mi:0,spending:275,contacts:0,federal:0,ai:2017,opp:0,health:"Green"}},
+  {name:"The Office Pal Inc", owner:"Steven Miner", url:"https://govspend.lightning.force.com/lightning/r/AccountPlan/252VP00000tiQf3YAE/view", focus:null, status:"Not activated", rm:null, ci:null, start:"2026-06-18", expected:null, acv:9000, newAcv:9000, sh:0, oms:0, msc:0, ft:0, po:0, test:false, usage:{hits:898,bids:326,contracts:217,mi:5,spending:107,contacts:2,federal:9,ai:7,opp:49,health:"Yellow"}},
+  {name:"Therapy Source", owner:"Steven Miner", url:"https://govspend.lightning.force.com/lightning/r/AccountPlan/252VP00000thP6jYAE/view", focus:null, status:"Not activated", rm:null, ci:null, start:"2026-06-18", expected:null, acv:12000, newAcv:12000, sh:0, oms:0, msc:0, ft:0, po:0, test:false, usage:{hits:404,bids:37,contracts:53,mi:17,spending:144,contacts:10,federal:0,ai:0,opp:7,health:"Green"}},
+  {name:"Air Clean Environmental Inc.", owner:"Brian Mooney", url:"https://govspend.lightning.force.com/lightning/r/AccountPlan/252VP00000tUoEDYA0/view", focus:null, status:"Not activated", rm:null, ci:null, start:"2026-06-16", expected:null, acv:6500, newAcv:13500, sh:0, oms:0, msc:0, ft:0, po:0, test:false, usage:{hits:12,bids:2,contracts:0,mi:0,spending:0,contacts:0,federal:0,ai:23,opp:84,health:"Yellow"}},
+  {name:"TitanScan Security Group inc", owner:"Nate Van De Graff", url:"https://govspend.lightning.force.com/lightning/r/AccountPlan/252VP00000tUmtxYAC/view", focus:null, status:"Not activated", rm:"Nate Van De Graff", ci:null, start:"2026-06-16", expected:null, acv:7000, newAcv:14500, sh:0, oms:0, msc:0, ft:0, po:0, test:false, usage:{hits:485,bids:83,contracts:33,mi:232,spending:25,contacts:11,federal:0,ai:35,opp:0,health:"Green"}},
+  {name:"gWorks", owner:"Stephanie Zuluaga", url:"https://govspend.lightning.force.com/lightning/r/AccountPlan/252VP00000tQZqVYAW/view", focus:null, status:"Not activated", rm:"Stephanie Zuluaga", ci:"Jacob Carrillo", start:"2026-06-15", expected:null, acv:10000, newAcv:10000, sh:0, oms:0, msc:0, ft:0, po:0, test:false, usage:{hits:449,bids:103,contracts:14,mi:68,spending:203,contacts:0,federal:0,ai:20,opp:1,health:"Green"}},
+  {name:"The Vistar Division of Performance Food Group, Inc.", owner:"Erika Flynn", url:"https://govspend.lightning.force.com/lightning/r/AccountPlan/252VP00000tCJATYA4/view", focus:null, status:"Not activated", rm:"Erika Flynn", ci:"Jacob Carrillo", start:"2026-06-12", expected:null, acv:13775, newAcv:13775, sh:0, oms:0, msc:0, ft:0, po:0, test:false, usage:{hits:1168,bids:411,contracts:271,mi:42,spending:174,contacts:2,federal:2,ai:7,opp:27,health:"Green"}},
+  {name:"Workday", owner:"Shannon Boudreaux", url:"https://govspend.lightning.force.com/lightning/r/AccountPlan/252VP00000tC2UcYAK/view", focus:null, status:"Not activated", rm:"Shannon Boudreaux", ci:"Michelle Vasquez", start:"2026-06-12", expected:null, acv:50000, newAcv:103000, sh:0, oms:0, msc:0, ft:0, po:0, test:false, usage:{hits:3809,bids:608,contracts:306,mi:856,spending:426,contacts:257,federal:0,ai:43,opp:141,health:"Green"}},
+  {name:"Bretford Manufacturing", owner:"Steven Miner", url:"https://govspend.lightning.force.com/lightning/r/AccountPlan/252VP00000t8WCkYAM/view", focus:null, status:"Not activated", rm:null, ci:null, start:"2026-06-11", expected:null, acv:15000, newAcv:31000, sh:0, oms:0, msc:0, ft:0, po:0, test:false, usage:{hits:163,bids:10,contracts:0,mi:0,spending:68,contacts:2,federal:0,ai:47,opp:35,health:"Green"}},
+  {name:"MacGill School Nurse Supplies", owner:"Jace Short", url:"https://govspend.lightning.force.com/lightning/r/AccountPlan/252VP00000t6yMnYAI/view", focus:null, status:"Not activated", rm:"Jace Short", ci:null, start:"2026-06-11", expected:null, acv:26400, newAcv:26400, sh:0, oms:0, msc:0, ft:0, po:0, test:false, usage:{hits:348,bids:24,contracts:6,mi:0,spending:171,contacts:24,federal:0,ai:0,opp:0,health:"Green"}},
+  {name:"Pali Institute", owner:"Kayla Maldonado", url:"https://govspend.lightning.force.com/lightning/r/AccountPlan/252VP00000t6QrNYAU/view", focus:null, status:"Not activated", rm:"Kayla Maldonado", ci:"Jacob Carrillo", start:"2026-06-11", expected:null, acv:13000, newAcv:13000, sh:0, oms:0, msc:0, ft:0, po:0, test:false, usage:{hits:2295,bids:182,contracts:198,mi:221,spending:330,contacts:875,federal:0,ai:78,opp:118,health:"Green"}},
+  {name:"SIEMENS", owner:"Shannon Boudreaux", url:"https://govspend.lightning.force.com/lightning/r/AccountPlan/252VP00000t1blqYAA/view", focus:null, status:"Not activated", rm:"Shannon Boudreaux", ci:"Michelle Vasquez", start:"2026-06-10", expected:null, acv:38575, newAcv:77150, sh:0, oms:0, msc:0, ft:0, po:0, test:false, usage:{hits:751,bids:170,contracts:9,mi:52,spending:106,contacts:2,federal:0,ai:0,opp:15,health:"Yellow"}},
+  {name:"Pointel", owner:"Stephanie Zuluaga", url:"https://govspend.lightning.force.com/lightning/r/AccountPlan/252VP00000sp56eYAA/view", focus:"Full GovSpend Suite", status:"In-Progress", rm:null, ci:null, start:"2026-06-08", expected:null, acv:7000, newAcv:15000, sh:1, oms:0, msc:0, ft:0, po:0, test:false, usage:{hits:354,bids:12,contracts:2,mi:9,spending:6,contacts:2,federal:39,ai:44,opp:84,health:"Yellow"}},
+  {name:"Active Network LLC", owner:"Jace Short", url:"https://govspend.lightning.force.com/lightning/r/AccountPlan/252VP00000snoxRYAQ/view", focus:null, status:"Not activated", rm:"Jace Short", ci:"Michelle Vasquez", start:"2026-06-08", expected:null, acv:30000, newAcv:30000, sh:0, oms:0, msc:0, ft:0, po:0, test:false, usage:{hits:1770,bids:190,contracts:79,mi:67,spending:229,contacts:0,federal:0,ai:19,opp:183,health:"Green"}},
+  {name:"University of Wisconsin System", owner:"Erika Flynn", url:"https://govspend.lightning.force.com/lightning/r/AccountPlan/252VP00000spwakYAA/view", focus:null, status:"Not activated", rm:"Erika Flynn", ci:null, start:"2026-06-08", expected:null, acv:24750, newAcv:50000, sh:0, oms:0, msc:0, ft:0, po:0, test:false, usage:{hits:230,bids:56,contracts:33,mi:0,spending:137,contacts:0,federal:0,ai:0,opp:0,health:"Yellow"}},
+  {name:"Schrodinger", owner:"Kayla Maldonado", url:"https://govspend.lightning.force.com/lightning/r/AccountPlan/252VP00000sbA4XYAU/view", focus:null, status:"Not activated", rm:"Kayla Maldonado", ci:null, start:"2026-06-05", expected:null, acv:14000, newAcv:14000, sh:0, oms:0, msc:0, ft:0, po:0, test:false, usage:{hits:238,bids:34,contracts:15,mi:13,spending:18,contacts:0,federal:4,ai:8,opp:29,health:"Green"}},
+  {name:"Relay Resources Organization", owner:"Jessica Thompson", url:"https://govspend.lightning.force.com/lightning/r/AccountPlan/252VP00000sWPozYAG/view", focus:null, status:"Not activated", rm:"Jessica Thompson", ci:"Jacob Carrillo", start:"2026-06-04", expected:null, acv:21275, newAcv:21275, sh:0, oms:0, msc:0, ft:0, po:0, test:false, usage:{hits:21,bids:0,contracts:0,mi:0,spending:0,contacts:0,federal:0,ai:25,opp:24,health:"Yellow"}},
+  {name:"Ditto Transcripts", owner:"Kelly Weed", url:"https://govspend.lightning.force.com/lightning/r/AccountPlan/252VP00000sR0WHYA0/view", focus:"Full GovSpend Suite", status:"In-Progress", rm:"Kelly Weed", ci:"Jacob Carrillo", start:"2026-06-03", expected:null, acv:7000, newAcv:7000, sh:1, oms:0, msc:0, ft:0, po:0, test:false, usage:{hits:53,bids:42,contracts:0,mi:0,spending:3,contacts:0,federal:0,ai:0,opp:0,health:"Red"}},
+  {name:"Spartoi Group Inc.", owner:"Kelly Weed", url:"https://govspend.lightning.force.com/lightning/r/AccountPlan/252VP00000sRkfZYAS/view", focus:null, status:"Not activated", rm:"Kelly Weed", ci:"Jacob Carrillo", start:"2026-06-03", expected:null, acv:5000, newAcv:11500, sh:0, oms:0, msc:0, ft:0, po:0, test:false, usage:{hits:1741,bids:753,contracts:309,mi:0,spending:198,contacts:404,federal:2,ai:134,opp:21,health:"Green"}},
+  {name:"Parallels, Inc.", owner:"Erika Flynn", url:"https://govspend.lightning.force.com/lightning/r/AccountPlan/252VP00000sPX6YYAW/view", focus:null, status:"Not activated", rm:"Erika Flynn", ci:null, start:"2026-06-03", expected:null, acv:25000, newAcv:25000, sh:0, oms:0, msc:0, ft:0, po:0, test:false, usage:{hits:242,bids:13,contracts:2,mi:39,spending:33,contacts:0,federal:0,ai:0,opp:5,health:"Green"}},
+  {name:"Pioneer Athletics", owner:"Kayla Maldonado", url:"https://govspend.lightning.force.com/lightning/r/AccountPlan/252VP00000sPZZlYAO/view", focus:null, status:"Not activated", rm:"Kayla Maldonado", ci:null, start:"2026-06-03", expected:null, acv:23500, newAcv:23500, sh:0, oms:0, msc:0, ft:0, po:0, test:false, usage:{hits:2356,bids:519,contracts:243,mi:241,spending:706,contacts:562,federal:0,ai:8,opp:4,health:"Green"}},
+  {name:"Trend Micro", owner:"Mayra Ramirez", url:"https://govspend.lightning.force.com/lightning/r/AccountPlan/252VP00000sPKXYYA4/view", focus:null, status:"Not activated", rm:"Mayra Ramirez", ci:"Michelle Vasquez", start:"2026-06-03", expected:null, acv:82800, newAcv:82800, sh:0, oms:0, msc:0, ft:0, po:0, test:false, usage:{hits:1782,bids:196,contracts:375,mi:20,spending:262,contacts:0,federal:195,ai:7,opp:52,health:"Green"}},
+  {name:"9amHealth", owner:"Brian Mooney", url:"https://govspend.lightning.force.com/lightning/r/AccountPlan/252VP00000sRHs5YAG/view", focus:null, status:"Not activated", rm:null, ci:null, start:"2026-06-03", expected:null, acv:9000, newAcv:19000, sh:0, oms:0, msc:0, ft:0, po:0, test:false, usage:{hits:504,bids:50,contracts:100,mi:7,spending:8,contacts:1,federal:0,ai:7,opp:25,health:"Green"}},
+  {name:"Vibrant Works", owner:"Steven Miner", url:"https://govspend.lightning.force.com/lightning/r/AccountPlan/252VP00000sLts1YAC/view", focus:null, status:"Not activated", rm:null, ci:null, start:"2026-06-02", expected:null, acv:8500, newAcv:8500, sh:0, oms:0, msc:0, ft:0, po:0, test:false, usage:{hits:62,bids:17,contracts:0,mi:0,spending:0,contacts:0,federal:0,ai:0,opp:3,health:"Yellow"}},
+  {name:"Pitney Bowes Group(Main)", owner:"Kayla Maldonado", url:"https://govspend.lightning.force.com/lightning/r/AccountPlan/252VP00000sFS05YAG/view", focus:null, status:"Not activated", rm:"Kayla Maldonado", ci:"Jacob Carrillo", start:"2026-06-01", expected:null, acv:23500, newAcv:23500, sh:0, oms:0, msc:0, ft:0, po:0, test:false, usage:{hits:1059,bids:79,contracts:60,mi:35,spending:150,contacts:99,federal:2,ai:51,opp:78,health:"Green"}},
+  {name:"Forrester Research, Inc", owner:"Baxter Knight", url:"https://govspend.lightning.force.com/lightning/r/AccountPlan/252VP00000sGZ4NYAW/view", focus:null, status:"Not activated", rm:"Baxter Knight", ci:null, start:"2026-06-01", expected:null, acv:64500, newAcv:64500, sh:0, oms:0, msc:0, ft:0, po:0, test:false, usage:{hits:1993,bids:47,contracts:180,mi:2,spending:417,contacts:85,federal:256,ai:25,opp:19,health:"Green"}}
+];
+/* ===DATA:END=== */
+
+/* ==== STATIC CONFIG ==== */
+const STAGES=[
+  {key:"sh", short:"Sales Handoff",        field:"sh",  budget:3, color:"#0076DE"},
+  {key:"oms",short:"Opp Module Setup",     field:"oms", budget:6, color:"#2E86E6"},
+  {key:"msc",short:"GS Master Search",     field:"msc", budget:9, color:"#303650"},
+  {key:"ft", short:"GS Fullsuite Training",field:"ft",  budget:7, color:"#4B5470"},
+  {key:"po", short:"Post-Onboarding",      field:"po",  budget:5, color:"#5B6473"}
+];
+let cum=0; STAGES.forEach(s=>{cum+=s.budget; s.cum=cum;});
+const SLA_TOTAL=cum;
+const INTERNAL={sh:true,oms:true,msc:true,ft:false,po:false};
+const NEXT_ACTION={
+  sh:"Complete AE→RM handoff & partnership kickoff",
+  oms:"Set up Opp Module profiles & train users",
+  msc:"Build & verify master searches, set alerts",
+  ft:"Schedule & hold full-suite kickoff training",
+  po:"Hold post-onboarding review & schedule QBR"
+};
+const MODULES=[
+  {k:"bids",label:"Bids",color:"#0076DE"},
+  {k:"contracts",label:"Contracts",color:"#2E86E6"},
+  {k:"mi",label:"Meeting Intelligence",color:"#303650"},
+  {k:"spending",label:"Spending",color:"#35A36A"},
+  {k:"contacts",label:"Contacts",color:"#4B5470"},
+  {k:"federal",label:"Federal",color:"#5B6473"},
+  {k:"ai",label:"AI",color:"#FFC44D"},
+  {k:"opp",label:"Opp Module",color:"#F2A63B"}
+];
+/* Manager teams (account owner → manager). Edit here when the org chart changes. */
+const MANAGERS={
+  "Mayra Ramirez":"Grover","Baxter Knight":"Grover","Shannon Boudreaux":"Grover","Jessica Thompson":"Grover","Erika Flynn":"Grover",
+  "Stephanie Zuluaga":"Mockler","Mara Chotiner":"Mockler","Jace Short":"Mockler","Kayla Maldonado":"Mockler",
+  "Brian Mooney":"Trujillo","Kelly Weed":"Trujillo","Nate Van De Graff":"Trujillo","Steven Miner":"Trujillo",
+  "Jonathan Silverstone":"Key Accounts"
+};
+const MGR_ORDER=["Grover","Mockler","Trujillo","Key Accounts","Other"];
+const mgrOf=o=>MANAGERS[o]||"Other";
+
+/* ==== HELPERS ==== */
+const today=new Date(SNAPSHOT+"T00:00:00");
+const daysBetween=(a,b)=>Math.round((b-a)/86400000);
+const elapsed=a=>daysBetween(new Date(a.start+"T00:00:00"),today);
+const nHit=n=>n.toLocaleString("en-US");
+function currentStage(a){for(const s of STAGES){if(!a[s.field])return s;}return null;}
+function slaStatus(a){
+  const cs=currentStage(a); if(!cs)return {k:"done",label:"Completed",cls:"c-blue"};
+  const r=elapsed(a)/cs.cum;
+  if(r>1)return {k:"red",label:"Past SLA",cls:"c-red"};
+  if(r>=0.7)return {k:"amber",label:"Approaching",cls:"c-amber"};
+  return {k:"green",label:"On track",cls:"c-green"};
+}
+function ownerCell(a){
+  const lead=a.ci||a.owner; const tag=a.ci?"CI":"Owner";
+  const rm=a.rm?`<div class="muted" style="font-size:11.5px">${a.rm} · RM</div>`:'';
+  return `<span class="who">${lead}</span> <small class="muted">${tag}</small>`+rm;
+}
+function fmtAcv(v){ if(!v) return '<span class="muted">—</span>'; const k=v/1000; return '$'+(k>=10?Math.round(k):k.toFixed(1))+'K'; }
+function fmtAcvBig(v){ if(!v) return '$0'; if(v>=1e6) return '$'+(v/1e6).toFixed(2)+'M'; if(v>=1e3) return '$'+Math.round(v/1e3)+'K'; return '$'+v; }
+
+/* ==== DRILL-DOWN ==== */
+let DRILL={};
+function showDrill(title,list){
+  document.getElementById("drillTitle").textContent=title+" — "+list.length+" account"+(list.length===1?'':'s')+" · "+fmtAcvBig(list.reduce((s,a)=>s+(a.acv||0),0))+" ACV";
+  const rows=list.slice().sort((a,b)=>elapsed(b)-elapsed(a)).map(a=>{
+    const cs=currentStage(a), st=cs?slaStatus(a):{cls:"c-blue",label:"Completed"};
+    return `<tr>
+      <td class="who">${a.url?`<a href="${a.url}" target="_blank" rel="noopener" style="color:var(--blue)">${a.name}</a>`:a.name}</td>
+      <td class="num">${fmtAcv(a.acv)}</td>
+      <td>${a.owner}</td>
+      <td>${a.ci||'<span class="muted">—</span>'}</td>
+      <td class="muted" style="font-size:12px">${mgrOf(a.owner)}</td>
+      <td>${cs?`<span class="stage-chip">${cs.short}</span>`:'<span class="chip c-blue">Complete</span>'}</td>
+      <td class="num">${elapsed(a)}</td>
+      <td><span class="chip ${st.cls}">${st.label}</span></td></tr>`;}).join("");
+  document.querySelector("#drillTbl tbody").innerHTML=rows||`<tr><td colspan="8" class="empty">No accounts.</td></tr>`;
+  document.getElementById("drill").style.display="flex";
+}
+function closeDrill(){document.getElementById("drill").style.display="none";}
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeDrill();});
+document.getElementById("kpis").addEventListener("click",e=>{const c=e.target.closest("[data-drill]");if(c&&DRILL[c.dataset.drill])showDrill(DRILL[c.dataset.drill].title,DRILL[c.dataset.drill].list);});
+document.getElementById("pipe").addEventListener("click",e=>{const c=e.target.closest("[data-drill]");if(c&&DRILL[c.dataset.drill])showDrill(DRILL[c.dataset.drill].title,DRILL[c.dataset.drill].list);});
+const focusChip=f=>f?`<span class="stage-chip">${f==="Full GovSpend Suite"?"Full Suite":f}</span>`:'<span class="muted">—</span>';
+const healthChip=h=>{const c=h==="Green"?"c-green":h==="Yellow"?"c-amber":h==="Red"?"c-red":"c-gray";return `<span class="chip ${c}">${h}</span>`;};
+
+/* ==== STATIC RENDER (once) ==== */
+document.getElementById("snapdate").textContent="Snapshot: "+today.toLocaleDateString("en-US",{month:"long",day:"numeric",year:"numeric"});
+document.getElementById("slamodel").innerHTML=STAGES.map(s=>
+  `<div class="slaseg" style="background:${s.color}"><div class="c">by day ${s.cum}</div><div class="n">${s.short}</div><div class="d">${s.budget} days</div></div>`).join("");
+(function(){const t=[
+  ["Sales Handoff","Opp Module Setup"],["Opp Module Setup","GS Master Search"],
+  ["GS Master Search","GS Fullsuite Training"],["GS Fullsuite Training","Post-Onboarding"]];
+ document.getElementById("timeline").innerHTML=t.map(x=>`<div class="tl-row">
+   <div class="leg">${x[0]} → ${x[1]}<small>avg · median · min · max</small></div>
+   <div class="met"><b>—</b>avg</div><div class="met"><b>—</b>med</div></div>`).join("")+
+   `<div class="tl-total"><div class="tl-row" style="border:none;padding:2px 0">
+     <div class="leg">Sales Handoff → Post-Onboarding<small>total onboarding duration</small></div>
+     <div class="met"><b>—</b>avg</div><div class="met"><b style="color:var(--blue)">${SLA_TOTAL}d</b>SLA</div></div></div>
+   <div style="font-size:11.5px;color:var(--gray);margin-top:10px">Milestone completion dates in the current snapshot were backfilled together, so inter-stage gaps aren't yet meaningful. These fill in as stages are completed on their real dates.</div>`;
+})();
+
+/* ==== REP FILTER ==== */
+let currentFilter="__all__";
+let currentMonth="__all__";
+let currentCI="__all__";
+let currentMgr="__all__";
+let teamMode="ci";
+(function(){
+  const base=ACCOUNTS.filter(a=>!a.test);
+  const mgrs=[...new Set(base.map(a=>mgrOf(a.owner)))].sort((a,b)=>MGR_ORDER.indexOf(a)-MGR_ORDER.indexOf(b));
+  const gsel=document.getElementById("mgrfilter");
+  gsel.innerHTML=`<option value="__all__">All managers</option>`+mgrs.map(g=>`<option value="${g}">${g}</option>`).join("");
+  gsel.addEventListener("change",e=>{currentMgr=e.target.value; render();});
+  const owners=[...new Set(base.map(a=>a.owner))].sort();
+  const rsel=document.getElementById("repfilter");
+  rsel.innerHTML=`<option value="__all__">All reps</option>`+owners.map(o=>`<option value="${o}">${o}</option>`).join("");
+  rsel.addEventListener("change",e=>{currentFilter=e.target.value; render();});
+  const months=[...new Set(base.map(a=>a.start.slice(0,7)))].sort();
+  const fmt=m=>new Date(m+"-01T00:00:00").toLocaleDateString("en-US",{month:"short",year:"numeric"});
+  const msel=document.getElementById("monthfilter");
+  msel.innerHTML=`<option value="__all__">All months</option>`+months.map(m=>`<option value="${m}">${fmt(m)}</option>`).join("");
+  msel.addEventListener("change",e=>{currentMonth=e.target.value; render();});
+  const cis=[...new Set(base.filter(a=>a.ci).map(a=>a.ci))].sort();
+  const hasNone=base.some(a=>!a.ci);
+  const csel=document.getElementById("cifilter");
+  csel.innerHTML=`<option value="__all__">All CIs</option>`+cis.map(c=>`<option value="${c}">${c}</option>`).join("")+(hasNone?`<option value="__none__">No CI assigned</option>`:``);
+  csel.addEventListener("change",e=>{currentCI=e.target.value; render();});
+})();
+function setTeam(m){teamMode=m;
+  document.getElementById("tCI").classList.toggle("on",m==="ci");
+  document.getElementById("tRM").classList.toggle("on",m==="rm");
+  document.getElementById("ownhdr").textContent=m==="ci"?"CI Specialist":"Relationship Manager";
+  renderTeam(currentBase());}
+function currentBase(){return ACCOUNTS.filter(a=>!a.test
+  && (currentMgr==="__all__"||mgrOf(a.owner)===currentMgr)
+  && (currentFilter==="__all__"||a.owner===currentFilter)
+  && (currentMonth==="__all__"||a.start.slice(0,7)===currentMonth)
+  && (currentCI==="__all__"|| (currentCI==="__none__" ? !a.ci : a.ci===currentCI)));}
+
+/* ==== MAIN RENDER ==== */
+function render(){
+  const base=currentBase();
+  const active=base.filter(a=>currentStage(a));
+  const done=base.filter(a=>!currentStage(a));
+  const isAll=currentFilter==="__all__";
+
+  /* KPIs */
+  const overdue=active.filter(a=>elapsed(a)>SLA_TOTAL);
+  const awaitInternal=active.filter(a=>INTERNAL[currentStage(a).key]);
+  const awaitCustomer=active.filter(a=>!INTERNAL[currentStage(a).key]);
+  const completed=done.filter(a=>a.expected);
+  const durations=done.map(elapsed).sort((x,y)=>x-y);
+  const avgDur=durations.length?Math.round(durations.reduce((s,x)=>s+x,0)/durations.length):null;
+  const medDur=durations.length?durations[Math.floor(durations.length/2)]:null;
+  const pctSLA=done.length?Math.round(done.filter(a=>elapsed(a)<=SLA_TOTAL).length/done.length*100):null;
+  const acvSum=l=>l.reduce((s,a)=>s+(a.acv||0),0);
+  const kpis=[
+    {lab:"Active onboardings",big:active.length,note:isAll?`of ${POP.cohort} new-business wins`:"active for this rep",cls:"accent",drill:"active",list:active},
+    {lab:"Completed this month",big:completed.length,note:"onboarding marked complete",cls:"",drill:"completed",list:completed},
+    {lab:"Avg duration",big:avgDur!=null?avgDur+"d":"—",note:"real completions pending",cls:""},
+    {lab:"Median duration",big:medDur!=null?medDur+"d":"—",note:"real completions pending",cls:""},
+    {lab:"Within 30-day SLA",big:pctSLA!=null?pctSLA+"%":"—",note:"of completed onboardings",cls:"good"},
+    {lab:"Overdue (past 30d)",big:overdue.length,note:"active & past SLA",cls:"warn",drill:"overdue",list:overdue},
+    {lab:"Awaiting internal action",big:awaitInternal.length,note:"handoff / setup / searches",cls:"amberc",drill:"internal",list:awaitInternal},
+    {lab:"Awaiting customer action",big:awaitCustomer.length,note:"training / post-onboarding",cls:"",drill:"customer",list:awaitCustomer}
+  ];
+  DRILL={};
+  kpis.forEach(k=>{if(k.drill)DRILL[k.drill]={title:k.lab,list:k.list};});
+  document.getElementById("kpis").innerHTML=kpis.map(k=>`<div class="kpi ${k.cls} ${k.drill?'clickable':''}"${k.drill?` data-drill="${k.drill}"`:''}><div class="lab">${k.lab}</div><div class="big">${k.big}</div><div class="note">${k.note}${k.drill?` · <b>${fmtAcvBig(acvSum(k.list))}</b> ACV`:''}</div>${k.drill?'<div class="drillhint">Click to view →</div>':''}</div>`).join("");
+  const cohortAcv=base.reduce((s,a)=>s+(a.newAcv||0),0);
+  document.getElementById("seednote").innerHTML=isAll
+    ? `<b>Cohort:</b> ${POP.cohort} accounts with a Closed-Won <b>new-business</b> opportunity since Jun 1, 2026 ($${cohortAcv.toLocaleString("en-US")} new ACV). The onboarding clock starts at each account's close date. Only ${POP.activated} have the Account Plan onboarding tab activated — the rest sit at Sales Handoff by default, which is exactly the gap this view surfaces. Duration / completion-rate KPIs fill in as onboardings are worked and completed. Use the <b>Rep</b> filter to focus on one owner.`
+    : `<b>Filtered to ${currentFilter}:</b> ${base.length} new-business account${base.length===1?'':'s'} in cohort ($${cohortAcv.toLocaleString("en-US")} ACV), ${active.length} still onboarding. Switch back to “All reps” for the full cohort.`;
+
+  /* Pipeline */
+  const sc={}; const stageList={}; STAGES.forEach(s=>{sc[s.key]=0; stageList[s.key]=[];});
+  active.forEach(a=>{const k=currentStage(a).key; sc[k]++; stageList[k].push(a);});
+  const maxS=Math.max(0,...Object.values(sc));
+  STAGES.forEach(s=>DRILL["st_"+s.key]={title:s.short+" — current stage",list:stageList[s.key]});
+  document.getElementById("pipe").innerHTML=STAGES.map(s=>{
+    const c=sc[s.key]; const hot=(c===maxS&&c>0);
+    return `<div class="pcol clickable ${hot?'hot':''}" data-drill="st_${s.key}">${hot?'<span class="tag">BOTTLENECK</span>':''}<div class="stg">${s.short}</div><div class="cnt">${c}</div><div class="bud">${s.budget}-day budget · by day ${s.cum}</div></div>`;
+  }).join("");
+
+  /* Active table */
+  const abody=active.slice().sort((a,b)=>elapsed(b)-elapsed(a)).map(a=>{
+    const cs=currentStage(a),st=slaStatus(a);
+    return `<tr><td class="who">${a.url?`<a href="${a.url}" target="_blank" rel="noopener" style="color:var(--blue)">${a.name}</a>`:a.name}</td><td class="num">${fmtAcv(a.acv)}</td><td>${focusChip(a.focus)}</td>
+      <td><span class="stage-chip">${cs.short}</span></td><td>${ownerCell(a)}</td>
+      <td class="num">${elapsed(a)}</td><td class="muted" style="font-size:12px">${NEXT_ACTION[cs.key]}</td>
+      <td><span class="chip ${st.cls}"><span class="dot" style="background:${st.k==='red'?'#B23127':st.k==='amber'?'#9A6512':'#1F7A4D'}"></span>${st.label}</span></td></tr>`;}).join("");
+  document.querySelector("#activetbl tbody").innerHTML=abody;
+  document.getElementById("activeempty").innerHTML=active.length?"":'<div class="empty">No active onboardings for this rep.</div>';
+
+  /* SLA table */
+  const sbody=active.slice().sort((a,b)=>(elapsed(b)/currentStage(b).cum)-(elapsed(a)/currentStage(a).cum)).map(a=>{
+    const cs=currentStage(a),st=slaStatus(a);
+    return `<tr><td class="who">${a.name}</td><td><span class="stage-chip">${cs.short}</span></td>
+      <td class="num">${elapsed(a)}d</td><td class="num muted">${cs.cum}d</td>
+      <td class="muted" style="font-size:12px">${a.ci||a.rm||a.owner||'—'}</td><td><span class="chip ${st.cls}">${st.label}</span></td></tr>`;}).join("");
+  document.querySelector("#slatbl tbody").innerHTML=sbody;
+  document.getElementById("slaempty").innerHTML=active.length?"":'<div class="empty">Nothing to monitor for this rep.</div>';
+
+  /* Monthly */
+  const mk=d=>d.slice(0,7); const startedBy={},completedBy={};
+  base.forEach(a=>{const k=mk(a.start);startedBy[k]=(startedBy[k]||0)+1;});
+  completed.forEach(()=>{const k=mk(SNAPSHOT);completedBy[k]=(completedBy[k]||0)+1;});
+  const months=[...new Set([...Object.keys(startedBy),...Object.keys(completedBy)])].sort();
+  const maxM=Math.max(1,...months.map(m=>Math.max(startedBy[m]||0,completedBy[m]||0)));
+  const fmtM=m=>new Date(m+"-01T00:00:00").toLocaleDateString("en-US",{month:"short",year:"2-digit"});
+  document.getElementById("months").innerHTML=months.length?months.map(m=>{
+    const s=startedBy[m]||0,c=completedBy[m]||0,hs=Math.round(s/maxM*140),hc=Math.round(c/maxM*140);
+    return `<div class="mcol"><div class="mbars">
+      <div class="mbar s" style="height:${Math.max(hs,s?6:3)}px">${s?`<span style="color:#0076DE">${s}</span>`:''}</div>
+      <div class="mbar c" style="height:${Math.max(hc,c?6:3)}px">${c?`<span style="color:#C77B00">${c}</span>`:''}</div>
+    </div><div class="mlab">${fmtM(m)}</div></div>`;}).join(""):'<div class="empty">No onboardings for this rep.</div>';
+
+  /* Team + Usage */
+  renderTeam(base);
+  renderUsage(base,isAll);
+}
+
+/* ==== TEAM ==== */
+function renderTeam(base){
+  const active=base.filter(a=>currentStage(a));
+  const map={};
+  active.forEach(a=>{const o=(teamMode==="ci"?a.ci:a.rm)||"— Unassigned";(map[o]=map[o]||[]).push(a);});
+  const rows=Object.entries(map).map(([o,list])=>({o,active:list.length,
+    ov:list.filter(a=>elapsed(a)>SLA_TOTAL).length,
+    avg:Math.round(list.reduce((s,a)=>s+elapsed(a),0)/list.length)})).sort((a,b)=>b.active-a.active);
+  document.querySelector("#teamtbl tbody").innerHTML=rows.length?rows.map(r=>`<tr>
+    <td class="who">${r.o}</td><td class="num">${r.active}</td>
+    <td class="num" style="color:${r.ov?'var(--red)':'var(--gray)'}">${r.ov}</td><td class="num">${r.avg}d</td></tr>`).join("")
+    :'<tr><td colspan="4" class="empty">No active onboardings for this rep.</td></tr>';
+}
+
+/* ==== USAGE ==== */
+function renderUsage(base,isAll){
+  const prov=base.filter(a=>a.usage && a.usage.hits>0);
+  const cohortHits=prov.reduce((s,a)=>s+a.usage.hits,0);
+  const modTot={}; MODULES.forEach(m=>modTot[m.k]=prov.reduce((s,a)=>s+a.usage[m.k],0));
+  const named=Object.values(modTot).reduce((s,x)=>s+x,0);
+  const top=MODULES.slice().sort((a,b)=>modTot[b.k]-modTot[a.k])[0];
+  const nonTest=base.length;
+
+  document.getElementById("usagekpis").innerHTML=(cohortHits?[
+    {lab:"Hits — rolling 30 days",big:nHit(cohortHits),note:USAGE_WINDOW,cls:"accent"},
+    {lab:"Active in last 30 days",big:prov.length+" of "+nonTest,note:(nonTest-prov.length)+" with no 30-day usage",cls:""},
+    {lab:"Top module",big:top.label,note:nHit(modTot[top.k])+" hits · "+Math.round(modTot[top.k]/named*100)+"% of classified",cls:"good"},
+    {lab:"Avg hits / active acct",big:nHit(Math.round(cohortHits/prov.length)),note:"across "+prov.length+" provisioned",cls:""}
+  ]:[{lab:"Cohort hits",big:"—",note:"no provisioned accounts for this rep",cls:""}]).map(k=>
+    `<div class="kpi ${k.cls}"><div class="lab">${k.lab}</div><div class="big">${k.big}</div><div class="note">${k.note}</div></div>`).join("");
+
+  const maxMod=Math.max(1,...MODULES.map(m=>modTot[m.k]));
+  document.getElementById("modbars").innerHTML=named?MODULES.slice().sort((a,b)=>modTot[b.k]-modTot[a.k]).map(m=>{
+    const v=modTot[m.k],pct=Math.round(v/named*100);
+    return `<div class="mrow"><div class="ml"><i style="background:${m.color}"></i>${m.label}</div>
+      <div class="mtrack"><div class="mfill" style="width:${Math.max(v/maxMod*100,1)}%;background:${m.color}"></div></div>
+      <div class="mv"><b>${nHit(v)}</b> · ${pct}%</div></div>`;}).join(""):'<div class="empty">No usage for this rep.</div>';
+
+  const maxA=Math.max(1,...prov.map(a=>a.usage.hits));
+  document.getElementById("acctusage").innerHTML=prov.length?prov.slice().sort((a,b)=>b.usage.hits-a.usage.hits).map(a=>
+    `<div class="arow"><div class="an">${a.name}</div><div class="at"><div class="af" style="width:${Math.max(a.usage.hits/maxA*100,1)}%"></div></div><div class="av">${nHit(a.usage.hits)}</div></div>`).join(""):'<div class="empty">No usage for this rep.</div>';
+
+  document.querySelector("#usagetbl tbody").innerHTML=base.slice().sort((a,b)=>((b.usage?.hits)||-1)-((a.usage?.hits)||-1)).map(a=>{
+    const u=a.usage;
+    if(!u)return `<tr><td class="who">${a.name}</td><td colspan="9" class="np">Not yet provisioned — no platform activity</td><td><span class="chip c-gray">—</span></td></tr>`;
+    return `<tr><td class="who">${a.name}</td><td class="num"><b>${nHit(u.hits)}</b></td>
+      <td class="num">${nHit(u.bids)}</td><td class="num">${nHit(u.contracts)}</td><td class="num">${nHit(u.mi)}</td>
+      <td class="num">${nHit(u.spending)}</td><td class="num">${nHit(u.contacts)}</td><td class="num">${nHit(u.federal)}</td>
+      <td class="num">${nHit(u.ai)}</td><td class="num">${nHit(u.opp)}</td><td>${healthChip(u.health)}</td></tr>`;}).join("");
+
+  document.getElementById("usageseed").innerHTML=
+    `<b>Rolling 30-day usage (${USAGE_WINDOW}).</b> The "Usage by account & module" figures — overall hits and the six core modules (Bids, Contracts, Meeting Intelligence, Spending, Contacts, Federal) — are trailing-30-day sums from <code>analytics.user_module_usage_daily</code>. AI + Opp Module come from <code>analytics.feature_usage_monthly_history</code> (latest full month, so those two run slightly conservative). `+
+    (cohortHits?`The eight named modules cover ${Math.round(named/cohortHits*100)}% of overall hits; the remainder is other/unclassified activity. `:``)+
+    `Matched to Salesforce accounts by CRM ID.`;
+}
+
+render();
+</script>
+</body>
+</html>
