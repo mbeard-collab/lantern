@@ -137,7 +137,7 @@ th.modh{padding-top:7px;padding-bottom:7px}
     <div class="ctl">
       <label>Module</label>
       <div class="seg" id="modSeg">
-        <button data-mod="core" class="on">Core / Platform</button><button data-mod="ai">AI</button><button data-mod="opp">Opportunities</button>
+        <button data-mod="core" class="on">Core / Platform</button><button data-mod="ai">AI</button><button data-mod="opp">Opportunities</button><button data-mod="mcp">MCP</button>
       </div>
     </div>
     <label class="toggle" id="trialWrap"><input type="checkbox" id="trialChk"><span class="tg"></span>Include trials</label>
@@ -222,11 +222,14 @@ th.modh{padding-top:7px;padding-bottom:7px}
 <script>
 const D = window.GS_DATA;
 const fmt = n => Math.round(n||0).toLocaleString();
-const MODS = ['core','ai','opp'];
+const MODS = ['core','ai','opp','mcp'];
 const MOD = {
   core:{label:'Core',full:'Core / Platform',color:'#0076DE',ow:'c',pay:'cp',tri:'ct'},
   ai:{label:'AI',full:'AI',color:'#7a4ddb',ow:'a',pay:'ap',tri:'at'},
-  opp:{label:'Opp',full:'Opportunities',color:'#e0913a',ow:'p',pay:'op',tri:'ot'}
+  opp:{label:'Opp',full:'Opportunities',color:'#e0913a',ow:'p',pay:'op',tri:'ot'},
+  // MCP tool calls (external customers only). No trial split, so tri is null; the ALL-view
+  // trend reads a daily `mcp` field on portfolio, owner/table views use the mcp weekly array.
+  mcp:{label:'MCP',full:'MCP tool calls',color:'#12a0a8',ow:'mcp',pay:'mcp',tri:null}
 };
 const W = D.weeks.length;
 const PAGE = 150;
@@ -235,13 +238,19 @@ const state = {owner:'ALL', tf:30, mods:['core'], trial:false, ovOrg:null,
 let orgShow=PAGE, userShow=PAGE, trendChart=null;
 
 // ---- build per-entity weekly arrays (aligned to D.weeks) ----
-function blank(){return {core:new Float64Array(W), ai:new Float64Array(W), opp:new Float64Array(W)};}
+// `mcp` = external MCP tool calls (GovSpend internal excluded upstream). Not a "module";
+// it rides alongside core/ai/opp so it can be windowed by the same 7/30/90d selector.
+function blank(){return {core:new Float64Array(W), ai:new Float64Array(W), opp:new Float64Array(W), mcp:new Float64Array(W)};}
 const orgW = D.orgs.map(blank), userW = D.users.map(blank);
 (D.orgWeekly||[]).forEach(([oi,wi,c,a,p])=>{const x=orgW[oi]; if(x){x.core[wi]+=c; x.ai[wi]+=a; x.opp[wi]+=p;}});
 (D.userWeekly||[]).forEach(([ui,wi,c,a,p])=>{const x=userW[ui]; if(x){x.core[wi]+=c; x.ai[wi]+=a; x.opp[wi]+=p;}});
+(D.orgMcpWeekly||[]).forEach(([oi,wi,c])=>{const x=orgW[oi]; if(x){x.mcp[wi]+=c;}});
+(D.userMcpWeekly||[]).forEach(([ui,wi,c])=>{const x=userW[ui]; if(x){x.mcp[wi]+=c;}});
 const ownerW = {};
 D.owners.forEach(o=>ownerW[o]=blank());
 (D.ownerWeekly||[]).forEach(r=>{const x=ownerW[r.o]; if(x){const wi=D.weeks.indexOf(r.w); if(wi>=0){x.core[wi]+=r.c;x.ai[wi]+=r.a;x.opp[wi]+=r.p;}}});
+// owner-level MCP = sum of each owner's book of orgs (no owner-level MCP query needed)
+(D.orgMcpWeekly||[]).forEach(([oi,wi,c])=>{const o=D.orgs[oi]; if(o){const x=ownerW[o.o]; if(x) x.mcp[wi]+=c;}});
 
 function tfWeeks(){return state.tf>=90 ? W : (state.tf===30 ? Math.min(4,W) : 1);}
 function windows(){const n=tfWeeks(); const cur=[],prev=[];
@@ -357,7 +366,7 @@ function renderTrend(){
   if(state.owner==='ALL'){
     const s=D.portfolio.slice(-(state.tf>=90?D.portfolio.length:state.tf));
     labels=s.map(r=>new Date(r.d).toLocaleDateString(undefined,{month:'short',day:'numeric'}));
-    state.mods.forEach(m=>{const v=s.map(r=>r[MOD[m].pay]+(state.trial?r[MOD[m].tri]:0));
+    state.mods.forEach(m=>{const v=s.map(r=>(r[MOD[m].pay]||0)+((state.trial&&MOD[m].tri)?r[MOD[m].tri]:0));
       series.push({label:MOD[m].full,data:v,color:MOD[m].color});});
     document.getElementById('trendHint').textContent='daily'+(state.mods.length===1?' · 7-day average overlay':'');
   } else {
@@ -386,14 +395,19 @@ function renderMix(){
   let f={panel:0,notebook:0,search:0,opp:0,crm:0};
   if(state.owner==='ALL') D.ownerFeature.forEach(r=>{for(const k in f)f[k]+=r[k];});
   else {const r=D.ownerFeature.find(x=>x.o===state.owner); if(r)for(const k in f)f[k]=r[k];}
+  // MCP tool calls over the last ~4 weeks (30d rolling), matching the feature-rolling window.
+  const mcW=Math.min(4,W); const mcIdx=[]; for(let i=W-mcW;i<W;i++) if(i>=0) mcIdx.push(i);
+  let mcp=0;
+  if(state.owner==='ALL'){ (D.orgMcpWeekly||[]).forEach(([oi,wi,c])=>{ if(wi>=W-mcW) mcp+=c; }); }
+  else { const x=ownerW[state.owner]; if(x) mcp=sumW(x.mcp,mcIdx); }
   const rows=[['AI Panel',f.panel,'#0076DE'],['AI Notebook',f.notebook,'#3f9bf0'],['AI Search',f.search,'#7a4ddb'],
-    ['Opportunity',f.opp,'#e0913a'],['CRM',f.crm,'#1f9d6b']];
+    ['Opportunity',f.opp,'#e0913a'],['CRM',f.crm,'#1f9d6b'],['MCP calls',mcp,MOD.mcp.color]];
   const max=Math.max(1,...rows.map(r=>r[1])), tot=rows.reduce((a,b)=>a+b[1],0);
   document.getElementById('mix').innerHTML=rows.map(r=>
     '<div class="mix-row"><div class="lab">'+r[0]+'</div>'+
     '<div class="mix-bar"><i style="width:'+(r[1]/max*100)+'%;background:'+r[2]+'"></i></div>'+
     '<div class="val">'+fmt(r[1])+'</div></div>').join('')+
-    '<div class="sub2" style="margin-top:10px">'+(tot?fmt(tot)+' module actions (30d rolling)':'No rolling module activity recorded')+'</div>';
+    '<div class="sub2" style="margin-top:10px">'+(tot?fmt(tot)+' module + MCP actions (30d rolling)':'No rolling module activity recorded')+'</div>';
 }
 
 // ---- Owner leaderboard (exec only; ranks by combined selected modules over window) ----
@@ -545,7 +559,8 @@ document.getElementById('foot').innerHTML=
   '<b>Biggest increase</b> surfaces the fastest-growing accounts and <b>Biggest decrease</b> the fastest-declining, per module. Movement compares the current window to the equal '+
   'period just before it (7d, 30d); for 90d there is no prior 90-day window, so it compares the recent half of the window to the earlier half. <b>Total hits</b> ranks by raw volume instead. '+
   '<b>Core</b> is an export-weighted score, so single-day spikes can be one-off exports — the 7-day average is the truer trend. '+
-  'User-level figures cover provisioned external users only (~2–3% below org-level by design). Module mix is 30-day rolling at org level. Owner trends/totals are exact across all paying orgs.';
+  'User-level figures cover provisioned external users only (~2–3% below org-level by design). Module mix is 30-day rolling at org level. Owner trends/totals are exact across all paying orgs. '+
+  'The <b>MCP</b> module (toggle it in the Module picker) counts GovSpend MCP tool calls — search/analytics tools — over the selected time frame, for <b>external customers only</b>; GovSpend internal usage is excluded. Turning it on adds an MCP trend line, an MCP bar in the module mix, and MCP columns in the org/user tables. MCP telemetry begins late Jun 2026, so 90d totals cover only the weeks with data.';
 
 function render(){syncTrial();renderKpis();renderTrend();renderMix();renderLb();renderOrgs();renderUsers();}
 buildSortUI();
