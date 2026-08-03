@@ -150,7 +150,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gs-bg);color:var(--gs-tex
   </div>
   <div class="header-meta">
     <span style="font-size:12px;color:rgba(255,255,255,0.5);font-family:'DM Mono',monospace">Prospect Pipeline</span>
-    <span class="header-date">Snapshot: 2026-07-28</span>
+    <span class="header-date">Snapshot: 2026-08-03</span>
   </div>
 </div>
 
@@ -172,6 +172,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gs-bg);color:var(--gs-tex
   <button class="month-btn" data-month="2026-05" onclick="toggleMonth(this)">May '26</button>
   <button class="month-btn" data-month="2026-06" onclick="toggleMonth(this)">Jun '26</button>
   <button class="month-btn" data-month="2026-07" onclick="toggleMonth(this)">Jul '26</button>
+  <button class="month-btn" data-month="2026-08" onclick="toggleMonth(this)">Aug '26</button>
 <span class="month-clear" onclick="setPreset('all',document.querySelector('.preset'))">Clear</span>
 </div>
 
@@ -193,12 +194,12 @@ body{font-family:'DM Sans',sans-serif;background:var(--gs-bg);color:var(--gs-tex
 <div class="section active" id="section-overview">
   <div class="exec-summary">
     <div class="exec-title">Executive Summary</div>
-    <div class="exec-headline" id="execHeadline">3,931 YTD prospect records · 619 qualified (15.7%) · $1.81M ACV from 83 Closed Won deals</div>
+    <div class="exec-headline" id="execHeadline">4,156 YTD prospect records · 645 qualified (15.5%) · $1.92M ACV from 90 Closed Won deals</div>
     <div class="exec-bullets">
-      <div class="exec-bullet"><div class="exec-bullet-label">Open Pipeline</div><div class="exec-bullet-val" style="color:#3DAEE9" id="eb-open">1095</div><div class="exec-bullet-sub">Active, non-closed prospects</div></div>
-      <div class="exec-bullet"><div class="exec-bullet-label">Qual. Rate</div><div class="exec-bullet-val" style="color:#4CD9A8" id="eb-qual-pct">15.7%</div><div class="exec-bullet-sub">T1 Inbound leads at 33%+</div></div>
+      <div class="exec-bullet"><div class="exec-bullet-label">Open Pipeline</div><div class="exec-bullet-val" style="color:#3DAEE9" id="eb-open">1161</div><div class="exec-bullet-sub">Active, non-closed prospects</div></div>
+      <div class="exec-bullet"><div class="exec-bullet-label">Qual. Rate</div><div class="exec-bullet-val" style="color:#4CD9A8" id="eb-qual-pct">15.5%</div><div class="exec-bullet-sub">T1 Inbound leads at 33%+</div></div>
       <div class="exec-bullet"><div class="exec-bullet-label">Speed Improvement</div><div class="exec-bullet-val" style="color:#F6C743">87%</div><div class="exec-bullet-sub">New→Outreach: 186h → 25h (Jan→May)</div></div>
-      <div class="exec-bullet"><div class="exec-bullet-label">Top DQ Reason</div><div class="exec-bullet-val" style="color:#F87171">917</div><div class="exec-bullet-sub">Unresponsive — #1 every month</div></div>
+      <div class="exec-bullet"><div class="exec-bullet-label">Top DQ Reason</div><div class="exec-bullet-val" style="color:#F87171">934</div><div class="exec-bullet-sub">Unresponsive — #1 every month</div></div>
     </div>
     <div class="insight-row">
       <div class="insight-pill"><span class="dot" style="background:#3DAEE9"></span>T1 Inbound 33%+ qual — best bucket by 8x vs T4</div>
@@ -217,12 +218,12 @@ body{font-family:'DM Sans',sans-serif;background:var(--gs-bg);color:var(--gs-tex
   </div>
 
   <div class="metric-row">
-    <div class="metric-card accent"><div class="metric-label">Total Prospects</div><div class="metric-value" id="m-total">3,931</div><div class="metric-sub">Excl. Evan White records</div></div>
-    <div class="metric-card accent"><div class="metric-label">YTD 2026</div><div class="metric-value" id="m-ytd">3,931</div><div class="metric-sub">Jan – May 5, 2026</div></div>
-    <div class="metric-card green"><div class="metric-label">Open Pipeline</div><div class="metric-value" id="m-open">1095</div><div class="metric-sub">Across 5 active stages</div></div>
-    <div class="metric-card green"><div class="metric-label">Closed Qualified</div><div class="metric-value" id="m-qual">619</div><div class="metric-sub" id="m-qual-pct-sub">15.7% conversion</div></div>
-    <div class="metric-card red"><div class="metric-label">Disqualified</div><div class="metric-value" id="m-dq">2,216</div><div class="metric-sub" id="m-dq-pct-sub">56.4% of all</div></div>
-    <div class="metric-card amber"><div class="metric-label">Closed Won ACV</div><div class="metric-value">$1.81M</div><div class="metric-sub">83 deals, $21.8K avg</div></div>
+    <div class="metric-card accent"><div class="metric-label">Total Prospects</div><div class="metric-value" id="m-total">4,156</div><div class="metric-sub">Excl. Evan White records</div></div>
+    <div class="metric-card accent"><div class="metric-label">YTD 2026</div><div class="metric-value" id="m-ytd">4,156</div><div class="metric-sub">Jan – May 5, 2026</div></div>
+    <div class="metric-card green"><div class="metric-label">Open Pipeline</div><div class="metric-value" id="m-open">1161</div><div class="metric-sub">Across 5 active stages</div></div>
+    <div class="metric-card green"><div class="metric-label">Closed Qualified</div><div class="metric-value" id="m-qual">645</div><div class="metric-sub" id="m-qual-pct-sub">15.5% conversion</div></div>
+    <div class="metric-card red"><div class="metric-label">Disqualified</div><div class="metric-value" id="m-dq">2,349</div><div class="metric-sub" id="m-dq-pct-sub">56.5% of all</div></div>
+    <div class="metric-card amber"><div class="metric-label">Closed Won ACV</div><div class="metric-value">$1.92M</div><div class="metric-sub">90 deals, $21.4K avg</div></div>
   </div>
 
   <div class="chart-grid chart-grid-2">
@@ -267,12 +268,12 @@ body{font-family:'DM Sans',sans-serif;background:var(--gs-bg);color:var(--gs-tex
 <div class="section" id="section-pipeline">
   <div class="callout"><strong>Open pipeline snapshot.</strong> 701 active prospects across 6 stages. Research is largest (281, 40%); Outreach (189) and New (192) close behind.</div>
   <div class="metric-row">
-    <div class="metric-card accent"><div class="metric-label">Total Open</div><div class="metric-value">1095</div><div class="metric-sub">Non-closed prospects</div></div>
-    <div class="metric-card"><div class="metric-label">New</div><div class="metric-value">307</div><div class="metric-sub">Not yet contacted</div></div>
-    <div class="metric-card"><div class="metric-label">Research</div><div class="metric-value">342</div><div class="metric-sub">51% of open pipeline</div></div>
-    <div class="metric-card"><div class="metric-label">Outreach</div><div class="metric-value">281</div><div class="metric-sub">19% of open pipeline</div></div>
-    <div class="metric-card"><div class="metric-label">Discovery</div><div class="metric-value">147</div><div class="metric-sub">Active discovery calls</div></div>
-    <div class="metric-card amber"><div class="metric-label">On Hold</div><div class="metric-value">15</div><div class="metric-sub">Paused</div></div>
+    <div class="metric-card accent"><div class="metric-label">Total Open</div><div class="metric-value">1161</div><div class="metric-sub">Non-closed prospects</div></div>
+    <div class="metric-card"><div class="metric-label">New</div><div class="metric-value">260</div><div class="metric-sub">Not yet contacted</div></div>
+    <div class="metric-card"><div class="metric-label">Research</div><div class="metric-value">447</div><div class="metric-sub">51% of open pipeline</div></div>
+    <div class="metric-card"><div class="metric-label">Outreach</div><div class="metric-value">268</div><div class="metric-sub">19% of open pipeline</div></div>
+    <div class="metric-card"><div class="metric-label">Discovery</div><div class="metric-value">171</div><div class="metric-sub">Active discovery calls</div></div>
+    <div class="metric-card amber"><div class="metric-label">On Hold</div><div class="metric-value">13</div><div class="metric-sub">Paused</div></div>
   </div>
   <div class="chart-grid chart-grid-2">
     <div class="chart-card">
@@ -350,12 +351,12 @@ body{font-family:'DM Sans',sans-serif;background:var(--gs-bg);color:var(--gs-tex
 <div class="section" id="section-dq">
   <div class="callout callout-warn"><strong>Unresponsive (614 records YTD) is #1 every month.</strong> Click any reason bucket to drill into individual prospects. Champify-sourced prospects drive most of the Unresponsive DQ volume.</div>
   <div class="metric-row">
-    <div class="metric-card red"><div class="metric-label">Total DQ</div><div class="metric-value" id="dq-total">2,216</div><div class="metric-sub">Across all prospect records</div></div>
-    <div class="metric-card red" style="cursor:pointer" onclick="openDrillDown('Unresponsive')" title="Click to see prospects"><div class="metric-label">Unresponsive <span style="font-size:10px;opacity:0.7">↗</span></div><div class="metric-value">917</div><div class="metric-sub">41.4% of DQs — click to drill in</div></div>
-    <div class="metric-card amber" style="cursor:pointer" onclick="openDrillDown('Not Government Focused')" title="Click to see prospects"><div class="metric-label">Not Govt Focused <span style="font-size:10px;opacity:0.7">↗</span></div><div class="metric-value">305</div><div class="metric-sub">13.8% of DQs — click to drill in</div></div>
-    <div class="metric-card amber" style="cursor:pointer" onclick="openDrillDown('False Lead')" title="Click to see prospects"><div class="metric-label">False Lead <span style="font-size:10px;opacity:0.7">↗</span></div><div class="metric-value">360</div><div class="metric-sub">16.2% of DQs — click to drill in</div></div>
-    <div class="metric-card" style="cursor:pointer" onclick="openDrillDown('Not a Decision Maker')" title="Click to see prospects"><div class="metric-label">Not Decision Maker <span style="font-size:10px;opacity:0.7">↗</span></div><div class="metric-value">93</div><div class="metric-sub">4.2% of DQs — click to drill in</div></div>
-    <div class="metric-card" style="cursor:pointer" onclick="openDrillDown('Budget')" title="Click to see prospects"><div class="metric-label">Budget <span style="font-size:10px;opacity:0.7">↗</span></div><div class="metric-value">37</div><div class="metric-sub">1.7% of DQs — click to drill in</div></div>
+    <div class="metric-card red"><div class="metric-label">Total DQ</div><div class="metric-value" id="dq-total">2,349</div><div class="metric-sub">Across all prospect records</div></div>
+    <div class="metric-card red" style="cursor:pointer" onclick="openDrillDown('Unresponsive')" title="Click to see prospects"><div class="metric-label">Unresponsive <span style="font-size:10px;opacity:0.7">↗</span></div><div class="metric-value">934</div><div class="metric-sub">39.8% of DQs — click to drill in</div></div>
+    <div class="metric-card amber" style="cursor:pointer" onclick="openDrillDown('Not Government Focused')" title="Click to see prospects"><div class="metric-label">Not Govt Focused <span style="font-size:10px;opacity:0.7">↗</span></div><div class="metric-value">312</div><div class="metric-sub">13.3% of DQs — click to drill in</div></div>
+    <div class="metric-card amber" style="cursor:pointer" onclick="openDrillDown('False Lead')" title="Click to see prospects"><div class="metric-label">False Lead <span style="font-size:10px;opacity:0.7">↗</span></div><div class="metric-value">381</div><div class="metric-sub">16.2% of DQs — click to drill in</div></div>
+    <div class="metric-card" style="cursor:pointer" onclick="openDrillDown('Not a Decision Maker')" title="Click to see prospects"><div class="metric-label">Not Decision Maker <span style="font-size:10px;opacity:0.7">↗</span></div><div class="metric-value">119</div><div class="metric-sub">5.1% of DQs — click to drill in</div></div>
+    <div class="metric-card" style="cursor:pointer" onclick="openDrillDown('Budget')" title="Click to see prospects"><div class="metric-label">Budget <span style="font-size:10px;opacity:0.7">↗</span></div><div class="metric-value">39</div><div class="metric-sub">1.7% of DQs — click to drill in</div></div>
   </div>
   <div class="chart-grid chart-grid-2">
     <div class="chart-card">
@@ -537,63 +538,63 @@ body{font-family:'DM Sans',sans-serif;background:var(--gs-bg);color:var(--gs-tex
 
 <script>
 // ── DATA ──
-const MONTHS_ALL = ["2025-09","2025-10","2025-11","2025-12","2026-01","2026-02","2026-03","2026-04","2026-05","2026-06","2026-07"];
-const MONTH_LABELS = {"2025-09":"Sep '25","2025-10":"Oct '25","2025-11":"Nov '25","2025-12":"Dec '25","2026-01":"Jan '26","2026-02":"Feb '26","2026-03":"Mar '26","2026-04":"Apr '26","2026-05":"May '26","2026-06":"Jun '26","2026-07":"Jul '26"};
+const MONTHS_ALL = ["2025-09","2025-10","2025-11","2025-12","2026-01","2026-02","2026-03","2026-04","2026-05","2026-06","2026-07","2026-08"];
+const MONTH_LABELS = {"2025-09":"Sep '25","2025-10":"Oct '25","2025-11":"Nov '25","2025-12":"Dec '25","2026-01":"Jan '26","2026-02":"Feb '26","2026-03":"Mar '26","2026-04":"Apr '26","2026-05":"May '26","2026-06":"Jun '26","2026-07":"Jul '26","2026-08":"Aug '26"};
 
-const MONTHLY_DATA = {"2025-09":{"total":0,"qual":0,"dq":0,"qual_pct":0.0,"dq_pct":0.0,"tiers":{},"icps":{},"dq_reasons":{}},"2025-10":{"total":0,"qual":0,"dq":0,"qual_pct":0.0,"dq_pct":0.0,"tiers":{},"icps":{},"dq_reasons":{}},"2025-11":{"total":0,"qual":0,"dq":0,"qual_pct":0.0,"dq_pct":0.0,"tiers":{},"icps":{},"dq_reasons":{}},"2025-12":{"total":0,"qual":0,"dq":0,"qual_pct":0.0,"dq_pct":0.0,"tiers":{},"icps":{},"dq_reasons":{}},"2026-01":{"total":802,"qual":97,"dq":566,"tiers":{"Tier 1 (Inbound)":264,"Tier 2 (Trade Show)":20,"Tier 4 (Good Fit)":518},"icps":{"Enterprise ICP":88,"Strategic ICP":170,"Mid-Market ICP":25,"Non-ICP":519},"dq_reasons":{"Unknown":2,"Budget":10,"Competitor":4,"False Lead":81,"Not a Decision Maker":35,"Not Government Focused":84,"Only Bids Focused":8,"Other":119,"Unresponsive":212,"Unsubscribed":11},"qual_pct":12.1,"dq_pct":70.6},"2026-02":{"total":819,"qual":86,"dq":614,"tiers":{"Tier 1 (Inbound)":242,"Tier 2 (Trade Show)":20,"Tier 4 (Good Fit)":557},"icps":{"Enterprise ICP":46,"Strategic ICP":161,"Mid-Market ICP":29,"Non-ICP":583},"dq_reasons":{"Automation Expired":4,"Budget":8,"Competitor":1,"False Lead":84,"Not a Decision Maker":19,"Not Government Focused":97,"Only Bids Focused":4,"Other":106,"Unresponsive":287,"Unsubscribed":4},"qual_pct":10.5,"dq_pct":75.0},"2026-03":{"total":392,"qual":84,"dq":236,"tiers":{"Tier 1 (Inbound)":238,"Tier 2 (Trade Show)":25,"Tier 4 (Good Fit)":129},"icps":{"Enterprise ICP":34,"Strategic ICP":78,"Mid-Market ICP":25,"Non-ICP":255},"dq_reasons":{"Budget":6,"Competitor":1,"False Lead":41,"Not a Decision Maker":10,"Not Government Focused":33,"Only Bids Focused":13,"Other":48,"Unresponsive":81,"Unsubscribed":3},"qual_pct":21.4,"dq_pct":60.2},"2026-04":{"total":522,"qual":118,"dq":280,"tiers":{"Tier 1 (Inbound)":267,"Tier 2 (Trade Show)":83,"Tier 4 (Good Fit)":172},"icps":{"Enterprise ICP":46,"Strategic ICP":145,"Mid-Market ICP":33,"Non-ICP":297},"dq_reasons":{"Budget":3,"Competitor":3,"False Lead":55,"Not a Decision Maker":10,"Not Government Focused":25,"Only Bids Focused":9,"Other":45,"Unresponsive":129,"Unsubscribed":1},"qual_pct":22.6,"dq_pct":53.6},"2026-05":{"total":392,"qual":66,"dq":214,"tiers":{"Tier 1 (Inbound)":200,"Tier 2 (Trade Show)":55,"Tier 4 (Good Fit)":137},"icps":{"Enterprise ICP":43,"Strategic ICP":82,"Mid-Market ICP":18,"Non-ICP":249},"dq_reasons":{"Automation Expired":1,"Budget":5,"Competitor":1,"False Lead":42,"Not a Decision Maker":8,"Not Government Focused":28,"Only Bids Focused":5,"Other":25,"Unresponsive":95,"Unsubscribed":4},"qual_pct":16.8,"dq_pct":54.6},"2026-06":{"total":494,"qual":101,"dq":240,"tiers":{"Tier 1 (Inbound)":271,"Tier 2 (Trade Show)":77,"Tier 4 (Good Fit)":146},"icps":{"Enterprise ICP":26,"Strategic ICP":68,"Mid-Market ICP":26,"Non-ICP":374},"dq_reasons":{"Automation Expired":4,"Budget":4,"Competitor":1,"False Lead":44,"Not a Decision Maker":8,"Not Government Focused":34,"Only Bids Focused":6,"Other":41,"Unresponsive":97,"Unsubscribed":1},"qual_pct":20.4,"dq_pct":48.6},"2026-07":{"total":510,"qual":67,"dq":66,"tiers":{"Tier 1 (Inbound)":145,"Tier 2 (Trade Show)":146,"Tier 3 (Intent)":193,"Tier 4 (Good Fit)":26},"icps":{"Enterprise ICP":48,"Strategic ICP":94,"Mid-Market ICP":38,"Non-ICP":330},"dq_reasons":{"Budget":1,"Competitor":2,"False Lead":13,"Not a Decision Maker":3,"Not Government Focused":4,"Only Bids Focused":2,"Other":25,"Unresponsive":16},"qual_pct":13.1,"dq_pct":12.9}};
+const MONTHLY_DATA = {"2025-09":{"total":0,"qual":0,"dq":0,"qual_pct":0.0,"dq_pct":0.0,"tiers":{},"icps":{},"dq_reasons":{}},"2025-10":{"total":0,"qual":0,"dq":0,"qual_pct":0.0,"dq_pct":0.0,"tiers":{},"icps":{},"dq_reasons":{}},"2025-11":{"total":0,"qual":0,"dq":0,"qual_pct":0.0,"dq_pct":0.0,"tiers":{},"icps":{},"dq_reasons":{}},"2025-12":{"total":0,"qual":0,"dq":0,"qual_pct":0.0,"dq_pct":0.0,"tiers":{},"icps":{},"dq_reasons":{}},"2026-01":{"total":802,"qual":97,"dq":566,"tiers":{"Tier 1 (Inbound)":264,"Tier 2 (Trade Show)":20,"Tier 4 (Good Fit)":518},"icps":{"Enterprise ICP":88,"Strategic ICP":171,"Mid-Market ICP":25,"Non-ICP":518},"dq_reasons":{"Unknown":2,"Budget":10,"Competitor":4,"False Lead":81,"Not a Decision Maker":35,"Not Government Focused":84,"Only Bids Focused":8,"Other":119,"Unresponsive":212,"Unsubscribed":11},"qual_pct":12.1,"dq_pct":70.6},"2026-02":{"total":819,"qual":86,"dq":614,"tiers":{"Tier 1 (Inbound)":242,"Tier 2 (Trade Show)":20,"Tier 4 (Good Fit)":557},"icps":{"Enterprise ICP":46,"Strategic ICP":161,"Mid-Market ICP":29,"Non-ICP":583},"dq_reasons":{"Automation Expired":4,"Budget":8,"Competitor":1,"False Lead":84,"Not a Decision Maker":19,"Not Government Focused":97,"Only Bids Focused":4,"Other":106,"Unresponsive":287,"Unsubscribed":4},"qual_pct":10.5,"dq_pct":75.0},"2026-03":{"total":392,"qual":84,"dq":236,"tiers":{"Tier 1 (Inbound)":238,"Tier 2 (Trade Show)":25,"Tier 4 (Good Fit)":129},"icps":{"Enterprise ICP":34,"Strategic ICP":79,"Mid-Market ICP":25,"Non-ICP":254},"dq_reasons":{"Budget":6,"Competitor":1,"False Lead":41,"Not a Decision Maker":10,"Not Government Focused":33,"Only Bids Focused":13,"Other":48,"Unresponsive":81,"Unsubscribed":3},"qual_pct":21.4,"dq_pct":60.2},"2026-04":{"total":522,"qual":118,"dq":291,"tiers":{"Tier 1 (Inbound)":267,"Tier 2 (Trade Show)":83,"Tier 4 (Good Fit)":172},"icps":{"Enterprise ICP":46,"Strategic ICP":145,"Mid-Market ICP":33,"Non-ICP":297},"dq_reasons":{"Budget":3,"Competitor":3,"False Lead":57,"Not a Decision Maker":12,"Not Government Focused":25,"Only Bids Focused":9,"Other":49,"Unresponsive":132,"Unsubscribed":1},"qual_pct":22.6,"dq_pct":55.7},"2026-05":{"total":392,"qual":66,"dq":230,"tiers":{"Tier 1 (Inbound)":200,"Tier 2 (Trade Show)":55,"Tier 4 (Good Fit)":137},"icps":{"Enterprise ICP":44,"Strategic ICP":82,"Mid-Market ICP":20,"Non-ICP":246},"dq_reasons":{"Automation Expired":1,"Budget":5,"Competitor":1,"False Lead":43,"Not a Decision Maker":13,"Not Government Focused":28,"Only Bids Focused":5,"Other":32,"Unresponsive":98,"Unsubscribed":4},"qual_pct":16.8,"dq_pct":58.7},"2026-06":{"total":552,"qual":104,"dq":273,"tiers":{"Tier 1 (Inbound)":271,"Tier 2 (Trade Show)":77,"Tier 4 (Good Fit)":204},"icps":{"Enterprise ICP":28,"Strategic ICP":81,"Mid-Market ICP":26,"Non-ICP":417},"dq_reasons":{"Automation Expired":4,"Budget":5,"Competitor":1,"False Lead":47,"Not a Decision Maker":25,"Not Government Focused":37,"Only Bids Focused":6,"Other":46,"Unresponsive":101,"Unsubscribed":1},"qual_pct":18.8,"dq_pct":49.5},"2026-07":{"total":675,"qual":90,"dq":139,"tiers":{"Tier 1 (Inbound)":180,"Tier 2 (Trade Show)":146,"Tier 3 (Intent)":229,"Tier 4 (Good Fit)":120},"icps":{"Enterprise ICP":57,"Strategic ICP":145,"Mid-Market ICP":54,"Non-ICP":419},"dq_reasons":{"Budget":2,"Competitor":2,"False Lead":28,"Not a Decision Maker":5,"Not Government Focused":8,"Only Bids Focused":4,"Other":67,"Unresponsive":23},"qual_pct":13.3,"dq_pct":20.6},"2026-08":{"total":2,"qual":0,"dq":0,"tiers":{"Tier 1 (Inbound)":2},"icps":{"Enterprise ICP":1,"Non-ICP":1},"dq_reasons":{},"qual_pct":0.0,"dq_pct":0.0}};
 
-const SPEED_DATA = {"2026-01":{"n2o":231.4,"o2d":192.4},"2026-02":{"n2o":166.9,"o2d":312.6},"2026-03":{"n2o":204.4,"o2d":183.2},"2026-04":{"n2o":137.9,"o2d":231.9},"2026-05":{"n2o":189.7,"o2d":305.0},"2026-06":{"n2o":125.3,"o2d":184.7},"2026-07":{"n2o":102.7,"o2d":86.1}};
+const SPEED_DATA = {"2026-01":{"n2o":231.4,"o2d":192.4},"2026-02":{"n2o":166.9,"o2d":312.6},"2026-03":{"n2o":204.4,"o2d":183.2},"2026-04":{"n2o":137.9,"o2d":266.1},"2026-05":{"n2o":255.8,"o2d":333.4},"2026-06":{"n2o":176.7,"o2d":207.0},"2026-07":{"n2o":104.9,"o2d":48.2},"2026-08":{"n2o":null,"o2d":null}};
 
 const REP_DATA = [
-  {name:"Keelan Richer",team:"Mid Market",total:501,qual:70,n2o:77.5,o2d:177.0,dq_top:"Unresponsive",dq_pct:59},
-  {name:"Jake Affeldt",team:"Mid Market",total:465,qual:65,n2o:44.7,o2d:122.1,dq_top:"Unresponsive",dq_pct:52},
-  {name:"Jamie Dolnick",team:"Mid Market",total:291,qual:56,n2o:67.6,o2d:249.2,dq_top:"Unresponsive",dq_pct:53},
-  {name:"Eric Swedler",team:"Mid Market",total:286,qual:33,n2o:81.4,o2d:225.7,dq_top:"Unresponsive",dq_pct:54},
-  {name:"Blake Cornett",team:"Mid Market",total:253,qual:39,n2o:174.2,o2d:199.4,dq_top:"Other",dq_pct:31},
-  {name:"Bryce Gilgallon",team:"Mid Market",total:212,qual:58,n2o:67.1,o2d:866.3,dq_top:"False Lead",dq_pct:43},
-  {name:"Christopher Larson",team:"Mid Market",total:90,qual:7,n2o:308.5,o2d:0,dq_top:"Other",dq_pct:24},
-  {name:"Gilbert Butler",team:"Mid Market",total:74,qual:20,n2o:41.3,o2d:187.9,dq_top:"Unresponsive",dq_pct:50},
-  {name:"Jordan Sharaf",team:"Mid Market",total:69,qual:4,n2o:162.3,o2d:47.9,dq_top:"Other",dq_pct:55},
-  {name:"Erika Flynn",team:"Mid Market",total:66,qual:7,n2o:47.9,o2d:0.1,dq_top:"False Lead",dq_pct:80},
-  {name:"Sean Williams",team:"Mid Market",total:64,qual:14,n2o:31.1,o2d:335.6,dq_top:"False Lead",dq_pct:42},
-  {name:"Mayra Ramirez",team:"Mid Market",total:61,qual:0,n2o:336.4,o2d:39.0,dq_top:"False Lead",dq_pct:77},
-  {name:"Hayley Lane",team:"Mid Market",total:59,qual:31,n2o:133.2,o2d:242.5,dq_top:"Unresponsive",dq_pct:45},
+  {name:"Keelan Richer",team:"Mid Market",total:542,qual:72,n2o:78.4,o2d:176.4,dq_top:"Unresponsive",dq_pct:58},
+  {name:"Jake Affeldt",team:"Mid Market",total:503,qual:70,n2o:53.2,o2d:114.1,dq_top:"Unresponsive",dq_pct:50},
+  {name:"Jamie Dolnick",team:"Mid Market",total:305,qual:62,n2o:68.4,o2d:284.4,dq_top:"Unresponsive",dq_pct:52},
+  {name:"Eric Swedler",team:"Mid Market",total:290,qual:35,n2o:81.3,o2d:222.9,dq_top:"Unresponsive",dq_pct:53},
+  {name:"Blake Cornett",team:"Mid Market",total:262,qual:39,n2o:171.9,o2d:197.5,dq_top:"Other",dq_pct:31},
+  {name:"Bryce Gilgallon",team:"Mid Market",total:221,qual:60,n2o:80.4,o2d:777.4,dq_top:"False Lead",dq_pct:44},
+  {name:"Christopher Larson",team:"Mid Market",total:92,qual:7,n2o:395.8,o2d:554.4,dq_top:"False Lead",dq_pct:21},
+  {name:"Gilbert Butler",team:"Mid Market",total:74,qual:20,n2o:178.9,o2d:247.1,dq_top:"Unresponsive",dq_pct:45},
+  {name:"Jordan Sharaf",team:"Mid Market",total:70,qual:4,n2o:140.0,o2d:330.2,dq_top:"Other",dq_pct:61},
+  {name:"Erika Flynn",team:"Mid Market",total:69,qual:7,n2o:52.7,o2d:0.1,dq_top:"False Lead",dq_pct:80},
+  {name:"Hayley Lane",team:"Mid Market",total:66,qual:33,n2o:133.2,o2d:232.7,dq_top:"Unresponsive",dq_pct:45},
+  {name:"Sean Williams",team:"Mid Market",total:66,qual:15,n2o:31.1,o2d:303.7,dq_top:"False Lead",dq_pct:41},
+  {name:"Mayra Ramirez",team:"Mid Market",total:64,qual:0,n2o:336.4,o2d:34.6,dq_top:"False Lead",dq_pct:77},
+  {name:"Mark Owen",team:"Mid Market",total:63,qual:13,n2o:60.6,o2d:215.0,dq_top:"Unresponsive",dq_pct:73},
   {name:"Tyler Owen",team:"Mid Market",total:51,qual:13,n2o:717.6,o2d:12.4,dq_top:"Unresponsive",dq_pct:75},
-  {name:"Mark Owen",team:"Mid Market",total:47,qual:12,n2o:41.2,o2d:215.0,dq_top:"Unresponsive",dq_pct:73},
-  {name:"Baxter Knight",team:"Mid Market",total:46,qual:0,n2o:409.8,o2d:0,dq_top:"False Lead",dq_pct:94},
-  {name:"Connor Molloy",team:"Mid Market",total:46,qual:4,n2o:1834.3,o2d:21.1,dq_top:"False Lead",dq_pct:62},
-  {name:"Ryan Levy",team:"Mid Market",total:44,qual:5,n2o:69.4,o2d:96.9,dq_top:"False Lead",dq_pct:75},
+  {name:"Connor Molloy",team:"Mid Market",total:47,qual:4,n2o:1717.6,o2d:21.1,dq_top:"False Lead",dq_pct:57},
+  {name:"Baxter Knight",team:"Mid Market",total:46,qual:0,n2o:394.8,o2d:0,dq_top:"False Lead",dq_pct:94},
+  {name:"Ryan Levy",team:"Mid Market",total:45,qual:5,n2o:82.8,o2d:96.9,dq_top:"False Lead",dq_pct:67},
   {name:"Jonathan Silverstone",team:"Mid Market",total:43,qual:5,n2o:511.4,o2d:66.7,dq_top:"False Lead",dq_pct:86},
-  {name:"Kayla Maldonado",team:"Mid Market",total:34,qual:0,n2o:495.2,o2d:0,dq_top:"False Lead",dq_pct:100},
-  {name:"Jessica Thompson",team:"Mid Market",total:30,qual:0,n2o:16.4,o2d:0,dq_top:"Other",dq_pct:96},
+  {name:"Kayla Maldonado",team:"Mid Market",total:36,qual:0,n2o:495.2,o2d:0,dq_top:"False Lead",dq_pct:100},
+  {name:"Jessica Thompson",team:"Mid Market",total:31,qual:0,n2o:16.4,o2d:0,dq_top:"Other",dq_pct:96},
   {name:"Mara Chotiner",team:"Mid Market",total:29,qual:0,n2o:601.6,o2d:0,dq_top:"False Lead",dq_pct:100},
-  {name:"Nate Van De Graff",team:"Mid Market",total:26,qual:1,n2o:893.3,o2d:163.8,dq_top:"\u2014",dq_pct:0},
+  {name:"Nate Van De Graff",team:"Mid Market",total:28,qual:1,n2o:893.3,o2d:163.8,dq_top:"\u2014",dq_pct:0},
   {name:"Jace Short",team:"Mid Market",total:21,qual:0,n2o:236.5,o2d:455.5,dq_top:"Other",dq_pct:59},
-  {name:"Adam Fehd",team:"Mid Market",total:20,qual:1,n2o:0.3,o2d:0,dq_top:"\u2014",dq_pct:0},
+  {name:"Adam Fehd",team:"Mid Market",total:19,qual:1,n2o:0.3,o2d:0,dq_top:"\u2014",dq_pct:0},
   {name:"Stephanie Zuluaga",team:"Mid Market",total:19,qual:0,n2o:338.5,o2d:0,dq_top:"Other",dq_pct:100},
-  {name:"Steven Miner",team:"Mid Market",total:17,qual:0,n2o:2191.7,o2d:0,dq_top:"False Lead",dq_pct:58},
-  {name:"Andrew Gordon",team:"Mid Market",total:17,qual:0,n2o:143.1,o2d:0,dq_top:"Not a Decision Maker",dq_pct:100},
+  {name:"Steven Miner",team:"Mid Market",total:18,qual:0,n2o:2191.7,o2d:0,dq_top:"False Lead",dq_pct:58},
+  {name:"Shannon Boudreaux",team:"Mid Market",total:16,qual:0,n2o:1481.5,o2d:1939.7,dq_top:"False Lead",dq_pct:85},
+  {name:"Andrew Gordon",team:"Mid Market",total:16,qual:0,n2o:142.1,o2d:0,dq_top:"Not a Decision Maker",dq_pct:100},
   {name:"Tiffany Grover",team:"Mid Market",total:15,qual:3,n2o:68.6,o2d:0,dq_top:"Other",dq_pct:67},
-  {name:"Shannon Boudreaux",team:"Mid Market",total:15,qual:0,n2o:1481.5,o2d:1939.7,dq_top:"False Lead",dq_pct:85},
   {name:"Marc Digeronimo",team:"Mid Market",total:14,qual:1,n2o:49.5,o2d:0,dq_top:"\u2014",dq_pct:0},
   {name:"Kelly Weed",team:"Mid Market",total:12,qual:0,n2o:466.8,o2d:168,dq_top:"False Lead",dq_pct:100},
-  {name:"Brian Mooney",team:"Mid Market",total:10,qual:0,n2o:0,o2d:0,dq_top:"Other",dq_pct:100},
+  {name:"Brian Mooney",team:"Mid Market",total:11,qual:0,n2o:0,o2d:0,dq_top:"Other",dq_pct:100},
   {name:"Jaden Trujillo",team:"Mid Market",total:10,qual:0,n2o:79.3,o2d:0,dq_top:"Unresponsive",dq_pct:100},
   {name:"Murphy Allen",team:"Mid Market",total:8,qual:2,n2o:81.3,o2d:1823.5,dq_top:"Other",dq_pct:50},
   {name:"Connor Duddy",team:"Mid Market",total:8,qual:0,n2o:100.7,o2d:0,dq_top:"\u2014",dq_pct:0},
   {name:"Chris Dennis",team:"Mid Market",total:8,qual:3,n2o:125.3,o2d:36.4,dq_top:"False Lead",dq_pct:40},
-  {name:"Priscilla Ford",team:"Mid Market",total:7,qual:0,n2o:0,o2d:0,dq_top:"\u2014",dq_pct:0},
-  {name:"Alexander Oakley",team:"Strategic A",total:102,qual:27,n2o:273.8,o2d:163.2,dq_top:"Other",dq_pct:39},
-  {name:"Cory Kozlin",team:"Strategic A",total:96,qual:11,n2o:127.9,o2d:363.9,dq_top:"False Lead",dq_pct:54},
-  {name:"Kris Hodgen",team:"Strategic A",total:38,qual:13,n2o:477.1,o2d:126.2,dq_top:"False Lead",dq_pct:92},
-  {name:"Jose Delgado",team:"Strategic A",total:21,qual:10,n2o:128.8,o2d:1.6,dq_top:"Not a Decision Maker",dq_pct:50},
-  {name:"Dan King",team:"Strategic A",total:20,qual:9,n2o:72.1,o2d:102.0,dq_top:"Other",dq_pct:40},
-  {name:"Corey Monfordini",team:"Strategic B",total:119,qual:12,n2o:127.2,o2d:471.2,dq_top:"Unresponsive",dq_pct:37},
-  {name:"Pedro Hurtado",team:"Strategic B",total:92,qual:15,n2o:163.7,o2d:455.9,dq_top:"Other",dq_pct:53},
-  {name:"Michael Roxin",team:"Strategic B",total:85,qual:8,n2o:145.1,o2d:189.3,dq_top:"Unresponsive",dq_pct:44},
+  {name:"Lisa Fisher",team:"Mid Market",total:8,qual:1,n2o:108.9,o2d:0,dq_top:"\u2014",dq_pct:0},
+  {name:"Cory Kozlin",team:"Strategic A",total:111,qual:12,n2o:115.6,o2d:383.1,dq_top:"False Lead",dq_pct:48},
+  {name:"Alexander Oakley",team:"Strategic A",total:102,qual:27,n2o:560.4,o2d:163.2,dq_top:"Not a Decision Maker",dq_pct:57},
+  {name:"Kris Hodgen",team:"Strategic A",total:55,qual:15,n2o:362.9,o2d:126.2,dq_top:"False Lead",dq_pct:92},
+  {name:"Jose Delgado",team:"Strategic A",total:28,qual:10,n2o:106.1,o2d:1.6,dq_top:"Not a Decision Maker",dq_pct:50},
+  {name:"Dan King",team:"Strategic A",total:20,qual:9,n2o:72.1,o2d:330.6,dq_top:"Unresponsive",dq_pct:36},
+  {name:"Corey Monfordini",team:"Strategic B",total:115,qual:12,n2o:129.0,o2d:475.4,dq_top:"Unresponsive",dq_pct:38},
+  {name:"Pedro Hurtado",team:"Strategic B",total:95,qual:15,n2o:183.8,o2d:443.5,dq_top:"Other",dq_pct:52},
+  {name:"Michael Roxin",team:"Strategic B",total:88,qual:8,n2o:160.4,o2d:189.3,dq_top:"Unresponsive",dq_pct:47},
   {name:"Shawn Young",team:"Strategic B",total:74,qual:21,n2o:80.1,o2d:211.0,dq_top:"Unresponsive",dq_pct:47},
-  {name:"James Biesinger",team:"Strategic B",total:72,qual:7,n2o:222.0,o2d:130.3,dq_top:"False Lead",dq_pct:44},
-  {name:"Cameron Collins",team:"Strategic B",total:48,qual:24,n2o:50.8,o2d:278.6,dq_top:"False Lead",dq_pct:59},
+  {name:"James Biesinger",team:"Strategic B",total:73,qual:7,n2o:222.0,o2d:130.3,dq_top:"False Lead",dq_pct:42},
+  {name:"Cameron Collins",team:"Strategic B",total:61,qual:25,n2o:59.1,o2d:278.6,dq_top:"False Lead",dq_pct:56},
   {name:"Lauren Barbour",team:"Strategic B",total:25,qual:5,n2o:18.6,o2d:300.5,dq_top:"Other",dq_pct:30}
 ];
 
@@ -756,18 +757,18 @@ function refreshAll(){
     });
   }
   // Tier conversion (use static rates — monthly decomposition not available per-tier)
-  const tierQual=[31.3, 13.8, 2.1, 2.8];
-  const tierDQ=[54.3, 32.6, 1.0, 70.7];
+  const tierQual=[31.6, 14.3, 4.8, 2.6];
+  const tierDQ=[55.5, 43.2, 17.9, 65.4];
   function convChart(id,labels,qual,dq){
     mkChart(id,'bar',{labels,datasets:[{label:'Qual %',data:qual,backgroundColor:'#1D9E75'},{label:'DQ %',data:dq,backgroundColor:'#E24B4A'}]},{...noLeg,scales:{x:{...TC.x,ticks:{...TC.x.ticks,maxRotation:0,font:{size:10}}},y:{...TC.y,max:85,ticks:{...TC.y.ticks,callback:v=>v+'%'}}}});
   }
   convChart('c_conv_tier',tierShort,tierQual,tierDQ);
-  convChart('c_conv_icp',['Enterprise','Mid-Market','Strategic','Non-ICP'],[11.8, 36.1, 16.8, 14.4],[36.0, 41.2, 41.9, 64.6]);
+  convChart('c_conv_icp',['Enterprise','Mid-Market','Strategic','Non-ICP'],[11.6, 34.0, 16.1, 14.4],[38.4, 45.3, 40.7, 64.7]);
   convChart('c_conv_tier2',tierShort,tierQual,tierDQ);
-  convChart('c_conv_icp2',['Enterprise','Mid-Market','Strategic','Non-ICP'],[11.8, 36.1, 16.8, 14.4],[36.0, 41.2, 41.9, 64.6]);
+  convChart('c_conv_icp2',['Enterprise','Mid-Market','Strategic','Non-ICP'],[11.6, 34.0, 16.1, 14.4],[38.4, 45.3, 40.7, 64.7]);
   mkChart('c_conv_origin','bar',{
     labels:['Web Demo','Champify','Trade Show','High Score','Life Ins.','P&C'],
-    datasets:[{label:'Qual %',data:[31.3, 2.9, 13.8, 2.1, 0.0, 3.6],backgroundColor:['#378ADD','#7F77DD','#1D9E75','#BA7517','#E24B4A','#888780']}]
+    datasets:[{label:'Qual %',data:[31.6, 2.7, 14.3, 4.8, 0.0, 3.6],backgroundColor:['#378ADD','#7F77DD','#1D9E75','#BA7517','#E24B4A','#888780']}]
   },{...noLeg,scales:{x:{...TC.x,ticks:{...TC.x.ticks,maxRotation:20,font:{size:10}}},y:{...TC.y,max:40,ticks:{...TC.y.ticks,callback:v=>v+'%'}}}});
 
   // DQ chart
@@ -806,14 +807,14 @@ function refreshAll(){
   // Conversion table
   const cb = document.getElementById('convTableBody');
   const cvData=[
-    {seg:"T1 Inbound",type:"Tier",total:1627,qual:509,qualPct:31.3,dqPct:54.3},
-    {seg:"T2 Trade Show",type:"Tier",total:426,qual:59,qualPct:13.8,dqPct:32.6},
-    {seg:"T3 Intent",type:"Tier",total:193,qual:4,qualPct:2.1,dqPct:1.0},
-    {seg:"T4 Good Fit",type:"Tier",total:1685,qual:47,qualPct:2.8,dqPct:70.7},
-    {seg:"Enterprise ICP",type:"ICP",total:331,qual:39,qualPct:11.8,dqPct:36.0},
-    {seg:"Strategic ICP",type:"ICP",total:798,qual:134,qualPct:16.8,dqPct:41.9},
-    {seg:"Mid-Market ICP",type:"ICP",total:194,qual:70,qualPct:36.1,dqPct:41.2},
-    {seg:"Non-ICP",type:"ICP",total:2607,qual:376,qualPct:14.4,dqPct:64.6},
+    {seg:"T1 Inbound",type:"Tier",total:1664,qual:525,qualPct:31.6,dqPct:55.5},
+    {seg:"T2 Trade Show",type:"Tier",total:426,qual:61,qualPct:14.3,dqPct:43.2},
+    {seg:"T3 Intent",type:"Tier",total:229,qual:11,qualPct:4.8,dqPct:17.9},
+    {seg:"T4 Good Fit",type:"Tier",total:1837,qual:48,qualPct:2.6,dqPct:65.4},
+    {seg:"Enterprise ICP",type:"ICP",total:344,qual:40,qualPct:11.6,dqPct:38.4},
+    {seg:"Strategic ICP",type:"ICP",total:864,qual:139,qualPct:16.1,dqPct:40.7},
+    {seg:"Mid-Market ICP",type:"ICP",total:212,qual:72,qualPct:34.0,dqPct:45.3},
+    {seg:"Non-ICP",type:"ICP",total:2735,qual:394,qualPct:14.4,dqPct:64.7},
   ];
   cb.innerHTML='';
   cvData.forEach(r=>{
@@ -883,10 +884,10 @@ function refreshAll(){
 // ── STATIC CHARTS (not month-filtered) ──
 function buildStaticCharts() {
   // Pipeline
-  mkChart('c_pipeline_stage','bar',{labels:['New','Research','Outreach','Discovery','On Hold'],datasets:[{label:'Records',data:[307, 342, 281, 147, 15],backgroundColor:['#378ADD','#7F77DD','#1D9E75','#BA7517','#888780']}]},{...noLeg,indexAxis:'y',scales:{x:{...TC.x},y:{...TC.y,ticks:{...TC.y.ticks,font:{size:12}}}}});
+  mkChart('c_pipeline_stage','bar',{labels:['New','Research','Outreach','Discovery','On Hold'],datasets:[{label:'Records',data:[260, 447, 268, 171, 13],backgroundColor:['#378ADD','#7F77DD','#1D9E75','#BA7517','#888780']}]},{...noLeg,indexAxis:'y',scales:{x:{...TC.x},y:{...TC.y,ticks:{...TC.y.ticks,font:{size:12}}}}});
   const ptierKeys=['Tier 1 (Inbound)','Tier 2 (Trade Show)','Tier 3 (Intent)','Tier 4 (Good Fit)'];
   const ptierShort=['T1','T2','T3','T4'];
-  const ptierData={"Tier 1 (Inbound)":{"New": 97, "Research": 26, "Outreach": 24, "Discovery": 81, "On Hold": 4},"Tier 2 (Trade Show)":{"New": 183, "Research": 23, "Outreach": 18, "Discovery": 3, "On Hold": 1},"Tier 3 (Intent)":{"New": 0, "Research": 0, "Outreach": 139, "Discovery": 47, "On Hold": 1},"Tier 4 (Good Fit)":{"New": 27, "Research": 293, "Outreach": 100, "Discovery": 16, "On Hold": 9}};
+  const ptierData={"Tier 1 (Inbound)":{"New": 97, "Research": 25, "Outreach": 15, "Discovery": 75, "On Hold": 2},"Tier 2 (Trade Show)":{"New": 136, "Research": 17, "Outreach": 22, "Discovery": 4, "On Hold": 2},"Tier 3 (Intent)":{"New": 0, "Research": 0, "Outreach": 102, "Discovery": 75, "On Hold": 0},"Tier 4 (Good Fit)":{"New": 27, "Research": 405, "Outreach": 129, "Discovery": 17, "On Hold": 9}};
   const stageNames=['New','Research','Outreach','Discovery','On Hold'];
   const stageCols=['#378ADD','#7F77DD','#1D9E75','#BA7517','#888780'];
   mkChart('c_pipeline_tier','bar',{labels:ptierShort,datasets:stageNames.map((s,i)=>({label:s,data:ptierKeys.map(t=>ptierData[t][s]||0),backgroundColor:stageCols[i],stack:'s'}))},{...noLeg,scales:{x:{...TC.x,stacked:true},y:{...TC.y,stacked:true}}});
@@ -894,28 +895,28 @@ function buildStaticCharts() {
   // Stage % by tier
   const allStages=['New','Research','Outreach','Discovery','On Hold','Closed/Qualified','Closed/Disqualified'];
   const stageColors={'New':'#378ADD','Research':'#7F77DD','Outreach':'#1D9E75','Discovery':'#BA7517','On Hold':'#888780','Closed/Qualified':'#639922','Closed/Disqualified':'#E24B4A'};
-  const stagePctTier={"Tier 1 (Inbound)":{"New": 6.0, "Research": 1.6, "Outreach": 1.5, "Discovery": 5.0, "On Hold": 0.2, "Closed/Qualified": 31.3, "Closed/Disqualified": 54.3},"Tier 2 (Trade Show)":{"New": 43.0, "Research": 5.4, "Outreach": 4.2, "Discovery": 0.7, "On Hold": 0.2, "Closed/Qualified": 13.8, "Closed/Disqualified": 32.6},"Tier 3 (Intent)":{"New": 0.0, "Research": 0.0, "Outreach": 72.0, "Discovery": 24.4, "On Hold": 0.5, "Closed/Qualified": 2.1, "Closed/Disqualified": 1.0},"Tier 4 (Good Fit)":{"New": 1.6, "Research": 17.4, "Outreach": 5.9, "Discovery": 0.9, "On Hold": 0.5, "Closed/Qualified": 2.8, "Closed/Disqualified": 70.7}};
+  const stagePctTier={"Tier 1 (Inbound)":{"New": 5.8, "Research": 1.5, "Outreach": 0.9, "Discovery": 4.5, "On Hold": 0.1, "Closed/Qualified": 31.6, "Closed/Disqualified": 55.5},"Tier 2 (Trade Show)":{"New": 31.9, "Research": 4.0, "Outreach": 5.2, "Discovery": 0.9, "On Hold": 0.5, "Closed/Qualified": 14.3, "Closed/Disqualified": 43.2},"Tier 3 (Intent)":{"New": 0.0, "Research": 0.0, "Outreach": 44.5, "Discovery": 32.8, "On Hold": 0.0, "Closed/Qualified": 4.8, "Closed/Disqualified": 17.9},"Tier 4 (Good Fit)":{"New": 1.5, "Research": 22.0, "Outreach": 7.0, "Discovery": 0.9, "On Hold": 0.5, "Closed/Qualified": 2.6, "Closed/Disqualified": 65.4}};
   mkChart('c_stage_pct_tier','bar',{labels:['T1','T2','T3','T4'],datasets:allStages.map(s=>({label:s,data:ptierKeys.map(t=>stagePctTier[t]?.[s]||0),backgroundColor:stageColors[s],stack:'s'}))},{...noLeg,scales:{x:{...TC.x,stacked:true},y:{...TC.y,stacked:true,max:100,ticks:{...TC.y.ticks,callback:v=>v+'%'}}}});
-  const stagePctICP={"Enterprise ICP":{"New": 12.7, "Research": 19.6, "Outreach": 13.3, "Discovery": 6.6, "On Hold": 0.0, "Closed/Qualified": 11.8, "Closed/Disqualified": 36.0},"Strategic ICP":{"New": 12.7, "Research": 16.2, "Outreach": 9.3, "Discovery": 2.9, "On Hold": 0.3, "Closed/Qualified": 16.8, "Closed/Disqualified": 41.9},"Mid-Market ICP":{"New": 8.8, "Research": 2.1, "Outreach": 9.8, "Discovery": 1.5, "On Hold": 0.5, "Closed/Qualified": 36.1, "Closed/Disqualified": 41.2},"Non-ICP":{"New": 5.6, "Research": 5.5, "Outreach": 5.5, "Discovery": 3.8, "On Hold": 0.5, "Closed/Qualified": 14.4, "Closed/Disqualified": 64.6}};
+  const stagePctICP={"Enterprise ICP":{"New": 11.9, "Research": 21.8, "Outreach": 10.5, "Discovery": 5.8, "On Hold": 0.0, "Closed/Qualified": 11.6, "Closed/Disqualified": 38.4},"Strategic ICP":{"New": 11.3, "Research": 19.7, "Outreach": 8.2, "Discovery": 3.6, "On Hold": 0.2, "Closed/Qualified": 16.1, "Closed/Disqualified": 40.7},"Mid-Market ICP":{"New": 4.2, "Research": 2.4, "Outreach": 9.4, "Discovery": 4.2, "On Hold": 0.5, "Closed/Qualified": 34.0, "Closed/Disqualified": 45.3},"Non-ICP":{"New": 4.1, "Research": 7.2, "Outreach": 5.2, "Discovery": 4.1, "On Hold": 0.4, "Closed/Qualified": 14.4, "Closed/Disqualified": 64.7}};
   mkChart('c_stage_pct_icp','bar',{labels:['Enterprise','Mid-Market','Strategic','Non-ICP'],datasets:allStages.map(s=>({label:s,data:['Enterprise ICP','Mid-Market ICP','Strategic ICP','Non-ICP'].map(k=>stagePctICP[k]?.[s]||0),backgroundColor:stageColors[s],stack:'s'}))},{...noLeg,scales:{x:{...TC.x,stacked:true},y:{...TC.y,stacked:true,max:100,ticks:{...TC.y.ticks,callback:v=>v+'%'}}}});
 
   // ACV
-  mkChart('c_acv_tier','bar',{labels:['T1 Inbound','T2 Trade Show','T3 Intent','T4 Good Fit'],datasets:[{label:'ACV',data:[1581925, 101775, 0, 126200],backgroundColor:['#378ADD','#1D9E75','#BA7517','#7F77DD']}]},{...noLeg,scales:{x:{...TC.x},y:{...TC.y,ticks:{...TC.y.ticks,callback:v=>'$'+Math.round(v/1000)+'K'}}}});
-  mkChart('c_acv_icp','bar',{labels:['Enterprise ICP','Mid-Market ICP','Non-ICP','Strategic ICP'],datasets:[{label:'ACV',data:[125000, 156750, 0, 707500],backgroundColor:['#378ADD','#1D9E75','#888780','#7F77DD']}]},{...noLeg,scales:{x:{...TC.x,ticks:{...TC.x.ticks,font:{size:10}}},y:{...TC.y,ticks:{...TC.y.ticks,callback:v=>'$'+Math.round(v/1000)+'K'}}}});
+  mkChart('c_acv_tier','bar',{labels:['T1 Inbound','T2 Trade Show','T3 Intent','T4 Good Fit'],datasets:[{label:'ACV',data:[1685625, 109775, 0, 126200],backgroundColor:['#378ADD','#1D9E75','#BA7517','#7F77DD']}]},{...noLeg,scales:{x:{...TC.x},y:{...TC.y,ticks:{...TC.y.ticks,callback:v=>'$'+Math.round(v/1000)+'K'}}}});
+  mkChart('c_acv_icp','bar',{labels:['Enterprise ICP','Mid-Market ICP','Non-ICP','Strategic ICP'],datasets:[{label:'ACV',data:[125000, 156750, 854150, 785700],backgroundColor:['#378ADD','#1D9E75','#888780','#7F77DD']}]},{...noLeg,scales:{x:{...TC.x,ticks:{...TC.x.ticks,font:{size:10}}},y:{...TC.y,ticks:{...TC.y.ticks,callback:v=>'$'+Math.round(v/1000)+'K'}}}});
 
   // Speed by origin
   mkChart('c_speed_origin','bar',{labels:['Web Demo','Champify','Trade Show','High Score','Life Ins.','P&C'],datasets:[{label:'New→Outreach',data:[132.6,331.6,715.3,507.2,84.9,131.2],backgroundColor:'#378ADD'},{label:'Outreach duration',data:[243.5,224.2,772.9,916.2,238.7,151.6],backgroundColor:'#7F77DD'}]},{...noLeg,scales:{x:{...TC.x,ticks:{...TC.x.ticks,font:{size:10},maxRotation:20}},y:{...TC.y,ticks:{...TC.y.ticks,callback:v=>v+'h'}}}});
 
   // ACV table
   const acvTableData=[
-    {seg:"T1 Inbound",type:"Tier",deals:75,acv:1581925,qualRate:31.3,total:1627},
-    {seg:"T2 Trade Show",type:"Tier",deals:3,acv:101775,qualRate:13.8,total:426},
-    {seg:"T3 Intent",type:"Tier",deals:0,acv:0,qualRate:2.1,total:193},
-    {seg:"T4 Good Fit",type:"Tier",deals:5,acv:126200,qualRate:2.8,total:1685},
-    {seg:"Enterprise ICP",type:"ICP",deals:3,acv:125000,qualRate:11.8,total:331},
-    {seg:"Strategic ICP",type:"ICP",deals:18,acv:707500,qualRate:16.8,total:798},
-    {seg:"Mid-Market ICP",type:"ICP",deals:13,acv:156750,qualRate:36.1,total:194},
-    {seg:"Non-ICP",type:"ICP",deals:0,acv:0,qualRate:14.4,total:2607},
+    {seg:"T1 Inbound",type:"Tier",deals:81,acv:1685625,qualRate:31.6,total:1664},
+    {seg:"T2 Trade Show",type:"Tier",deals:4,acv:109775,qualRate:14.3,total:426},
+    {seg:"T3 Intent",type:"Tier",deals:0,acv:0,qualRate:4.8,total:229},
+    {seg:"T4 Good Fit",type:"Tier",deals:5,acv:126200,qualRate:2.6,total:1837},
+    {seg:"Enterprise ICP",type:"ICP",deals:3,acv:125000,qualRate:11.6,total:344},
+    {seg:"Strategic ICP",type:"ICP",deals:21,acv:785700,qualRate:16.1,total:864},
+    {seg:"Mid-Market ICP",type:"ICP",deals:13,acv:156750,qualRate:34.0,total:212},
+    {seg:"Non-ICP",type:"ICP",deals:53,acv:854150,qualRate:14.4,total:2735},
   ];
   const ab=document.getElementById('acvTableBody');
   ab.innerHTML='';
