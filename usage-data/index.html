@@ -279,7 +279,7 @@ function metrics(){
 
 // ---- controls ----
 document.getElementById('stamp').innerHTML =
-  'Data window <b>'+new Date(D.meta.minDay).toLocaleDateString()+' – '+new Date(D.meta.maxDay).toLocaleDateString()+
+  'Data window <b>'+new Date(D.meta.minDay).toLocaleDateString(undefined,{timeZone:'UTC'})+' – '+new Date(D.meta.maxDay).toLocaleDateString(undefined,{timeZone:'UTC'})+
   '</b><br>Generated '+D.meta.generatedAt+(D.meta.source?'<br><span style="color:#FFC44D">'+D.meta.source+'</span>':'');
 const ownerSel=document.getElementById('ownerSel');
 ownerSel.innerHTML='<option value="ALL">Executive · All owners</option>'+
@@ -365,13 +365,13 @@ function renderTrend(){
   let labels, series=[];
   if(state.owner==='ALL'){
     const s=D.portfolio.slice(-(state.tf>=90?D.portfolio.length:state.tf));
-    labels=s.map(r=>new Date(r.d).toLocaleDateString(undefined,{month:'short',day:'numeric'}));
+    labels=s.map(r=>new Date(r.d).toLocaleDateString(undefined,{month:'short',day:'numeric',timeZone:'UTC'}));
     state.mods.forEach(m=>{const v=s.map(r=>(r[MOD[m].pay]||0)+((state.trial&&MOD[m].tri)?r[MOD[m].tri]:0));
       series.push({label:MOD[m].full,data:v,color:MOD[m].color});});
     document.getElementById('trendHint').textContent='daily'+(state.mods.length===1?' · 7-day average overlay':'');
   } else {
     const {cur}=windows(); const x=ownerW[state.owner]||blank();
-    labels=cur.map(i=>'wk '+new Date(D.weeks[i]).toLocaleDateString(undefined,{month:'short',day:'numeric'}));
+    labels=cur.map(i=>'wk '+new Date(D.weeks[i]).toLocaleDateString(undefined,{month:'short',day:'numeric',timeZone:'UTC'}));
     state.mods.forEach(m=>{const v=cur.map(i=>x[m][i]); series.push({label:MOD[m].full,data:v,color:MOD[m].color});});
     document.getElementById('trendHint').textContent='weekly (paying)';
   }
