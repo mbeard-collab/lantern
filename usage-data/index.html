@@ -83,6 +83,8 @@ tbody tr:hover{background:#f3f8fe}
 .delta{font-weight:700}
 .delta.up{color:var(--good)} .delta.dn{color:var(--bad)}
 .pill{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:700;background:var(--line-2);color:var(--muted)}
+.pill.paid{background:#e5f4ec;color:#1f9d6b}
+.pill.trial{background:#fdf1dc;color:#b9812a}
 .scrim{position:fixed;inset:0;background:rgba(48,54,80,.4);opacity:0;pointer-events:none;transition:.18s;z-index:40}
 .scrim.show{opacity:1;pointer-events:auto}
 .over{position:fixed;top:0;right:0;bottom:0;width:min(560px,94vw);background:#fff;box-shadow:-10px 0 40px rgba(48,54,80,.2);transform:translateX(100%);transition:.22s;z-index:41;display:flex;flex-direction:column}
@@ -222,6 +224,7 @@ th.modh{padding-top:7px;padding-bottom:7px}
 <script>
 const D = window.GS_DATA;
 const fmt = n => Math.round(n||0).toLocaleString();
+const subPill = t => t ? '<span class="pill trial">Trial</span>' : '<span class="pill paid">Paid</span>';
 const MODS = ['core','ai','opp','mcp'];
 const MOD = {
   core:{label:'Core',full:'Core / Platform',color:'#0076DE',ow:'c',pay:'cp',tri:'ct'},
@@ -246,11 +249,17 @@ const orgW = D.orgs.map(blank), userW = D.users.map(blank);
 (D.userWeekly||[]).forEach(([ui,wi,c,a,p])=>{const x=userW[ui]; if(x){x.core[wi]+=c; x.ai[wi]+=a; x.opp[wi]+=p;}});
 (D.orgMcpWeekly||[]).forEach(([oi,wi,c])=>{const x=orgW[oi]; if(x){x.mcp[wi]+=c;}});
 (D.userMcpWeekly||[]).forEach(([ui,wi,c])=>{const x=userW[ui]; if(x){x.mcp[wi]+=c;}});
-const ownerW = {};
-D.owners.forEach(o=>ownerW[o]=blank());
-(D.ownerWeekly||[]).forEach(r=>{const x=ownerW[r.o]; if(x){const wi=D.weeks.indexOf(r.w); if(wi>=0){x.core[wi]+=r.c;x.ai[wi]+=r.a;x.opp[wi]+=r.p;}}});
-// owner-level MCP = sum of each owner's book of orgs (no owner-level MCP query needed)
-(D.orgMcpWeekly||[]).forEach(([oi,wi,c])=>{const o=D.orgs[oi]; if(o){const x=ownerW[o.o]; if(x) x.mcp[wi]+=c;}});
+// Owner-level aggregates derived from the per-org weekly arrays, split by subscription so the
+// Include-trials toggle filters owner trends + leaderboard too. `all` = paid+trial; `paid` = paid only.
+const ownerWall={}, ownerWpaid={};
+D.owners.forEach(o=>{ownerWall[o]=blank(); ownerWpaid[o]=blank();});
+D.orgs.forEach((o,i)=>{const own=o.o; if(!own) return;
+  const src=orgW[i], A=ownerWall[own], P=o.t?null:ownerWpaid[own]; if(!A) return;
+  for(let wi=0;wi<W;wi++){A.core[wi]+=src.core[wi]; A.ai[wi]+=src.ai[wi]; A.opp[wi]+=src.opp[wi]; A.mcp[wi]+=src.mcp[wi];
+    if(P){P.core[wi]+=src.core[wi]; P.ai[wi]+=src.ai[wi]; P.opp[wi]+=src.opp[wi]; P.mcp[wi]+=src.mcp[wi];}}
+});
+// Active owner-aggregate set follows the Include-trials toggle.
+function curOwnerW(){return state.trial?ownerWall:ownerWpaid;}
 
 function tfWeeks(){return state.tf>=90 ? W : (state.tf===30 ? Math.min(4,W) : 1);}
 function windows(){const n=tfWeeks(); const cur=[],prev=[];
@@ -340,7 +349,7 @@ function scopeWindowTotals(){ // core/ai/opp totals for current scope+window
     s.forEach(r=>{t.core+=r.cp+(state.trial?r.ct:0); t.ai+=r.ap+(state.trial?r.at:0); t.opp+=r.op+(state.trial?r.ot:0);});
     return t;
   }
-  const x=ownerW[state.owner]||blank();
+  const x=curOwnerW()[state.owner]||blank();
   return {core:sumW(x.core,cur), ai:sumW(x.ai,cur), opp:sumW(x.opp,cur)};
 }
 function renderKpis(){
@@ -348,7 +357,7 @@ function renderKpis(){
   let acct,acctLab;
   if(state.owner==='ALL'){const s=D.portfolio.slice(-(state.tf>=90?D.portfolio.length:state.tf));
     acct=Math.max(...s.map(r=>r.n)); acctLab='peak active orgs/day';}
-  else {acct=D.orgs.filter(o=>o.o===state.owner).length; acctLab='accounts in book';}
+  else {acct=D.orgs.filter(o=>o.o===state.owner && (state.trial||!o.t)).length; acctLab='accounts in book';}
   const cards=[['core','Core / Platform',t.core],['ai','AI activity',t.ai],['opp','Opportunities',t.opp],
     ['acct','Accounts',acct]];
   document.getElementById('kpis').innerHTML=cards.map(c=>
@@ -370,7 +379,7 @@ function renderTrend(){
       series.push({label:MOD[m].full,data:v,color:MOD[m].color});});
     document.getElementById('trendHint').textContent='daily'+(state.mods.length===1?' · 7-day average overlay':'');
   } else {
-    const {cur}=windows(); const x=ownerW[state.owner]||blank();
+    const {cur}=windows(); const x=curOwnerW()[state.owner]||blank();
     labels=cur.map(i=>'wk '+new Date(D.weeks[i]).toLocaleDateString(undefined,{month:'short',day:'numeric',timeZone:'UTC'}));
     state.mods.forEach(m=>{const v=cur.map(i=>x[m][i]); series.push({label:MOD[m].full,data:v,color:MOD[m].color});});
     document.getElementById('trendHint').textContent='weekly (paying)';
@@ -399,7 +408,7 @@ function renderMix(){
   const mcW=Math.min(4,W); const mcIdx=[]; for(let i=W-mcW;i<W;i++) if(i>=0) mcIdx.push(i);
   let mcp=0;
   if(state.owner==='ALL'){ (D.orgMcpWeekly||[]).forEach(([oi,wi,c])=>{ if(wi>=W-mcW) mcp+=c; }); }
-  else { const x=ownerW[state.owner]; if(x) mcp=sumW(x.mcp,mcIdx); }
+  else { const x=curOwnerW()[state.owner]; if(x) mcp=sumW(x.mcp,mcIdx); }
   const rows=[['AI Panel',f.panel,'#0076DE'],['AI Notebook',f.notebook,'#3f9bf0'],['AI Search',f.search,'#7a4ddb'],
     ['Opportunity',f.opp,'#e0913a'],['CRM',f.crm,'#1f9d6b'],['MCP calls',mcp,MOD.mcp.color]];
   const max=Math.max(1,...rows.map(r=>r[1])), tot=rows.reduce((a,b)=>a+b[1],0);
@@ -415,7 +424,8 @@ function renderLb(){
   const card=document.getElementById('lbCard');
   if(state.owner!=='ALL'){card.style.display='none';return;} card.style.display='';
   const {cur}=windows();
-  const tot=D.owners.map(o=>{const x=ownerW[o]; let v=0; state.mods.forEach(m=>v+=sumW(x[m],cur)); return {o,v};})
+  const OW=curOwnerW();
+  const tot=D.owners.map(o=>{const x=OW[o]; let v=0; state.mods.forEach(m=>v+=sumW(x[m],cur)); return {o,v};})
     .filter(t=>t.v>0).sort((a,b)=>b.v-a.v).slice(0,15);
   const max=Math.max(1,...tot.map(t=>t.v));
   document.querySelector('#lbCard h2 .hint').textContent=state.tf+'-day · '+state.mods.map(m=>MOD[m].label).join('+')+' · click to focus';
@@ -441,6 +451,7 @@ function modCells(met){ // value+delta cells for an entity's metrics object
   return state.mods.map(m=>'<td><div>'+fmt(met[m])+'</div><div class="sub2">'+deltaCell(met['d'+m])+'</div></td>').join('');}
 function sortVal(met,meta,key){
   if(key==='name') return (meta.c||meta.n||'').toLowerCase();
+  if(key==='sub') return meta.t?1:0;
   if(key==='acv') return meta.acv||0;
   if(key==='nu') return meta.nu||0;
   const [k,m]=key.split(':'); return k==='m'?met[m]:met['d'+m];
@@ -451,20 +462,22 @@ function renderOrgs(){
   const M=metrics().org;
   let idx=D.orgs.map((o,i)=>i);
   if(state.owner!=='ALL') idx=idx.filter(i=>D.orgs[i].o===state.owner);
+  if(!state.trial) idx=idx.filter(i=>!D.orgs[i].t);   // Include-trials off ⇒ paid only
   const q=document.getElementById('orgSearch').value.trim().toLowerCase();
-  if(q) idx=idx.filter(i=>D.orgs[i].c.toLowerCase().includes(q)||D.orgs[i].o.toLowerCase().includes(q));
+  if(q) idx=idx.filter(i=>{const o=D.orgs[i]; return o.c.toLowerCase().includes(q)||o.o.toLowerCase().includes(q)||(o.t?'trial':'paid').includes(q);});
   const s=state.orgSort, str=(s.key==='name');
   idx.sort((a,b)=>{const va=sortVal(M[a],D.orgs[a],s.key), vb=sortVal(M[b],D.orgs[b],s.key);
     return str ? s.dir*String(va).localeCompare(vb) : s.dir*(va-vb);});
   document.getElementById('orgCountPill').textContent=idx.length+(idx.length===1?' org':' orgs');
   const head='<thead><tr><th class="l" data-sk="name">Organization</th><th class="l">Owner</th>'+
+    '<th class="l" data-sk="sub">Type</th>'+
     '<th data-sk="acv">ACV</th>'+modCols(state.orgSort)+'<th data-sk="nu">Users</th></tr></thead>';
   const view=idx.slice(0,orgShow);
   let body=view.map(i=>{const o=D.orgs[i],m=M[i];
     return '<tr data-org="'+o.c.replace(/"/g,'&quot;')+'"><td class="l cust">'+o.c+'</td>'+
-      '<td class="l sub2">'+o.o+'</td><td>'+(o.acv?'$'+fmt(o.acv):'—')+'</td>'+modCells(m)+'<td>'+fmt(o.nu)+'</td></tr>';}).join('');
-  if(!view.length) body='<tr><td class="l sub2" colspan="'+(4+state.mods.length)+'">No organizations in this view.</td></tr>';
-  if(idx.length>orgShow) body+='<tr class="more"><td colspan="'+(4+state.mods.length)+'" style="text-align:center;padding:12px"><button class="loadmore" data-t="org">Load more · showing '+view.length+' of '+idx.length+'</button></td></tr>';
+      '<td class="l sub2">'+o.o+'</td><td class="l">'+subPill(o.t)+'</td><td>'+(o.acv?'$'+fmt(o.acv):'—')+'</td>'+modCells(m)+'<td>'+fmt(o.nu)+'</td></tr>';}).join('');
+  if(!view.length) body='<tr><td class="l sub2" colspan="'+(5+state.mods.length)+'">No organizations in this view.</td></tr>';
+  if(idx.length>orgShow) body+='<tr class="more"><td colspan="'+(5+state.mods.length)+'" style="text-align:center;padding:12px"><button class="loadmore" data-t="org">Load more · showing '+view.length+' of '+idx.length+'</button></td></tr>';
   const tbl=document.getElementById('orgTable'); tbl.innerHTML=head+'<tbody>'+body+'</tbody>';
   wireHeaders(tbl,state.orgSort,renderOrgs);
   tbl.querySelectorAll('tr[data-org]').forEach(tr=>tr.onclick=()=>openOrg(tr.dataset.org));
@@ -476,19 +489,21 @@ function renderUsers(){
   const M=metrics().user;
   let idx=D.users.map((u,i)=>i);
   if(state.owner!=='ALL') idx=idx.filter(i=>D.users[i].o===state.owner);
+  if(!state.trial) idx=idx.filter(i=>!D.users[i].t);   // Include-trials off ⇒ paid only
   const q=document.getElementById('userSearch').value.trim().toLowerCase();
-  if(q) idx=idx.filter(i=>{const u=D.users[i];return (u.n||'').toLowerCase().includes(q)||u.e.toLowerCase().includes(q)||u.c.toLowerCase().includes(q);});
+  if(q) idx=idx.filter(i=>{const u=D.users[i];return (u.n||'').toLowerCase().includes(q)||u.e.toLowerCase().includes(q)||u.c.toLowerCase().includes(q)||(u.t?'trial':'paid').includes(q);});
   const s=state.userSort, str=(s.key==='name');
   idx.sort((a,b)=>{const va=sortVal(M[a],D.users[a],s.key), vb=sortVal(M[b],D.users[b],s.key);
     return str ? s.dir*String(va).localeCompare(vb) : s.dir*(va-vb);});
   document.getElementById('userCountPill').textContent=idx.length+(idx.length===1?' user':' users');
-  const head='<thead><tr><th class="l" data-sk="name">User</th><th class="l">Organization</th><th class="l">Owner</th>'+modCols(state.userSort)+'</tr></thead>';
+  const head='<thead><tr><th class="l" data-sk="name">User</th><th class="l">Organization</th><th class="l">Owner</th>'+
+    '<th class="l" data-sk="sub">Type</th>'+modCols(state.userSort)+'</tr></thead>';
   const view=idx.slice(0,userShow);
   let body=view.map(i=>{const u=D.users[i],m=M[i];
     return '<tr><td class="l"><div class="cust">'+(u.n||'(unknown)')+'</div><div class="sub2">'+u.e+'</div></td>'+
-      '<td class="l sub2">'+u.c+'</td><td class="l sub2">'+u.o+'</td>'+modCells(m)+'</tr>';}).join('');
-  if(!view.length) body='<tr><td class="l sub2" colspan="'+(3+state.mods.length)+'">No users in this view.</td></tr>';
-  if(idx.length>userShow) body+='<tr class="more"><td colspan="'+(3+state.mods.length)+'" style="text-align:center;padding:12px"><button class="loadmore" data-t="user">Load more · showing '+view.length+' of '+idx.length+'</button></td></tr>';
+      '<td class="l sub2">'+u.c+'</td><td class="l sub2">'+u.o+'</td><td class="l">'+subPill(u.t)+'</td>'+modCells(m)+'</tr>';}).join('');
+  if(!view.length) body='<tr><td class="l sub2" colspan="'+(4+state.mods.length)+'">No users in this view.</td></tr>';
+  if(idx.length>userShow) body+='<tr class="more"><td colspan="'+(4+state.mods.length)+'" style="text-align:center;padding:12px"><button class="loadmore" data-t="user">Load more · showing '+view.length+' of '+idx.length+'</button></td></tr>';
   const tbl=document.getElementById('userTable'); tbl.innerHTML=head+'<tbody>'+body+'</tbody>';
   wireHeaders(tbl,state.userSort,renderUsers);
   tbl.querySelectorAll('.loadmore').forEach(b=>b.onclick=()=>{userShow+=PAGE;renderUsers();});
@@ -509,7 +524,7 @@ function wireHeaders(tbl,s,rerender){
 function openOrg(name){
   const oi=D.orgs.findIndex(x=>x.c===name); if(oi<0)return; const o=D.orgs[oi]; state.ovOrg=name;
   const M=metrics().org[oi];
-  document.getElementById('ovName').textContent=o.c;
+  document.getElementById('ovName').innerHTML=o.c.replace(/</g,'&lt;')+' '+subPill(o.t);
   let stat='<div class="ostat">'+state.mods.map(m=>'<div><div class="l">'+MOD[m].full+' '+state.tf+'d</div><div class="v">'+fmt(M[m])+'</div>'+
     '<div class="sub2">'+deltaCell(M['d'+m])+' vs prior</div></div>').join('')+'</div>'+
     '<div class="ostat"><div><div class="l">Owner</div><div class="v" style="font-size:14px">'+o.o+'</div></div>'+
@@ -551,15 +566,19 @@ function resetAll(){
 document.getElementById('resetBtn').onclick=resetAll;
 
 // trial toggle availability + footer
-function syncTrial(){const w=document.getElementById('trialWrap');
-  if(state.owner==='ALL'){w.classList.remove('dis');} else {w.classList.add('dis');document.getElementById('trialChk').checked=false;state.trial=false;}}
+// Include-trials now applies to every view (portfolio, owner books, tables), so the toggle
+// stays enabled regardless of the selected owner.
+function syncTrial(){document.getElementById('trialWrap').classList.remove('dis');}
 document.getElementById('foot').innerHTML=
   '<b>Source:</b> CrateDB <code>analytics</code> schema, loaded from <code>usage_data.js</code>. Tables, leaderboard, and KPIs recompute for the selected <b>time frame</b> '+
   'using weekly buckets (7d ≈ latest week, 30d ≈ last 4 weeks, 90d = full window). <b>Rank by → movement (Δ hits)</b> orders accounts by how much activity rose or fell, so '+
   '<b>Biggest increase</b> surfaces the fastest-growing accounts and <b>Biggest decrease</b> the fastest-declining, per module. Movement compares the current window to the equal '+
   'period just before it (7d, 30d); for 90d there is no prior 90-day window, so it compares the recent half of the window to the earlier half. <b>Total hits</b> ranks by raw volume instead. '+
   '<b>Core</b> is an export-weighted score, so single-day spikes can be one-off exports — the 7-day average is the truer trend. '+
-  'User-level figures cover provisioned external users only (~2–3% below org-level by design). Module mix is 30-day rolling at org level. Owner trends/totals are exact across all paying orgs. '+
+  'User-level figures cover provisioned external users only (~2–3% below org-level by design). '+
+  'The <b>Include trials</b> toggle scopes the entire dashboard: off shows paid accounts only (the default), on adds trial accounts to the KPIs, trend, owner leaderboard, and both tables. '+
+  'Every org and user carries a <b>Paid/Trial</b> badge (sortable/searchable), and owner trends/totals recompute for the selected subscription set. '+
+  'Note: the Module-mix panel\'s AI Panel/Notebook/Search/Opp/CRM bars are drawn from paid-account feature rolling data, so they do not change with the trials toggle; the MCP bar counts all external calls. '+
   'The <b>MCP</b> module (toggle it in the Module picker) counts GovSpend MCP tool calls — search/analytics tools — over the selected time frame, for <b>external customers only</b>; GovSpend internal usage is excluded. Turning it on adds an MCP trend line, an MCP bar in the module mix, and MCP columns in the org/user tables. MCP telemetry begins late Jun 2026, so 90d totals cover only the weeks with data.';
 
 function render(){syncTrial();renderKpis();renderTrend();renderMix();renderLb();renderOrgs();renderUsers();}
