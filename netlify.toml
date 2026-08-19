@@ -25,6 +25,11 @@
   status = 200
 
 [[redirects]]
+  from = "/api/refresh-usage-data"
+  to = "/.netlify/functions/refresh-usage-data"
+  status = 200
+
+[[redirects]]
   from = "/api/voting/*"
   to = "/.netlify/functions/voting/:splat"
   status = 200
