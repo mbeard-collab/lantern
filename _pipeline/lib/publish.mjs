@@ -1,34 +1,60 @@
-// Commits one or more data files to the site via /api/commit (data action).
-// Called by refresh.mjs after queries succeed.
+// Commits one or more data files to the GitHub repo directly via the
+// GitHub Contents API. Requires GITHUB_TOKEN and GITHUB_REPO in .env.
 //
 // files: Array<{ name: string, content: string }>
 //   name is relative to the dashboard folder (e.g. 'usage_data.js' or 'data.json')
 
 export async function publish(slug, files) {
-  const siteUrl = (process.env.SITE_URL || '').replace(/\/$/, '');
-  const secret  = process.env.PIPELINE_SECRET;
+  const token = process.env.GITHUB_TOKEN;
+  const repo  = process.env.GITHUB_REPO;
 
-  if (!siteUrl) throw new Error('publish: SITE_URL is not set in _pipeline/.env');
-  if (!secret)  throw new Error('publish: PIPELINE_SECRET is not set in _pipeline/.env');
+  if (!token) throw new Error('publish: GITHUB_TOKEN is not set in _pipeline/.env');
+  if (!repo)  throw new Error('publish: GITHUB_REPO is not set in _pipeline/.env');
 
-  const endpoint = `${siteUrl}/api/commit`;
-  console.error(`[publish] POST ${endpoint} — slug=${slug}, files=[${files.map(f => f.name).join(', ')}]`);
+  const ghBase = `https://api.github.com/repos/${repo}/contents`;
+  const headers = {
+    Authorization: `token ${token}`,
+    Accept: 'application/vnd.github+json',
+    'X-GitHub-Api-Version': '2022-11-28',
+    'User-Agent': 'lantern-pipeline',
+  };
 
-  const res = await fetch(endpoint, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      action: 'data',
-      auth: { token: secret },
-      slug,
-      files,
-    }),
-  });
-
-  const body = await res.json().catch(() => ({}));
-  if (!res.ok || !body.ok) {
-    throw new Error(`publish: commit failed (HTTP ${res.status}) — ${body.error || JSON.stringify(body)}`);
+  async function getSha(path) {
+    const res = await fetch(`${ghBase}/${path}?ref=main`, { headers });
+    if (res.status === 404) return null;
+    if (!res.ok) throw new Error(`GET ${path} → ${res.status}: ${await res.text()}`);
+    return (await res.json()).sha;
   }
 
-  return body;
+  async function putFile(path, content, message, sha) {
+    const payload = {
+      message,
+      content: Buffer.from(content, 'utf-8').toString('base64'),
+      branch: 'main',
+    };
+    if (sha) payload.sha = sha;
+    const res = await fetch(`${ghBase}/${path}`, {
+      method: 'PUT',
+      headers: { ...headers, 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) throw new Error(`PUT ${path} → ${res.status}: ${await res.text()}`);
+    return (await res.json()).commit?.sha || null;
+  }
+
+  const commits = [];
+  for (const f of files) {
+    const path = `${slug}/${f.name}`;
+    console.error(`[publish] committing ${path} to ${repo}@main`);
+    const sha = await getSha(path);
+    const commitSha = await putFile(
+      path,
+      f.content,
+      `Update ${path} via pipeline`,
+      sha,
+    );
+    commits.push({ path, commitSha });
+  }
+
+  return { ok: true, commitSha: commits[0]?.commitSha || null, files: commits };
 }
