@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<script type="application/json" id="cowork-artifact-meta">
+{
+  "name": "Opp Adoption Sprint Review",
+  "schemaVersion": 1,
+  "description": "11-week Opportunity-module adoption sprint review across all paid (non-trial) GovSpend orgs (weeks of May 4 – Jul 13, 2026, covering through Jul 19). All 11 weeks complete; data through Jul 19, 2026. KPIs + weekly trend, adoption donut, engagement-depth bars, volume concentration, and presentation talking points. Static snapshot from CrateDB analytics.usage_org_daily."
+}
+</script>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Opportunity vs Overall Module Usage — 11-Week Sprint Review</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.js" integrity="sha384-iU8HYtnGQ8Cy4zl7gbNMOhsDTTKX02BTXptVP/vqAWIaTfM7isw76iyZCsjL2eVi" crossorigin="anonymous"></script>
+<style>
+:root{color-scheme:light;--bg:#f6f8fa;--card:#ffffff;--card2:#eef1f5;--line:#d8dee4;--txt:#1f2328;--dim:#656d76;--accent:#0969da;--green:#1a7f37;--amber:#9a6700;--red:#cf222e;--purple:#8250df;--slate:#6e7781;}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px;line-height:1.5;padding:28px 30px 40px}
+h1{font-size:24px;margin:0 0 4px;letter-spacing:-.01em}
+.sub{color:var(--dim);font-size:13px;margin-bottom:24px}
+.kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:22px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px}
+.kpi .v{font-size:30px;font-weight:800;letter-spacing:-.02em}
+.kpi .l{color:var(--dim);font-size:12px;margin-top:3px}
+.kpi .d{font-size:11.5px;margin-top:6px;font-weight:600}
+.up{color:var(--green)}
+.kpi.good .v{color:var(--green)}.kpi.accent .v{color:var(--accent)}.kpi.alert .v{color:var(--amber)}.kpi.slate .v{color:var(--slate)}
+.bar{height:7px;border-radius:5px;background:var(--card2);margin-top:9px;overflow:hidden}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--green),#3aa85a)}
+.grid{display:grid;gap:18px}
+.g-main{grid-template-columns:1fr;margin-bottom:18px}
+.g-2{grid-template-columns:1fr 1fr;margin-bottom:18px}
+.g-2b{grid-template-columns:1.3fr 1fr;margin-bottom:18px}
+.g-3{grid-template-columns:1fr 1fr 1fr;margin-bottom:18px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px}
+.card h2{font-size:14px;margin:0 0 2px;font-weight:700}
+.card .cap{color:var(--dim);font-size:12px;margin:0 0 14px}
+.chart-box{position:relative}
+.chart-box.tall{height:320px}
+.chart-box.med{height:240px}
+.story{background:linear-gradient(135deg,#ffffff,#eef4fb);border:1px solid var(--line);border-left:4px solid var(--accent)}
+.story h2{font-size:15px}
+ul{margin:6px 0 0;padding-left:0;list-style:none}
+li{position:relative;padding:7px 0 7px 26px;border-bottom:1px solid var(--line);font-size:13.5px}
+li:last-child{border-bottom:none}
+li:before{content:"";position:absolute;left:4px;top:14px;width:8px;height:8px;border-radius:50%;background:var(--accent)}
+li b{color:#000}
+li.gr:before{background:var(--green)}li.am:before{background:var(--amber)}li.rd:before{background:var(--red)}li.pu:before{background:var(--purple)}
+.metric-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--line);font-size:13px}
+.metric-row:last-child{border:none}
+.metric-row .mv{font-weight:700}
+.metric-row .dim{color:var(--dim)}
+.concbars{margin-top:4px}
+.cb{margin:11px 0}
+.cb .cbl{display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px}
+.cb .cbl .pct{font-weight:700;color:var(--accent)}
+.cbar{height:10px;background:var(--card2);border-radius:6px;overflow:hidden}
+.cbar i{display:block;height:100%;border-radius:6px;background:linear-gradient(90deg,var(--accent),#4f9cf9)}
+.foot{color:var(--dim);font-size:11.5px;margin-top:22px;line-height:1.6;border-top:1px solid var(--line);padding-top:14px}
+.tag{display:inline-block;font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;background:rgba(26,127,55,.12);color:var(--green);vertical-align:middle;margin-left:8px}
+@media(max-width:1050px){.kpis{grid-template-columns:repeat(2,1fr)}.g-3,.g-2,.g-2b{grid-template-columns:1fr}}
+</style></head>
+<body>
+<h1>Opportunity vs Overall Module Usage <span class="tag">11-Week Sprint Review</span></h1>
+<div class="sub">Paid (non-trial) organizations &middot; week of May 4 → Jul 13, 2026 &middot; Source: CrateDB analytics.usage_org_daily (data complete through Jul 19)</div>
+
+<div class="kpis">
+  <div class="kpi"><div class="v">2,424</div><div class="l">Paid orgs in scope</div></div>
+  <div class="kpi slate"><div class="v">2,391</div><div class="l">Platform-active orgs</div><div class="d" style="color:var(--dim)">98.6% of paid base</div></div>
+  <div class="kpi good"><div class="v">1,614</div><div class="l">Opp-active orgs</div><div class="d up">↑ +103 vs prior view</div></div>
+  <div class="kpi accent"><div class="v">67.5%</div><div class="l">Opp share of active base</div><div class="bar"><i style="width:67.5%"></i></div></div>
+  <div class="kpi"><div class="v">74,754</div><div class="l">Opp actions</div><div class="d" style="color:var(--dim)">vs 4.84M core score</div></div>
+</div>
+
+<div class="grid g-main">
+  <div class="card">
+    <h2>Weekly Active Orgs — Opportunity vs Whole Platform</h2>
+    <p class="cap">Overall platform engagement is flat (~1,750–1,830 active orgs/wk). Opp is the engagement layer riding inside that steady base — the green band holds 527–698 active orgs/wk.</p>
+    <div class="chart-box tall"><canvas id="overlayOrgs"></canvas></div>
+  </div>
+</div>
+
+<div class="grid g-2b">
+  <div class="card">
+    <h2>Weekly Activity Volume — Opp vs Core (dual axis)</h2>
+    <p class="cap">Gray bars = overall core usage score, left axis. Green line = Opp actions, right axis. Units differ (core is export-weighted; Opp is a flat action count) — shown to scale relative engagement, not to sum.</p>
+    <div class="chart-box med"><canvas id="overlayVol"></canvas></div>
+  </div>
+  <div class="card">
+    <h2>Opp Penetration of the Active Base</h2>
+    <p class="cap">Share of weekly platform-active orgs that used Opp. Holding in a ~30–38% band; 38.3% in the latest full week (Jul 13).</p>
+    <div class="chart-box med"><canvas id="penTrend"></canvas></div>
+  </div>
+</div>
+
+<div class="grid g-3">
+  <div class="card">
+    <h2>Adoption of Paid Base</h2>
+    <p class="cap">Nearly two-thirds of paying customers have touched Opp.</p>
+    <div class="chart-box med"><canvas id="donut"></canvas></div>
+  </div>
+  <div class="card">
+    <h2>Engagement Depth</h2>
+    <p class="cap">Active orgs by total Opp actions over the window — broad but mostly light.</p>
+    <div class="chart-box med"><canvas id="depth"></canvas></div>
+  </div>
+  <div class="card">
+    <h2>Opp Volume Concentration</h2>
+    <p class="cap">Share of all 74,754 Opp actions held by the top orgs.</p>
+    <div class="concbars">
+      <div class="cb"><div class="cbl"><span>Top 10 orgs</span><span class="pct">19.9%</span></div><div class="cbar"><i style="width:19.9%"></i></div></div>
+      <div class="cb"><div class="cbl"><span>Top 25 orgs</span><span class="pct">27.7%</span></div><div class="cbar"><i style="width:27.7%"></i></div></div>
+      <div class="cb"><div class="cbl"><span>Top 50 orgs</span><span class="pct">36.3%</span></div><div class="cbar"><i style="width:36.3%"></i></div></div>
+      <div class="cb"><div class="cbl"><span>Prutech Solutions (1 org)</span><span class="pct">10.7%</span></div><div class="cbar"><i style="width:10.7%;background:linear-gradient(90deg,var(--amber),#d4a017)"></i></div></div>
+    </div>
+    <div class="metric-row" style="margin-top:14px"><span class="dim">Avg actions / active org</span><span class="mv">46</span></div>
+    <div class="metric-row"><span class="dim">&lt;20 actions (light)</span><span class="mv">939 orgs · 58%</span></div>
+  </div>
+</div>
+
+<div class="grid g-main">
+  <div class="card story">
+    <h2>The Story to Tell</h2>
+    <ul>
+      <li class="gr"><b>Opp rides a steady base &amp; is rebounding</b> — overall weekly actives hold in the ~1,710–1,833 band while Opp actives range 527–698/wk (avg ~635), rebounding to 684 in the latest week (Jul 13) after a Jun 29 dip to 542.</li>
+      <li class="gr"><b>Opp now reaches 68% of every active org</b> — 1,614 of the 2,391 orgs that use the platform have used Opp; that's no longer a niche feature.</li>
+      <li class="am"><b>Penetration of the active base holds ~30–38%</b> — weekly Opp reach of platform-active orgs stayed in that band across the sprint, ending at its high of 38.3% (Jul 13).</li>
+      <li class="am"><b>Depth is the gap</b> — 58% of Opp-active orgs (939) used it &lt;20 times over the window. Broad trial, not yet weekly habit.</li>
+      <li class="rd"><b>Volume is top-heavy</b> — top 10 orgs = 20%; Prutech alone = 11% of all Opp actions.</li>
+      <li><b>Next play:</b> drive frequency in the 939 light-touch orgs &amp; convert the 810 with zero usage — awareness is no longer the blocker.</li>
+    </ul>
+  </div>
+</div>
+
+<div class="foot">
+  <b>Definitions —</b> Paid = <code>is_trial = false</code>. Opp action = Opportunities ViewDetails + Favorite clicks (flat, unweighted), summed per ISO week. Core = export-weighted whole-platform usage score. "Active org" = ≥1 action of the relevant type in the week/window. Week labels are Monday-start. All 11 weeks complete (May 4 → week of Jul 13, covering through Jul 19); data complete through Jul 19, 2026 (the partial current week of Jul 20 is excluded).
+</div>
+
+<script>
+const WEEKS=["May 4","May 11","May 18","May 25","Jun 1","Jun 8","Jun 15","Jun 22","Jun 29","Jul 6","Jul 13"];
+const OPP=[10176,6623,6392,5608,7100,7778,6355,6834,4931,6070,6887];
+const ACT=[527,548,658,589,698,656,619,682,542,622,684];
+const CORE=[461342,474207,416997,365478,443772,421420,389158,435787,401930,521753,509484];
+const KORG=[1778,1795,1776,1750,1833,1822,1807,1812,1710,1781,1788];
+const PEN=ACT.map((a,i)=>+(100*a/KORG[i]).toFixed(1));
+const C={txt:'#1f2328',dim:'#656d76',line:'#d8dee4',accent:'#0969da',green:'#1a7f37',amber:'#9a6700',red:'#cf222e',purple:'#8250df',slate:'#6e7781'};
+Chart.defaults.color=C.dim;Chart.defaults.font.family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif";
+const grid={color:C.line};
+
+new Chart(document.getElementById('overlayOrgs'),{
+ type:'line',
+ data:{labels:WEEKS,datasets:[
+  {label:'Platform-active orgs (overall)',data:KORG,borderColor:C.slate,backgroundColor:'rgba(110,119,129,.12)',borderWidth:3,tension:.3,pointRadius:3,fill:true,order:2},
+  {label:'Opp-active orgs',data:ACT,borderColor:C.green,backgroundColor:'rgba(26,127,55,.22)',borderWidth:3,tension:.3,pointRadius:4,pointBackgroundColor:C.green,fill:true,order:1}
+ ]},
+ options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+  plugins:{legend:{labels:{usePointStyle:true,padding:16}}},
+  scales:{y:{grid:grid,beginAtZero:true,suggestedMax:2000,title:{display:true,text:'Active orgs / week'}},x:{grid:{display:false}}}}
+});
+
+new Chart(document.getElementById('overlayVol'),{
+ data:{labels:WEEKS,datasets:[
+  {type:'bar',label:'Core usage score (overall)',data:CORE,backgroundColor:'rgba(110,119,129,.30)',borderColor:C.slate,borderWidth:1,borderRadius:4,yAxisID:'y'},
+  {type:'line',label:'Opp actions',data:OPP,borderColor:C.green,backgroundColor:C.green,borderWidth:3,tension:.35,pointRadius:4,pointBackgroundColor:C.green,yAxisID:'y1'}
+ ]},
+ options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+  plugins:{legend:{labels:{usePointStyle:true,padding:14}}},
+  scales:{
+   y:{position:'left',grid:grid,beginAtZero:true,title:{display:true,text:'Core score'}},
+   y1:{position:'right',grid:{drawOnChartArea:false},beginAtZero:true,suggestedMax:12000,title:{display:true,text:'Opp actions'}},
+   x:{grid:{display:false}}
+  }}
+});
+
+new Chart(document.getElementById('penTrend'),{
+ type:'line',
+ data:{labels:WEEKS,datasets:[{label:'Opp % of active orgs',data:PEN,borderColor:C.accent,
+  backgroundColor:'rgba(9,105,218,.12)',fill:true,borderWidth:3,tension:.35,pointRadius:4,pointBackgroundColor:C.accent}]},
+ options:{responsive:true,maintainAspectRatio:false,
+  plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.parsed.y}% of active orgs`}}},
+  scales:{y:{grid:grid,beginAtZero:false,suggestedMin:25,suggestedMax:42,ticks:{callback:v=>v+'%'}},x:{grid:{display:false}}}}
+});
+
+new Chart(document.getElementById('donut'),{
+ type:'doughnut',
+ data:{labels:['Used Opp (1,614)','Zero Opp (810)'],datasets:[{data:[1614,810],backgroundColor:[C.green,'#d0d7de'],borderColor:'#ffffff',borderWidth:3}]},
+ options:{responsive:true,maintainAspectRatio:false,cutout:'66%',
+  plugins:{legend:{position:'bottom',labels:{usePointStyle:true,padding:14}},
+   tooltip:{callbacks:{label:c=>` ${c.label}: ${(100*c.parsed/2424).toFixed(1)}%`}}}}
+});
+
+new Chart(document.getElementById('depth'),{
+ type:'bar',
+ data:{labels:['1–4','5–19','20–49','50–199','200+'],datasets:[{label:'Active orgs',data:[400,539,312,297,66],
+  backgroundColor:[C.red,C.amber,C.accent,C.green,C.purple],borderRadius:5}]},
+ options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+  plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.parsed.x} orgs · ${(100*c.parsed.x/1614).toFixed(0)}% of active`}}},
+  scales:{x:{grid:grid,beginAtZero:true,title:{display:true,text:'# of orgs'}},y:{grid:{display:false}}}}
+});
+</script>
+</body></html>

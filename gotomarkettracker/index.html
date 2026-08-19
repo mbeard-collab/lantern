@@ -1,379 +1,618 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<html lang="en" data-exported="2026-07-27T20:43:01.100Z" data-scribe-recorder-ready="true"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>GovSpend GTM Tracker</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,300;0,400;0,700;0,900;1,400&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,300;0,400;0,700;0,900;1,400&amp;display=swap" rel="stylesheet">
 
 <!--
   ============================================================================
-  GOVSPEND GTM TRACKER  —  STATE SCHEMA (for whoever updates this next)
+  GOVSPEND GTM TRACKER  v2  —  STATE SCHEMA & UPDATE RULES
   ============================================================================
-  The full dashboard state lives in the <script id="gtm-state"> JSON block below.
-  To update from a meeting transcript: read that JSON, apply the changes the
-  transcript implies (new/edited/removed tasks, owners, due dates, artifact
-  links, status, readiness slider values, notes), and regenerate this file with
-  the updated JSON baked back into the same #gtm-state block.
+  The whole dashboard lives in the <script id="gtm-state"> JSON block below.
+
+  >>> SOURCE OF TRUTH <<<
+  This DOWNLOADED FILE is now the single source of truth. Do NOT rebuild from
+  the original Google running-doc again. To update after a meeting:
+    1. Luke serves the most-recent downloaded file (with his manual edits) +
+       the new meeting transcript.
+    2. Read this file's #gtm-state JSON, apply deltas, regenerate the file with
+       the updated JSON in the same block. Manual edits are preserved because
+       you edit THIS state, never start over.
+
+  >>> TASK CAPTURE RULES <<<
+  - Only tasks with BOTH an owner AND a target date go into a product tab.
+  - Owner-only / date-less ideas ("suggestive") do NOT become tracked tasks.
+    They go in the matching week's recap under "suggestive".
+  - Decisions / rationale are NOT tasks — fold them into product "notes".
+  - Completed tasks STAY (history): set status "Done", completedDate, completedBy.
+  - Tag tasks created in a given meeting with addedWeek = that meeting date so
+    the Weekly tab can list them.
 
   Shape:
   {
     "meetingDate": "YYYY-MM-DD",
-    "products": [
-      {
-        "id": "mcp",
-        "name": "MCP",
-        "priority": true,                 // shows the PRIORITY flag
-        "targetDate": "Jun 16",           // free text, shown as target release
-        "readiness": 82,                  // 0-100, drives the red->green slider
-        "notes": "free text shown under the slider",
-        "tasks": [
-          {
-            "task": "...",
-            "owner": "...",
-            "due": "Jun 12",
-            "link": "https://...",        // artifact URL, optional ("" if none)
-            "status": "Not started" | "In progress" | "Blocked" | "Done"
-          }
-        ]
-      }
-    ]
+    "products": [{
+      "id","name","priority",
+      "targetDate": "free text shown as the launch target",
+      "launch":   0-100,   // launch readiness slider (red->green = shipped)
+      "adoption": 0-100,   // post-launch adoption slider (red->green = adopted)
+      "notes": "headline status / decisions / context",
+      "tasks": [{
+        "task","owner",
+        "due": "target date (free text ok: 'Jun 18','EOW','Ongoing')",
+        "link": "artifact URL ('' if none)",
+        "status": "Not started|On track|At risk|Off track|Blocked|Done",
+        "notes": "ongoing running notes until complete",
+        "completedDate": "set when Done",
+        "completedBy": "set when Done",
+        "addedWeek": "meeting date this task was added (optional)"
+      }]
+    }],
+    "weeklies": [{               // newest first
+      "date": "Jun 16, 2026",
+      "summary": "meeting summary",
+      "added":   [{"task","product"}],   // tasks added to tracker this week
+      "suggestive": ["idea without owner+date", ...]
+    }]
   }
-  Readiness bands: 0-24 Not started (red) / 25-49 Early (orange) /
-  50-74 In progress (amber) / 75-94 Nearly ready (lime) / 95-100 Ready (green).
+  Slider bands (both sliders): 0-24 red / 25-49 orange / 50-74 amber /
+  75-94 lime / 95-100 green.
   ============================================================================
 -->
 
 <style>
   :root{
-    --data-blue:#0076DE;
-    --data-blue-dk:#005bb0;
-    --deep-space:#303650;
-    --deep-space-2:#272c43;
+    --data-blue:#0076DE; --data-blue-dk:#005bb0;
+    --deep-space:#303650; --deep-space-2:#272c43;
     --xanthous:#FFC44D;
-    --ink:#1d2235;
-    --paper:#f3f5f9;
-    --card:#ffffff;
-    --line:#e2e7f0;
-    --line-strong:#cdd5e3;
-    --muted:#6b7488;
-    --muted-soft:#929bb0;
-
-    --red:#e2483d;
-    --orange:#f0823c;
-    --amber:#f5b324;
-    --lime:#7cc24a;
-    --green:#2faa57;
-
+    --ink:#1d2235; --paper:#f3f5f9; --card:#fff;
+    --line:#e2e7f0; --line-strong:#cdd5e3; --muted:#6b7488; --muted-soft:#929bb0;
+    --red:#e2483d; --orange:#f0823c; --amber:#f5b324; --lime:#7cc24a; --green:#2faa57;
     --shadow:0 1px 2px rgba(34,40,64,.06),0 8px 26px rgba(34,40,64,.07);
-    --radius:14px;
-    --radius-sm:9px;
+    --radius:14px; --radius-sm:9px;
   }
-
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
-  body{
-    font-family:'Lato',-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;
-    background:var(--paper);
-    color:var(--ink);
-    -webkit-font-smoothing:antialiased;
-    line-height:1.45;
-  }
-  .wrap{max-width:1120px;margin:0 auto;padding:0 26px 80px;}
+  body{font-family:'Lato',-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;
+    background:var(--paper);color:var(--ink);-webkit-font-smoothing:antialiased;line-height:1.45;}
+  .wrap{max-width:1140px;margin:0 auto;padding:0 26px 80px;}
 
-  /* ---------- Header / control bar ---------- */
-  header.bar{
-    background:linear-gradient(180deg,var(--deep-space) 0%,var(--deep-space-2) 100%);
-    color:#fff;
-    padding:22px 0 0;
-    box-shadow:0 6px 24px rgba(48,54,80,.28);
-    position:relative;
-  }
+  /* header */
+  header.bar{background:linear-gradient(180deg,var(--deep-space),var(--deep-space-2));color:#fff;
+    padding:22px 0 0;box-shadow:0 6px 24px rgba(48,54,80,.28);}
   .bar .wrap{padding-bottom:0;}
-  .bar-top{
-    display:flex;align-items:flex-start;justify-content:space-between;
-    gap:24px;flex-wrap:wrap;
-  }
+  .bar-top{display:flex;align-items:flex-start;justify-content:space-between;gap:24px;flex-wrap:wrap;}
   .brandblock{display:flex;align-items:center;gap:14px;}
-  .brandmark{
-    width:42px;height:42px;border-radius:10px;flex:none;
-    background:var(--data-blue);
-    display:flex;align-items:center;justify-content:center;
-    font-weight:900;font-size:22px;letter-spacing:-1px;color:#fff;
-    box-shadow:inset 0 0 0 1px rgba(255,255,255,.14);
-  }
+  .brandmark{width:42px;height:42px;border-radius:10px;flex:none;background:var(--data-blue);
+    display:flex;align-items:center;justify-content:center;font-weight:900;font-size:22px;letter-spacing:-1px;color:#fff;
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,.14);}
   .brandmark span{color:var(--xanthous);}
-  .titles h1{
-    margin:0;font-size:23px;font-weight:900;letter-spacing:-.4px;line-height:1.1;
-  }
-  .titles .eyebrow{
-    display:block;font-size:11px;font-weight:700;letter-spacing:2px;
-    text-transform:uppercase;color:var(--xanthous);margin-bottom:3px;
-  }
+  .titles .eyebrow{display:block;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--xanthous);margin-bottom:3px;}
+  .titles h1{margin:0;font-size:23px;font-weight:900;letter-spacing:-.4px;line-height:1.1;}
   .titles .sub{font-size:13px;color:#b9c0d4;margin-top:2px;}
-
   .bar-controls{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
-  .meeting-field{
-    display:flex;flex-direction:column;gap:3px;
-  }
-  .meeting-field label{
-    font-size:10px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;
-    color:#9aa3bd;
-  }
-  .meeting-field input{
-    font-family:inherit;font-size:14px;font-weight:700;color:#fff;
-    background:rgba(255,255,255,.08);
-    border:1px solid rgba(255,255,255,.18);
-    border-radius:8px;padding:7px 10px;
-    color-scheme:dark;
-  }
+  .meeting-field{display:flex;flex-direction:column;gap:3px;}
+  .meeting-field label{font-size:10px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;color:#9aa3bd;}
+  .meeting-field input{font-family:inherit;font-size:14px;font-weight:700;color:#fff;background:rgba(255,255,255,.08);
+    border:1px solid rgba(255,255,255,.18);border-radius:8px;padding:7px 10px;color-scheme:dark;}
   .meeting-field input:focus{outline:2px solid var(--data-blue);outline-offset:1px;}
-
-  .btn{
-    font-family:inherit;font-size:13.5px;font-weight:700;cursor:pointer;
-    border-radius:9px;padding:9px 16px;border:1px solid transparent;
-    display:inline-flex;align-items:center;gap:8px;transition:transform .08s ease,filter .15s ease,background .15s ease;
-  }
+  .btn{font-family:inherit;font-size:13.5px;font-weight:700;cursor:pointer;border-radius:9px;padding:9px 16px;
+    border:1px solid transparent;display:inline-flex;align-items:center;gap:8px;transition:transform .08s,filter .15s,background .15s;}
   .btn:active{transform:translateY(1px);}
   .btn-export{background:var(--xanthous);color:#3a2c05;border-color:#e8af33;}
   .btn-export:hover{filter:brightness(1.05);}
   .btn svg{width:16px;height:16px;}
 
-  /* ---------- Tabs ---------- */
+  /* tabs */
   .tabs{display:flex;gap:2px;margin-top:20px;flex-wrap:wrap;}
-  .tab{
-    font-family:inherit;font-size:13.5px;font-weight:700;cursor:pointer;
-    background:transparent;border:none;color:#aab2c9;
-    padding:13px 18px 14px;border-radius:10px 10px 0 0;
-    display:flex;align-items:center;gap:9px;position:relative;
-    transition:color .15s ease,background .15s ease;
-  }
+  .tab{font-family:inherit;font-size:13.5px;font-weight:700;cursor:pointer;background:transparent;border:none;color:#aab2c9;
+    padding:13px 17px 14px;border-radius:10px 10px 0 0;display:flex;align-items:center;gap:9px;transition:color .15s,background .15s;}
   .tab:hover{color:#fff;}
   .tab.active{background:var(--paper);color:var(--ink);}
   .tab .dot{width:9px;height:9px;border-radius:50%;flex:none;box-shadow:0 0 0 2px rgba(255,255,255,.18);}
   .tab.active .dot{box-shadow:0 0 0 2px rgba(0,0,0,.05);}
-  .tab .flag{
-    font-size:9px;font-weight:900;letter-spacing:.8px;color:#3a2c05;
-    background:var(--xanthous);padding:2px 6px;border-radius:5px;text-transform:uppercase;
-  }
+  .tab .flag{font-size:9px;font-weight:900;letter-spacing:.8px;color:#3a2c05;background:var(--xanthous);padding:2px 6px;border-radius:5px;text-transform:uppercase;}
 
-  /* ---------- Panels ---------- */
+  /* panels */
   .panel{display:none;padding-top:30px;}
   .panel.active{display:block;animation:fade .25s ease;}
   @keyframes fade{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
 
-  /* ---------- Overview ---------- */
-  .ov-head{margin:0 0 18px;}
+  /* overview */
   .ov-head h2{margin:0;font-size:18px;font-weight:900;letter-spacing:-.3px;}
-  .ov-head p{margin:4px 0 0;color:var(--muted);font-size:13.5px;}
+  .ov-head p{margin:4px 0 18px;color:var(--muted);font-size:13.5px;}
   .ov-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;}
-  .ov-card{
-    background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
-    padding:18px 20px;box-shadow:var(--shadow);cursor:pointer;text-align:left;
-    font-family:inherit;transition:border-color .15s ease,transform .08s ease;
-  }
+  .ov-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px;box-shadow:var(--shadow);
+    cursor:pointer;text-align:left;font-family:inherit;transition:border-color .15s,transform .08s;}
   .ov-card:hover{border-color:var(--line-strong);transform:translateY(-2px);}
-  .ov-card .row1{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px;}
-  .ov-card .pname{font-size:16px;font-weight:900;letter-spacing:-.2px;display:flex;align-items:center;gap:8px;}
-  .ov-card .pct{font-size:24px;font-weight:900;letter-spacing:-1px;font-variant-numeric:tabular-nums;}
-  .ov-bar{height:9px;border-radius:6px;background:#eef1f7;overflow:hidden;}
-  .ov-bar i{display:block;height:100%;border-radius:6px;transition:width .3s ease,background .3s ease;}
+  .ov-card .pname{font-size:16px;font-weight:900;letter-spacing:-.2px;display:flex;align-items:center;gap:8px;margin-bottom:14px;}
+  .metric{margin-bottom:11px;}
+  .metric .ml{display:flex;justify-content:space-between;font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-bottom:5px;}
+  .metric .ml b{font-variant-numeric:tabular-nums;font-size:13px;}
+  .ov-bar{height:8px;border-radius:6px;background:#eef1f7;overflow:hidden;}
+  .ov-bar i{display:block;height:100%;border-radius:6px;transition:width .3s,background .3s;}
   .ov-meta{display:flex;justify-content:space-between;margin-top:13px;font-size:12.5px;color:var(--muted);}
   .ov-meta b{color:var(--ink);font-weight:700;}
-  .ov-status-pill{font-size:11px;font-weight:800;padding:3px 9px;border-radius:20px;letter-spacing:.3px;}
   .mini-flag{font-size:8.5px;font-weight:900;letter-spacing:.6px;color:#3a2c05;background:var(--xanthous);padding:2px 6px;border-radius:5px;text-transform:uppercase;}
 
-  /* ---------- Product header ---------- */
-  .phead{
-    display:flex;justify-content:space-between;align-items:flex-end;gap:20px;
-    flex-wrap:wrap;margin-bottom:22px;
-  }
+  /* product header */
+  .phead{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap;margin-bottom:22px;}
   .phead h2{margin:0;font-size:26px;font-weight:900;letter-spacing:-.6px;display:flex;align-items:center;gap:11px;}
   .phead .ptag{font-size:13px;color:var(--muted);margin-top:5px;}
   .target-field{display:flex;flex-direction:column;gap:4px;align-items:flex-end;}
   .target-field label{font-size:10px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted);}
-  .target-field input{
-    font-family:inherit;font-size:15px;font-weight:800;color:var(--ink);text-align:right;
-    border:1px solid var(--line-strong);border-radius:8px;padding:7px 11px;background:#fff;min-width:120px;
-  }
+  .target-field input{font-family:inherit;font-size:14px;font-weight:800;color:var(--ink);text-align:right;
+    border:1px solid var(--line-strong);border-radius:8px;padding:7px 11px;background:#fff;min-width:200px;}
   .target-field input:focus{outline:2px solid var(--data-blue);outline-offset:1px;border-color:var(--data-blue);}
 
-  /* ---------- Readiness slider (signature element) ---------- */
-  .gauge{
-    background:linear-gradient(180deg,#fff 0%,#fbfcfe 100%);
-    border:1px solid var(--line);border-radius:var(--radius);
-    padding:22px 24px 24px;box-shadow:var(--shadow);margin-bottom:26px;
-  }
-  .gauge-top{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:18px;flex-wrap:wrap;}
-  .gauge-label{font-size:11px;font-weight:800;letter-spacing:1.6px;text-transform:uppercase;color:var(--muted);}
-  .gauge-stamp{display:flex;align-items:center;gap:13px;}
-  .gauge-pct{font-size:34px;font-weight:900;letter-spacing:-1.5px;font-variant-numeric:tabular-nums;line-height:1;}
-  .gauge-status{
-    font-size:13px;font-weight:800;padding:6px 14px;border-radius:22px;letter-spacing:.3px;
-    border:1.5px solid transparent;display:inline-flex;align-items:center;gap:7px;
-  }
-  .gauge-status .led{width:9px;height:9px;border-radius:50%;}
-
-  .slider-shell{position:relative;padding:8px 0 4px;}
-  input[type=range].readiness{
-    -webkit-appearance:none;appearance:none;width:100%;height:16px;border-radius:10px;
-    background:linear-gradient(90deg,
-      var(--red) 0%, var(--orange) 28%, var(--amber) 52%, var(--lime) 78%, var(--green) 100%);
-    outline:none;cursor:pointer;margin:0;
-    box-shadow:inset 0 1px 3px rgba(0,0,0,.18);
-  }
-  input[type=range].readiness::-webkit-slider-thumb{
-    -webkit-appearance:none;appearance:none;width:30px;height:30px;border-radius:50%;
-    background:#fff;border:4px solid var(--deep-space);cursor:grab;
-    box-shadow:0 2px 8px rgba(0,0,0,.28);margin-top:0;transition:transform .08s ease;
-  }
-  input[type=range].readiness::-webkit-slider-thumb:active{cursor:grabbing;transform:scale(1.08);}
-  input[type=range].readiness::-moz-range-thumb{
-    width:30px;height:30px;border-radius:50%;background:#fff;border:4px solid var(--deep-space);
-    cursor:grab;box-shadow:0 2px 8px rgba(0,0,0,.28);
-  }
-  input[type=range].readiness:focus-visible{outline:3px solid var(--data-blue);outline-offset:4px;}
-  .scale{display:flex;justify-content:space-between;margin-top:11px;font-size:10.5px;font-weight:700;letter-spacing:.4px;color:var(--muted-soft);text-transform:uppercase;}
-
-  .notes-line{margin-top:18px;}
+  /* dual gauges */
+  .gauge{background:linear-gradient(180deg,#fff,#fbfcfe);border:1px solid var(--line);border-radius:var(--radius);
+    padding:22px 24px 24px;box-shadow:var(--shadow);margin-bottom:26px;}
+  .gauge-grid{display:grid;grid-template-columns:1fr 1fr;gap:30px;}
+  .g-block .gt{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px;}
+  .gauge-label{font-size:11px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted);}
+  .gstamp{display:flex;align-items:center;gap:11px;}
+  .gpct{font-size:30px;font-weight:900;letter-spacing:-1.3px;font-variant-numeric:tabular-nums;line-height:1;}
+  .gstatus{font-size:11.5px;font-weight:800;padding:5px 12px;border-radius:20px;letter-spacing:.3px;border:1.5px solid transparent;display:inline-flex;align-items:center;gap:6px;}
+  .gstatus .led{width:8px;height:8px;border-radius:50%;}
+  input[type=range].rd{-webkit-appearance:none;appearance:none;width:100%;height:14px;border-radius:9px;outline:none;cursor:pointer;margin:0;
+    background:linear-gradient(90deg,var(--red) 0%,var(--orange) 28%,var(--amber) 52%,var(--lime) 78%,var(--green) 100%);
+    box-shadow:inset 0 1px 3px rgba(0,0,0,.18);}
+  input[type=range].rd::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:26px;height:26px;border-radius:50%;background:#fff;border:4px solid var(--deep-space);cursor:grab;box-shadow:0 2px 8px rgba(0,0,0,.28);transition:transform .08s;}
+  input[type=range].rd::-webkit-slider-thumb:active{cursor:grabbing;transform:scale(1.08);}
+  input[type=range].rd::-moz-range-thumb{width:26px;height:26px;border-radius:50%;background:#fff;border:4px solid var(--deep-space);cursor:grab;box-shadow:0 2px 8px rgba(0,0,0,.28);}
+  input[type=range].rd:focus-visible{outline:3px solid var(--data-blue);outline-offset:4px;}
+  .scale{display:flex;justify-content:space-between;margin-top:9px;font-size:10px;font-weight:700;letter-spacing:.3px;color:var(--muted-soft);text-transform:uppercase;}
+  .notes-line{margin-top:20px;border-top:1px solid var(--line);padding-top:16px;}
   .notes-line label{display:block;font-size:10px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted);margin-bottom:6px;}
-  .notes-line textarea{
-    width:100%;font-family:inherit;font-size:13.5px;color:var(--ink);line-height:1.5;
-    border:1px solid var(--line);border-radius:9px;padding:10px 12px;resize:vertical;min-height:46px;background:#fff;
-  }
-  .notes-line textarea:focus{outline:2px solid var(--data-blue);outline-offset:0;border-color:var(--data-blue);}
+  .notes-line textarea{width:100%;font-family:inherit;font-size:13.5px;color:var(--ink);line-height:1.5;border:1px solid var(--line);border-radius:9px;padding:10px 12px;resize:vertical;min-height:46px;background:#fff;}
+  .notes-line textarea:focus{outline:2px solid var(--data-blue);border-color:var(--data-blue);}
 
-  /* ---------- Deliverables table ---------- */
+  /* table */
   .tbl-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:10px;}
   .tbl-head h3{margin:0;font-size:15px;font-weight:900;letter-spacing:-.2px;}
-  .tbl-head .count{font-size:12.5px;color:var(--muted);font-weight:600;}
+  .tbl-head .count{font-size:12.5px;color:var(--muted);font-weight:600;margin-left:8px;}
+  .tbl-actions{display:flex;align-items:center;gap:14px;}
+  .hide-toggle{font-size:12px;color:var(--muted);font-weight:700;display:flex;align-items:center;gap:6px;cursor:pointer;user-select:none;}
   .btn-add{background:var(--data-blue);color:#fff;font-size:12.5px;padding:8px 13px;border-radius:8px;}
   .btn-add:hover{background:var(--data-blue-dk);}
-
   .tbl-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);}
   table{width:100%;border-collapse:collapse;}
-  thead th{
-    text-align:left;font-size:10.5px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--muted);
-    padding:12px 14px;background:#f7f9fc;border-bottom:1px solid var(--line);white-space:nowrap;
-  }
-  tbody td{padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:middle;}
-  tbody tr:last-child td{border-bottom:none;}
-  tbody tr:hover{background:#fafbfe;}
-  .cell-input{
-    width:100%;font-family:inherit;font-size:13.5px;color:var(--ink);
-    border:1px solid transparent;border-radius:7px;padding:8px 9px;background:transparent;
-  }
+  thead th{text-align:left;font-size:10.5px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--muted);
+    padding:12px 12px;background:#f7f9fc;border-bottom:1px solid var(--line);white-space:nowrap;}
+  tbody td{padding:6px 7px;border-bottom:1px solid var(--line);vertical-align:middle;}
+  tr.task-row:hover{background:#fafbfe;}
+  tr.detail-row td{padding:0;border-bottom:1px solid var(--line);background:#f8fafd;}
+  tr.detail-row.open td{padding:14px 16px 16px 44px;}
+  .detail-wrap{display:none;}
+  tr.detail-row.open .detail-wrap{display:block;}
+  .cell-input{width:100%;font-family:inherit;font-size:13.5px;color:var(--ink);border:1px solid transparent;border-radius:7px;padding:8px 8px;background:transparent;}
   .cell-input:hover{border-color:var(--line);}
   .cell-input:focus{outline:none;border-color:var(--data-blue);background:#fff;box-shadow:0 0 0 3px rgba(0,118,222,.12);}
   .cell-input::placeholder{color:#aeb6c8;}
-
-  .col-task{width:38%;}
-  .col-owner{width:15%;}
+  .col-exp{width:30px;}
+  .col-task{width:33%;}
+  .col-owner{width:13%;}
   .col-due{width:11%;}
-  .col-link{width:17%;}
-  .col-status{width:14%;}
-  .col-x{width:42px;}
+  .col-link{width:15%;}
+  .col-status{width:15%;}
+  .col-x{width:40px;}
+  .task-done .task-text{text-decoration:line-through;color:var(--muted-soft);}
+  .task-done{background:#fafbfd;}
+  .done-stamp{font-size:11px;color:var(--green);font-weight:800;margin-top:2px;padding-left:8px;display:flex;align-items:center;gap:5px;}
+  .done-stamp svg{width:12px;height:12px;}
 
-  .link-cell{display:flex;align-items:center;gap:4px;}
-  .link-open{
-    flex:none;width:30px;height:30px;border-radius:7px;display:flex;align-items:center;justify-content:center;
-    color:var(--data-blue);text-decoration:none;border:1px solid var(--line);background:#fff;
-  }
+  .exp-btn{width:26px;height:26px;border-radius:6px;border:1px solid transparent;background:transparent;color:#9aa3bd;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+  .exp-btn:hover{background:#eef1f7;color:var(--ink);}
+  .exp-btn svg{width:14px;height:14px;transition:transform .15s;}
+  tr.detail-row.open + tr, .task-row.expanded .exp-btn svg{transform:rotate(90deg);}
+
+  .link-cell{display:flex;align-items:center;gap:3px;}
+  .link-open{flex:none;width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;color:var(--data-blue);text-decoration:none;border:1px solid var(--line);background:#fff;}
   .link-open.disabled{color:#c2c9d8;border-color:transparent;pointer-events:none;background:transparent;}
   .link-open:hover{background:#eef6ff;}
-  .link-open svg{width:14px;height:14px;}
+  .link-open svg{width:13px;height:13px;}
 
-  select.status-sel{
-    width:100%;font-family:inherit;font-size:12.5px;font-weight:800;cursor:pointer;
-    border:1px solid var(--line);border-radius:7px;padding:7px 8px;background:#fff;color:var(--ink);
-    -webkit-appearance:none;appearance:none;
-    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'><path d='M1 3l4 4 4-4' stroke='%236b7488' stroke-width='1.6' fill='none' stroke-linecap='round'/></svg>");
-    background-repeat:no-repeat;background-position:right 9px center;padding-right:24px;
-  }
-  select.status-sel:focus{outline:2px solid var(--data-blue);outline-offset:0;}
-  .status-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:2px;}
-
-  .btn-del{
-    width:30px;height:30px;border-radius:7px;border:1px solid transparent;background:transparent;
-    color:#b7bfd0;cursor:pointer;display:flex;align-items:center;justify-content:center;
-  }
+  select.status-sel{width:100%;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer;border:1px solid var(--line);border-radius:7px;padding:7px 7px;background:#fff;
+    -webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'><path d='M1 3l4 4 4-4' stroke='%236b7488' stroke-width='1.6' fill='none' stroke-linecap='round'/></svg>");
+    background-repeat:no-repeat;background-position:right 8px center;padding-right:22px;}
+  select.status-sel:focus{outline:2px solid var(--data-blue);}
+  .btn-del{width:28px;height:28px;border-radius:7px;border:1px solid transparent;background:transparent;color:#b7bfd0;cursor:pointer;display:flex;align-items:center;justify-content:center;}
   .btn-del:hover{background:#fdeceb;color:var(--red);}
-  .btn-del svg{width:15px;height:15px;}
+  .btn-del svg{width:14px;height:14px;}
+  .empty-row td{padding:24px 14px;text-align:center;color:var(--muted);font-size:13px;}
 
-  .empty-row td{padding:26px 14px;text-align:center;color:var(--muted);font-size:13px;}
+  /* detail panel */
+  .detail-grid{display:grid;grid-template-columns:1fr;gap:14px;}
+  .d-field label{display:block;font-size:10px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);margin-bottom:5px;}
+  .d-field textarea{width:100%;font-family:inherit;font-size:13px;line-height:1.5;color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:9px 11px;resize:vertical;min-height:54px;background:#fff;}
+  .d-field textarea:focus{outline:2px solid var(--data-blue);border-color:var(--data-blue);}
+  .completion-row{display:none;gap:14px;background:#eef7ee;border:1px solid #cdeacd;border-radius:9px;padding:11px 13px;}
+  .completion-row.show{display:flex;flex-wrap:wrap;}
+  .completion-row .cf{flex:1;min-width:140px;}
+  .completion-row label{display:block;font-size:9.5px;font-weight:800;letter-spacing:1.1px;text-transform:uppercase;color:#3a7a45;margin-bottom:4px;}
+  .completion-row input{width:100%;font-family:inherit;font-size:12.5px;color:var(--ink);border:1px solid #bcdfbc;border-radius:7px;padding:7px 9px;background:#fff;}
+  .addedweek-tag{font-size:10px;font-weight:800;color:var(--data-blue);background:#e9f3ff;border-radius:5px;padding:2px 7px;letter-spacing:.3px;}
 
-  /* ---------- Footer / how-to ---------- */
-  .howto{
-    margin-top:32px;background:#eef2f9;border:1px solid var(--line);border-radius:var(--radius);
-    padding:16px 20px;font-size:12.5px;color:var(--muted);display:flex;gap:14px;align-items:flex-start;
-  }
+  /* weekly */
+  .wk-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:12px;}
+  .wk-head h2{margin:0;font-size:18px;font-weight:900;letter-spacing:-.3px;}
+  .wk-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:18px;overflow:hidden;}
+  .wk-top{display:flex;justify-content:space-between;align-items:center;gap:12px;background:var(--deep-space);color:#fff;padding:14px 20px;}
+  .wk-top .wkdate{font-family:inherit;font-size:16px;font-weight:900;letter-spacing:-.2px;color:#fff;background:transparent;border:1px solid transparent;border-radius:7px;padding:4px 8px;}
+  .wk-top .wkdate:hover{border-color:rgba(255,255,255,.25);}
+  .wk-top .wkdate:focus{outline:2px solid var(--xanthous);background:rgba(255,255,255,.08);}
+  .wk-body{padding:18px 20px;}
+  .wk-sec{margin-bottom:18px;}
+  .wk-sec:last-child{margin-bottom:0;}
+  .wk-sec h4{margin:0 0 9px;font-size:11px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);}
+  .wk-sec textarea{width:100%;font-family:inherit;font-size:13.5px;line-height:1.55;color:var(--ink);border:1px solid var(--line);border-radius:9px;padding:11px 13px;resize:vertical;min-height:70px;background:#fff;}
+  .wk-sec textarea:focus{outline:2px solid var(--data-blue);border-color:var(--data-blue);}
+  .added-item,.sugg-item{display:flex;align-items:center;gap:8px;margin-bottom:7px;}
+  .added-item input.ai-task,.sugg-item input{flex:1;font-family:inherit;font-size:13px;color:var(--ink);border:1px solid var(--line);border-radius:7px;padding:8px 10px;background:#fff;}
+  .added-item input:focus,.sugg-item input:focus{outline:2px solid var(--data-blue);border-color:var(--data-blue);}
+  .added-item select{font-family:inherit;font-size:12px;font-weight:800;border:1px solid var(--line);border-radius:7px;padding:8px 9px;background:#fff;color:var(--data-blue);min-width:140px;}
+  .mini-add{font-size:12px;font-weight:700;color:var(--data-blue);background:transparent;border:1px dashed var(--line-strong);border-radius:7px;padding:7px 11px;cursor:pointer;margin-top:3px;}
+  .mini-add:hover{background:#f0f6ff;border-color:var(--data-blue);}
+  .sugg-note{font-size:12px;color:var(--muted);margin:-2px 0 10px;}
+
+  .howto{margin-top:32px;background:#eef2f9;border:1px solid var(--line);border-radius:var(--radius);padding:16px 20px;font-size:12.5px;color:var(--muted);display:flex;gap:14px;align-items:flex-start;}
   .howto svg{width:18px;height:18px;flex:none;color:var(--data-blue);margin-top:1px;}
   .howto b{color:var(--ink);}
-  .exported-stamp{font-size:11px;color:#9aa3bd;margin-top:9px;text-align:right;}
+  .exported-stamp{font-size:11px;color:#9aa3bd;margin-top:9px;}
 
-  .toast{
-    position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);
-    background:var(--deep-space);color:#fff;font-size:13.5px;font-weight:700;
-    padding:12px 20px;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.3);
-    opacity:0;pointer-events:none;transition:opacity .2s ease,transform .2s ease;z-index:50;
-    display:flex;align-items:center;gap:9px;
-  }
+  .toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);background:var(--deep-space);color:#fff;font-size:13.5px;font-weight:700;
+    padding:12px 20px;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.3);opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:50;display:flex;align-items:center;gap:9px;}
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
   .toast svg{width:16px;height:16px;color:var(--xanthous);}
 
-  @media (max-width:760px){
+  @media (max-width:780px){
     .ov-grid{grid-template-columns:1fr;}
-    .col-task,.col-owner,.col-due,.col-link,.col-status{width:auto;}
-    table{display:block;overflow-x:auto;white-space:nowrap;}
+    .gauge-grid{grid-template-columns:1fr;gap:22px;}
+    .col-owner,.col-due,.col-link{display:none;}
     .phead h2{font-size:22px;}
+    .target-field input{min-width:150px;}
   }
-  @media (prefers-reduced-motion:reduce){
-    *{animation:none!important;transition:none!important;}
-  }
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;}}
 </style>
 </head>
 <body>
 
-<!-- Live, editable dashboard state. Updated on export. -->
 <script id="gtm-state" type="application/json">
 {
-  "meetingDate": "2026-06-16",
+  "meetingDate": "2026-07-21",
   "products": [
     {
       "id": "mcp",
       "name": "MCP",
       "priority": true,
-      "targetDate": "Jun 16",
-      "readiness": 82,
-      "notes": "Full go-to-market push scheduled June 16 — most visible GovSpend release in years. Commercial All Hands June 15. Reps prepping LinkedIn messaging.",
+      "targetDate": "Jun 16 — LAUNCHED",
+      "launch": 100,
+      "adoption": 38,
+      "notes": "Landing on the RM side (high open opportunities), but MCP usage still isn't hitting the top selling use cases or the goal - goaling remains unresolved and the use-case training is still held. Meghan is now collecting recorded '12 Days of MCP' videos from ICs. Record-limit escalation + prompting-help-article updates are still to be started.",
       "tasks": [
-        {"task":"Schedule Commercial All Hands","owner":"LDM","due":"Jun 15","link":"","status":"In progress"},
-        {"task":"Postable LinkedIn messaging themes for reps","owner":"Marketing","due":"Jun 15","link":"","status":"In progress"},
-        {"task":"Finalize & publish MCP Prompt Library","owner":"LDM / Beard","due":"Jun 12","link":"","status":"In progress"},
-        {"task":"Website takeover for MCP","owner":"LDM / Anne","due":"Jun 12","link":"","status":"In progress"},
-        {"task":"OAuth documentation for non-Claude implementations","owner":"Sam / Geo","due":"Jun 14","link":"","status":"In progress"},
-        {"task":"MCP security documentation update","owner":"Brian","due":"Jun 9","link":"","status":"In progress"},
-        {"task":"Finalize MCP entitlements in Spark (warm to hot fix)","owner":"Sam / Yarwood","due":"Jun 9","link":"","status":"In progress"},
-        {"task":"Review MCP commercial training with Sales Leaders","owner":"Jackson","due":"Jun 9","link":"https://govspend.learnupon.com/content-details/323968807/2","status":"In progress"},
-        {"task":"MCP goaling","owner":"Tiffany / JB","due":"Jun 9","link":"","status":"In progress"},
-        {"task":"AI Search Library","owner":"LDM / Tiff / Paige","due":"Jun 9","link":"","status":"In progress"},
-        {"task":"MLA / Trial Agreement ready for launch","owner":"RevOps","due":"Jun 16","link":"","status":"In progress"},
-        {"task":"Get ICs to finish MCP training ahead of release","owner":"Burrows / Jackson","due":"Jun 16","link":"https://govspend.learnupon.com/content-details/5083657/0","status":"In progress"}
+        {
+          "task": "Commercial All Hands",
+          "owner": "LDM",
+          "due": "Jun 15",
+          "link": "",
+          "status": "Done",
+          "notes": "",
+          "completedDate": "Jun 16",
+          "completedBy": "LDM",
+          "addedWeek": ""
+        },
+        {
+          "task": "Finalize & publish MCP Prompt Library",
+          "owner": "LDM / Beard",
+          "due": "Jun 12",
+          "link": "",
+          "status": "Done",
+          "notes": "",
+          "completedDate": "Jun 16",
+          "completedBy": "LDM / Beard",
+          "addedWeek": ""
+        },
+        {
+          "task": "Website takeover + press release",
+          "owner": "Marketing / Anne",
+          "due": "Jun 12",
+          "link": "",
+          "status": "Done",
+          "notes": "Website takeover + first press release in years, live and on-brand.",
+          "completedDate": "Jun 16",
+          "completedBy": "Marketing",
+          "addedWeek": ""
+        },
+        {
+          "task": "Repost enablement slides for ICs (LinkedIn)",
+          "owner": "Marketing / Meghan",
+          "due": "Jun 15",
+          "link": "",
+          "status": "Done",
+          "notes": "Slides handed out in the marketing meeting, reshared alongside the launch post.",
+          "completedDate": "Jun 16",
+          "completedBy": "Meghan",
+          "addedWeek": ""
+        },
+        {
+          "task": "MCP security documentation update",
+          "owner": "Brian",
+          "due": "Jun 9",
+          "link": "",
+          "status": "Done",
+          "notes": "",
+          "completedDate": "Jun 16",
+          "completedBy": "Brian",
+          "addedWeek": ""
+        },
+        {
+          "task": "MLA / Trial Agreement ready",
+          "owner": "RevOps",
+          "due": "Jun 16",
+          "link": "",
+          "status": "Done",
+          "notes": "Have the MLA — mandatory on sales side, nice-to-have on RM side.",
+          "completedDate": "Jun 16",
+          "completedBy": "RevOps",
+          "addedWeek": ""
+        },
+        {
+          "task": "Entitlement fix + Friday backfill",
+          "owner": "Sam / Yarwood",
+          "due": "Jun 18",
+          "link": "",
+          "status": "Done",
+          "notes": "Fix this week, backfill Friday. Some release-schedule hiccups but tracking to the 18th.",
+          "completedDate": "Jun 16",
+          "completedBy": "",
+          "addedWeek": ""
+        },
+        {
+          "task": "MCP goaling — define 'good usage' & how to track it",
+          "owner": "Tiffany / JB",
+          "due": "Jul (after data normalization)",
+          "link": "",
+          "status": "At risk",
+          "notes": "Still unresolved (7/21): high open opps on the RM side, but usage isn't hitting the top use cases or the goal. Also gated on usage-data normalization.",
+          "completedDate": "",
+          "completedBy": "",
+          "addedWeek": ""
+        },
+        {
+          "task": "Define top-3 MCP selling use cases (sales + eng)",
+          "owner": "Ryan Jackson",
+          "due": "Jun 23",
+          "link": "",
+          "status": "At risk",
+          "notes": "Training built (Ryan Jackson + engineers) and near-ready, but rollout intentionally HELD by Adam - sales inundated after a big June + federal. SEs are covering MCP demos in the meantime. (7/21) Still not rolled out; usage not yet hitting the top selling use cases.",
+          "completedDate": "",
+          "completedBy": "",
+          "addedWeek": ""
+        },
+        {
+          "task": "Finish IC MCP training completion",
+          "owner": "Daniel / JB / Adam",
+          "due": "Jun 20",
+          "link": "https://govspend.learnupon.com/content-details/5083657/0",
+          "status": "Done",
+          "notes": "Looking strong; marked done 7/7. A few stragglers being picked off one-by-one.",
+          "completedDate": "Jul 7",
+          "completedBy": "Daniel / Luke",
+          "addedWeek": ""
+        },
+        {
+          "task": "12 Days of MCP — assign use-case video topics",
+          "owner": "Meghan",
+          "due": "Jun 17",
+          "link": "",
+          "status": "Done",
+          "notes": "Topics assigned; 12 Days campaign live at 2 videos/week. Murphy's first posted 6/18.",
+          "completedDate": "Jun 30",
+          "completedBy": "Meghan",
+          "addedWeek": "2026-06-16"
+        },
+        {
+          "task": "12 Days of MCP — recording logistics & branding session",
+          "owner": "Meghan / Pam",
+          "due": "Jun 22",
+          "link": "",
+          "status": "Done",
+          "notes": "Early next week. Group session on Zoom recording + on-brand guidance. Spread 1-2 videos/week to avoid content fatigue; release internally first so reps can repost.",
+          "completedDate": "Jun 16",
+          "completedBy": "",
+          "addedWeek": "2026-06-16"
+        },
+        {
+          "task": "Post training-completion names in sales thread",
+          "owner": "Daniel / Adam",
+          "due": "Jun 17",
+          "link": "",
+          "status": "Done",
+          "notes": "Daniel pulls the report; Adam/JB name the not-yet-complete reps in the sales thread. Daniel sending the not-completed list to leadership (6/30).",
+          "completedDate": "Jul 7",
+          "completedBy": "Daniel / Adam",
+          "addedWeek": "2026-06-16"
+        },
+        {
+          "task": "Monitor MCP training completion (daily reports)",
+          "owner": "Daniel",
+          "due": "Ongoing",
+          "link": "",
+          "status": "Done",
+          "notes": "Running daily LMS reports; sending reminders.",
+          "completedDate": "Jul 7",
+          "completedBy": "Daniel",
+          "addedWeek": "2026-06-16"
+        },
+        {
+          "task": "Slack-nudge the remaining reps to finish MCP training",
+          "owner": "Luke",
+          "due": "Jul 1",
+          "link": "",
+          "status": "Done",
+          "notes": "~10 individuals left; message them directly via Slack to close out. Pairs with Daniel sending the not-completed list.",
+          "completedDate": "Jul 7",
+          "completedBy": "Luke",
+          "addedWeek": "2026-06-30"
+        },
+        {
+          "task": "Escalate MCP record-limit question to tech leadership",
+          "owner": "Octavio / JB",
+          "due": "ASAP",
+          "link": "",
+          "status": "Not started",
+          "notes": "Confirm whether the ~20-50 record default is a backend Elastic cap or LLM default behavior (Brian/Sergeant). Gate customer messaging on the answer.",
+          "completedDate": "",
+          "completedBy": "",
+          "addedWeek": "2026-07-07"
+        },
+        {
+          "task": "Draft transparent client messaging on MCP record limits",
+          "owner": "Tiffany / group",
+          "due": "After escalation",
+          "link": "",
+          "status": "Not started",
+          "notes": "Once tech confirms the cause, define customer-facing language so we're not overselling full-dataset access.",
+          "completedDate": "",
+          "completedBy": "",
+          "addedWeek": "2026-07-07"
+        },
+        {
+          "task": "Update prompting help article with record-limit + query-specificity tips",
+          "owner": "Lindsay",
+          "due": "This week",
+          "link": "",
+          "status": "Not started",
+          "notes": "Add: if you only see N records, be specific / ask for more. Tips-and-tricks prompting article for GovSpend.",
+          "completedDate": "",
+          "completedBy": "",
+          "addedWeek": "2026-07-07"
+        },
+        {
+          "task": "Collect 12 Days of MCP videos from ICs",
+          "owner": "Meghan",
+          "due": "Ongoing",
+          "link": "",
+          "status": "On track",
+          "notes": "Engaging individual contributors to record and submit videos for the 12 Days of MCP campaign.",
+          "completedDate": "",
+          "completedBy": "",
+          "addedWeek": "2026-07-21"
+        }
       ]
     },
     {
       "id": "slack",
       "name": "Slack App Add-On",
       "priority": false,
-      "targetDate": "Jun 15",
-      "readiness": 72,
-      "notes": "Bug fixed. UAT testing in progress. Targeting June 15 release — confirm on track.",
+      "targetDate": "5 orgs ~Jun 23 → marketplace ~Sept",
+      "launch": 85,
+      "adoption": 12,
+      "notes": "Marketplace review returned feedback - needs content edits + code changes (Sam). September launch still targeted, but dependent on how quickly the feedback rounds get cleared. Adoption still on wait-and-see.",
       "tasks": [
-        {"task":"UAT follow-up","owner":"Grover","due":"Jun 12","link":"https://docs.google.com/spreadsheets/d/1DXcFKOvkZF9lgwFO9kbPrA6lnKbaEFx7TucGnF1aglg/edit","status":"In progress"},
-        {"task":"UAT feedback loop — required \"help\" documentation","owner":"Team Grover","due":"Jun 12","link":"","status":"In progress"},
-        {"task":"Commercial training (Slack LMS)","owner":"Burrows / Jackson","due":"","link":"https://govspend.learnupon.com/content-details/4994330/0","status":"Not started"}
+        {
+          "task": "UAT follow-up",
+          "owner": "Grover",
+          "due": "Jun 12",
+          "link": "https://docs.google.com/spreadsheets/d/1DXcFKOvkZF9lgwFO9kbPrA6lnKbaEFx7TucGnF1aglg/edit",
+          "status": "Done",
+          "notes": "App rebuilt (faster, better layout), sent to 14 orgs to trial. UAT effectively complete.",
+          "completedDate": "Jun 16",
+          "completedBy": "Grover",
+          "addedWeek": ""
+        },
+        {
+          "task": "Add button + popup in AI search to drive Slack signups",
+          "owner": "Lindsay",
+          "due": "Jun 16",
+          "link": "",
+          "status": "Done",
+          "notes": "Both a persistent button and a first-visit popup linking to the Slack setup page. Lindsay building same-day; possibly live for the Thursday webinar.",
+          "completedDate": "Jun 16",
+          "completedBy": "",
+          "addedWeek": "2026-06-16"
+        },
+        {
+          "task": "Recruit 5+ friendly orgs as Slack test users",
+          "owner": "Adam / Sales",
+          "due": "Jun 23",
+          "link": "",
+          "status": "Done",
+          "notes": "Sales to find real, friendly orgs (not internal) willing to trial. Targets floated: Circool, US Energy Mgmt, 3E/Gartland. Need 2 more beyond current 3.",
+          "completedDate": "Jun 16",
+          "completedBy": "",
+          "addedWeek": "2026-06-16"
+        },
+        {
+          "task": "Webinar — drive Slack signups + messaging-tool poll",
+          "owner": "Tiffany / Kathryn",
+          "due": "Jun 18",
+          "link": "",
+          "status": "Done",
+          "notes": "Thursday webinar: demo AI search → Slack; poll on Slack vs Teams vs other to target the right users.",
+          "completedDate": "Jun 16",
+          "completedBy": "",
+          "addedWeek": "2026-06-16"
+        },
+        {
+          "task": "Newsletter copy on Slack marketplace status",
+          "owner": "Trip / Lindsay / Anne",
+          "due": "Jun 18",
+          "link": "",
+          "status": "Done",
+          "notes": "Clarify that the app is not yet in the marketplace; invite friendly customers to trial.",
+          "completedDate": "Jun 16",
+          "completedBy": "",
+          "addedWeek": "2026-06-16"
+        },
+        {
+          "task": "Monitor org connections toward the 5-org threshold",
+          "owner": "Sam",
+          "due": "Ongoing",
+          "link": "",
+          "status": "Done",
+          "notes": "Manual check for now — Grafana can't yet split Slack-app vs AI-search usage (upgrade coming). Sam checks the Slack app directly; flags when at 5.",
+          "completedDate": "Jun 16",
+          "completedBy": "",
+          "addedWeek": "2026-06-16"
+        },
+        {
+          "task": "Slack commercial training (LMS)",
+          "owner": "JB / Daniel / Adam",
+          "due": "After Jul 4",
+          "link": "https://govspend.learnupon.com/content-details/4994330/0",
+          "status": "Not started",
+          "notes": "Full push postponed to align with marketplace publication (~end of July); revisit 3rd/4th week of July. Course ready when we re-engage.",
+          "completedDate": "",
+          "completedBy": "",
+          "addedWeek": ""
+        },
+        {
+          "task": "Submit Slack app to the marketplace for review",
+          "owner": "Sam",
+          "due": "Jun 30",
+          "link": "",
+          "status": "Done",
+          "notes": "Submitted ~6/30 after reaching 5 active orgs and de-cluttering the app. ~10-week review begins.",
+          "completedDate": "Jun 30",
+          "completedBy": "Sam",
+          "addedWeek": "2026-06-30"
+        },
+        {
+          "task": "Address Slack app review feedback (content edits + code changes)",
+          "owner": "Sam",
+          "due": "~Aug (Sept launch)",
+          "link": "",
+          "status": "On track",
+          "notes": "Feedback received from marketplace review: formulate content edits and execute the requested code changes. Launch speed depends on clearing feedback rounds.",
+          "completedDate": "",
+          "completedBy": "",
+          "addedWeek": "2026-07-21"
+        }
       ]
     },
     {
@@ -381,27 +620,694 @@
       "name": "Opportunities Module",
       "priority": false,
       "targetDate": "Rolling — 90% by end of Sept",
-      "readiness": 58,
-      "notes": "~40% active usage. Mass-enabled 53 accounts Monday. Goal: 90% of accounts by end of September. Test tranche of 30 early-'27 renewers for auto-permission.",
+      "launch": 100,
+      "adoption": 50,
+      "notes": "Adoption reality check (7/21): 100 new accounts added, but 800+ clients still lack access, and of the ~1,600 WITH access, usage is low and concentrated in the top 10-25 orgs - with a noticeable overall decrease. Re-engagement is now the priority (Lindsay). Root causes are technical: website-populated keywords are ineffective/unlinked, with no territory or prime/subprime targeting - being prioritized with product. Naming is also a problem: clients read 'opportunities' as bids/RFPs; a rename (possibly 'Signals') is under discussion. Territories launch (2H Aug) still gates any next tranche.",
       "tasks": [
-        {"task":"Mass enablement feedback (53 accounts)","owner":"Milnor","due":"Jun 16","link":"","status":"In progress"},
-        {"task":"Follow up on opp enablement calls for feedback & questions","owner":"Kate","due":"Jun 12","link":"","status":"In progress"},
-        {"task":"Userflow for 30-client auto-permission test (post 1/1/27 renewal)","owner":"Luke / Anne","due":"","link":"","status":"In progress"},
-        {"task":"Opp Module goaling","owner":"Milnor / Anne","due":"","link":"https://docs.google.com/spreadsheets/d/1OUmE80GZEiDIbY1l1YOr37ax-EZwmrMXYmTGFkViiF0/edit","status":"In progress"},
-        {"task":"List of early-'27 renewers without Opp access","owner":"Luke / Jaden","due":"","link":"https://docs.google.com/spreadsheets/d/1xzIkTafZ4sIBxy8vayidHcbNS6kHK68YnOC6Xv-FPRM/edit","status":"Done"}
+        {
+          "task": "Opp Module goaling",
+          "owner": "Milnor / Anne",
+          "due": "",
+          "link": "https://docs.google.com/spreadsheets/d/1OUmE80GZEiDIbY1l1YOr37ax-EZwmrMXYmTGFkViiF0/edit",
+          "status": "Done",
+          "notes": "Goal figured out.",
+          "completedDate": "Jun 16",
+          "completedBy": "Milnor / Anne",
+          "addedWeek": ""
+        },
+        {
+          "task": "List of early-'27 renewers without Opp access",
+          "owner": "Luke / Jaden",
+          "due": "",
+          "link": "https://docs.google.com/spreadsheets/d/1xzIkTafZ4sIBxy8vayidHcbNS6kHK68YnOC6Xv-FPRM/edit",
+          "status": "Done",
+          "notes": "List built — 53 accounts enabled.",
+          "completedDate": "Jun 16",
+          "completedBy": "Luke / Jaden",
+          "addedWeek": ""
+        },
+        {
+          "task": "Mass-enablement feedback (53 accounts)",
+          "owner": "Kate / Milnor",
+          "due": "Jun 20",
+          "link": "",
+          "status": "Done",
+          "notes": "Most enablement calls made; little feedback or traction yet. Tour completion low. Luke to sync with Kate on what's working/not.",
+          "completedDate": "Jun 16",
+          "completedBy": "",
+          "addedWeek": ""
+        },
+        {
+          "task": "Build account-level usage tracking for enabled accounts",
+          "owner": "Luke / Seth",
+          "due": "Jun 23",
+          "link": "",
+          "status": "Done",
+          "notes": "Individual-level not available in the mesh yet; pull account-level usage from Crate for the 53 accounts. Usage where there was none = adoption signal.",
+          "completedDate": "Jun 16",
+          "completedBy": "",
+          "addedWeek": "2026-06-16"
+        },
+        {
+          "task": "Hold next enablement tranche until Territory Builder live",
+          "owner": "Luke / JB",
+          "due": "After Territory Builder (~Jul)",
+          "link": "",
+          "status": "On track",
+          "notes": "6/30 decision: pause mass enablement entirely (only 12 of 53 pilot accounts active in 8 wks) and rely on manual, user-initiated onboarding. Territory Builder still a factor for any future tranche.",
+          "completedDate": "",
+          "completedBy": "",
+          "addedWeek": "2026-06-16"
+        },
+        {
+          "task": "Collect customer feedback on the opp module",
+          "owner": "Kate / group",
+          "due": "Ongoing",
+          "link": "",
+          "status": "On track",
+          "notes": "Use Kate's CS rebuttal doc; self-booking links outperform phone outreach. Share findings back to the group.",
+          "completedDate": "",
+          "completedBy": "",
+          "addedWeek": "2026-06-30"
+        },
+        {
+          "task": "Profile restructuring - UAT + commercial LMS training before customer exposure",
+          "owner": "Kathryn / Daniel",
+          "due": "UAT this week; timeline next week",
+          "link": "",
+          "status": "On track",
+          "notes": "Promoted from suggestive: now dated. Restructures the opp profile (keyword/territory setup that drove low pilot adoption). LMS training for commercial before exposing changes to customers.",
+          "completedDate": "",
+          "completedBy": "",
+          "addedWeek": "2026-07-07"
+        },
+        {
+          "task": "Develop re-engagement plan for inactive opp-module users",
+          "owner": "Lindsay",
+          "due": "Near-term",
+          "link": "",
+          "status": "On track",
+          "notes": "Usage decreasing and concentrated in the top 10-25 orgs; build strategies to re-engage the rest.",
+          "completedDate": "",
+          "completedBy": "",
+          "addedWeek": "2026-07-21"
+        },
+        {
+          "task": "Fix opp-module search deficiencies (keyword linking, territory + prime/subprime targeting)",
+          "owner": "Product / Michelle",
+          "due": "Prioritizing w/ product",
+          "link": "",
+          "status": "On track",
+          "notes": "Website-populated keywords are ineffective and unlinked; no targeting for territories or prime/subprime preferences. Working with product to prioritize - this is the core client value gap.",
+          "completedDate": "",
+          "completedBy": "",
+          "addedWeek": "2026-07-21"
+        }
       ]
     },
     {
-      "id":"federal",
-      "name":"GovSpend Federal",
+      "id": "federal",
+      "name": "GovSpend Federal",
       "priority": false,
-      "targetDate":"Roadmap TBD",
-      "readiness":30,
-      "notes":"Bifurcating accounts/users to approach for reengagement campaign. Commercial training timeline still to be set. Confirm roadmap dates on track.",
+      "targetDate": "Search migration deadline Jul 31",
+      "launch": 70,
+      "adoption": 5,
+      "notes": "Dedicated Federal GTM session (7/27). Spending Analytics migration holds a HARD Aug 31 deadline (new data stops flowing to legacy after that). The migration carries over search criteria/filters correctly, but pre-release UAT surfaced two bugs: (1) incorrect filter migration - default filters missing (potential fix by Wed 7/30), and (2) improper title/description mapping needing reindexing (dev investigating). Until the mapping bug is fixed, search results and email alerts may be INCOMPLETE - a client-trust risk - so a proactive-comms decision is pending a definitive fix + timeline expected tomorrow morning (7/28). Scope trimmed: searches created/last-updated before 2022 are excluded to cut noise. Outreach uses a 'Swiss cheese' layering of 5 emails + newsletter + in-platform + phone (2 emails already sent); email is primary, calls follow, run in tandem. Low-usage Fedmine user migration is deferred to early September to ride the Opportunities launch as the compelling event. Call campaign is segmented into 4 buckets (non-Fedmine, spending-search migration, transitioning Fedmine, existing federal). Users are guided to new content via banners on their existing searches.",
       "tasks": [
-        {"task":"Federal bifurcation account/user list (reengagement)","owner":"Deepak / JB","due":"Jun 19","link":"","status":"In progress"},
-        {"task":"Fedmine inactive users without GSFed access — list","owner":"JB / Deepak","due":"Jun 9","link":"https://docs.google.com/spreadsheets/d/1iIeoW9W2P86wqfUfc2H0xr9SU38I-71R/edit","status":"In progress"},
-        {"task":"Commercial training release timeline","owner":"Burrows / Jackson","due":"","link":"","status":"Not started"}
+        {
+          "task": "Federal bifurcation account/user list (reengagement)",
+          "owner": "Deepak / JB",
+          "due": "Jun 19",
+          "link": "",
+          "status": "Done",
+          "notes": "Split accounts/users to approach for the reengagement campaign.",
+          "completedDate": "Jun 16",
+          "completedBy": "",
+          "addedWeek": ""
+        },
+        {
+          "task": "Identify users impacted by GSFed migration",
+          "owner": "JB",
+          "due": "-> RM call (early Jul)",
+          "link": "",
+          "status": "Done",
+          "notes": "Resolved via Peter's saved-search list with account names.",
+          "completedDate": "Jul 7",
+          "completedBy": "JB / Peter",
+          "addedWeek": "2026-06-16"
+        },
+        {
+          "task": "Estimate easy vs complex search migration (~6,000)",
+          "owner": "Deepak",
+          "due": "Jun 19",
+          "link": "",
+          "status": "Done",
+          "notes": "Counts finalized: copy (not migrate) 4,214 trial-tied + 2,238 non-trial = 6,452; list reduced after removing legacy searches.",
+          "completedDate": "Jul 7",
+          "completedBy": "Matt Beard / Peter",
+          "addedWeek": "2026-06-16"
+        },
+        {
+          "task": "Build in-product migration popup",
+          "owner": "Lindsay",
+          "due": "After Jul 4",
+          "link": "",
+          "status": "Done",
+          "notes": "In-platform messaging now sequenced with the email campaign: 'coming' notice, Jul 31 change notice, Aug 31 removal reminder. (Lindsay)",
+          "completedDate": "Jul 21",
+          "completedBy": "",
+          "addedWeek": "2026-06-16"
+        },
+        {
+          "task": "Fedmine inactive users without GSFed access — list",
+          "owner": "JB / Deepak",
+          "due": "After Jul 4",
+          "link": "https://docs.google.com/spreadsheets/d/1iIeoW9W2P86wqfUfc2H0xr9SU38I-71R/edit",
+          "status": "Done",
+          "notes": "Strategy set (7/21): pilot the transition with low-risk users who already stopped using FedMine, before approaching power users.",
+          "completedDate": "Jul 21",
+          "completedBy": "",
+          "addedWeek": ""
+        },
+        {
+          "task": "Commercial training release timeline",
+          "owner": "Burrows / Jackson",
+          "due": "",
+          "link": "",
+          "status": "Done",
+          "notes": "Federal selling course already released. Migration-navigation course now in progress (Daniel) - see below.",
+          "completedDate": "Jul 21",
+          "completedBy": "",
+          "addedWeek": ""
+        },
+        {
+          "task": "Re-engage Federal outreach campaign",
+          "owner": "JB",
+          "due": "Aug 31",
+          "link": "",
+          "status": "Not started",
+          "notes": "Low-usage Fedmine user migration deferred to early September to coincide with the Opportunities launch (the compelling event). Email campaign (5 emails + newsletter; 2 already sent) continues now; migration completion still targets Aug 31.",
+          "completedDate": "",
+          "completedBy": "",
+          "addedWeek": "2026-06-30"
+        },
+        {
+          "task": "RM-team migration overview at next RM meeting",
+          "owner": "Kelly / Shannon",
+          "due": "Wk of Jul 14",
+          "link": "",
+          "status": "Done",
+          "notes": "Kelly and/or Shannon to do a once-over for the RM teams alongside the LMS. Not this week - next week.",
+          "completedDate": "Jul 21",
+          "completedBy": "",
+          "addedWeek": "2026-06-30"
+        },
+        {
+          "task": "Create internal migration FAQs",
+          "owner": "Deepak",
+          "due": "Before Jul 31",
+          "link": "",
+          "status": "Done",
+          "notes": "Internal FAQs + customer-facing transition slides in progress; transition webinars scheduled for September.",
+          "completedDate": "Jul 21",
+          "completedBy": "",
+          "addedWeek": "2026-06-30"
+        },
+        {
+          "task": "Share product transition briefing doc - Internal",
+          "owner": "Deepak",
+          "due": "Before Jul 31",
+          "link": "",
+          "status": "Done",
+          "notes": "Distribute the product-transition briefing for the federal migration.",
+          "completedDate": "Jul 21",
+          "completedBy": "",
+          "addedWeek": "2026-06-30"
+        },
+        {
+          "task": "Flag & distribute the copyable saved-search list (w/ account names)",
+          "owner": "Peter",
+          "due": "This week",
+          "link": "",
+          "status": "Done",
+          "notes": "Copyable list flagged and distributed; searches that couldn't auto-copy are being handled via office hours.",
+          "completedDate": "Jul 21",
+          "completedBy": "Peter",
+          "addedWeek": "2026-07-07"
+        },
+        {
+          "task": "Execute migration email campaign",
+          "owner": "Lindsay",
+          "due": "Starts ASAP",
+          "link": "",
+          "status": "Done",
+          "notes": "Sequence: email ASAP, then Jul 23, Jul 31, Aug 18, Aug 31; Jul 30 newsletter call-out; in-platform notices throughout.",
+          "completedDate": "Jul 21",
+          "completedBy": "",
+          "addedWeek": "2026-07-07"
+        },
+        {
+          "task": "Run migration call campaign",
+          "owner": "CS / RM",
+          "due": "Jul 23 & Aug 18",
+          "link": "",
+          "status": "Done",
+          "notes": "Two touches (marry to the Jul 23 email + Aug 18 reminder), targeting users with usage in the last 30/60/90 days and saved-search owners.",
+          "completedDate": "Jul 21",
+          "completedBy": "",
+          "addedWeek": "2026-07-07"
+        },
+        {
+          "task": "Build & release FPDS->SAM.gov migration course",
+          "owner": "Daniel",
+          "due": "Pending Peter review",
+          "link": "",
+          "status": "Done",
+          "notes": "Launched Monday 7/20; federal exam seeing perfect scores. Help-site article linked as a resource.",
+          "completedDate": "Jul 21",
+          "completedBy": "Daniel",
+          "addedWeek": "2026-07-07"
+        },
+        {
+          "task": "Schedule migration office hours for commercial teams",
+          "owner": "Peter / Debbuck",
+          "due": "From ~Jul 10",
+          "link": "",
+          "status": "Done",
+          "notes": "Running 7/22 + next week to help migrate the searches that couldn't be automatically copied.",
+          "completedDate": "Jul 7",
+          "completedBy": "",
+          "addedWeek": "2026-07-07"
+        },
+        {
+          "task": "Spending Analytics UAT (through Thu Jul 23)",
+          "owner": "Deepak",
+          "due": "Jul 23",
+          "link": "",
+          "status": "Done",
+          "notes": "UAT to confirm readiness for the release of migrated (copied) searches.",
+          "completedDate": "Jul 21",
+          "completedBy": "",
+          "addedWeek": "2026-07-21"
+        },
+        {
+          "task": "Review Spending Analytics before release",
+          "owner": "Michelle / Paige",
+          "due": "By Jul 23",
+          "link": "",
+          "status": "Done",
+          "notes": "Access the system to verify updates and surface any issues prior to official release.",
+          "completedDate": "Jul 21",
+          "completedBy": "",
+          "addedWeek": "2026-07-21"
+        },
+        {
+          "task": "Update federal enablement deck for Federal Opportunities launch",
+          "owner": "The group",
+          "due": "Early Sept",
+          "link": "",
+          "status": "On track",
+          "notes": "Add Federal Opportunities launch info to the deck; adjust comms/enablement for the September timing.",
+          "completedDate": "",
+          "completedBy": "",
+          "addedWeek": "2026-07-21"
+        },
+        {
+          "task": "Federal Opportunities module launch",
+          "owner": "Deepak / Kathryn",
+          "due": "Early Sept (delayed)",
+          "link": "",
+          "status": "Not started",
+          "notes": "Slipped from earlier target to early September - shared resources prioritized for the territories tool. Part of the 2H-Aug Federal profile/opportunities roadmap.",
+          "completedDate": "",
+          "completedBy": "",
+          "addedWeek": "2026-07-21"
+        },
+        {
+          "task": "Call campaign - behind non fedmine users low usage (have access to GSF)",
+          "owner": "Kate",
+          "due": "Aug 31",
+          "link": "",
+          "status": "Not started",
+          "notes": "Bucket 1: non-Fedmine users with GSF access but low usage. Email-first, calls follow; completion by Aug 31.",
+          "completedDate": "",
+          "completedBy": "",
+          "addedWeek": "2026-07-21"
+        },
+        {
+          "task": "Call campaign - spending analytics",
+          "owner": "Kate",
+          "due": "July 27-31",
+          "link": "",
+          "status": "On track",
+          "notes": "Bucket 2: spending-search migration users. Active window Jul 27-31 alongside the migration cutover.",
+          "completedDate": "",
+          "completedBy": "",
+          "addedWeek": "2026-07-21"
+        },
+        {
+          "task": "Call campaign - migrating Fedmine users",
+          "owner": "Kate",
+          "due": "Aug 31",
+          "link": "",
+          "status": "Not started",
+          "notes": "Bucket 3: transitioning Fedmine users. Deferred to early September to align with the Opportunities launch.",
+          "completedDate": "",
+          "completedBy": "",
+          "addedWeek": "2026-07-21"
+        },
+        {
+          "task": "Call campaign - existing federal users to know opps are out",
+          "owner": "Kate",
+          "due": "Aug 31",
+          "link": "",
+          "status": "Not started",
+          "notes": "Bucket 4: existing federal (spend) users - make them aware Opportunities is coming.",
+          "completedDate": "",
+          "completedBy": "",
+          "addedWeek": "2026-07-21"
+        },
+        {
+          "task": "Issue identified with Description Contains - Fix implemented",
+          "owner": "Deepak",
+          "due": "July 31",
+          "link": "",
+          "status": "On track",
+          "notes": "Improper title/description field mapping - requires reindexing; dev investigating root cause. Definitive fix + timeline needed by tomorrow AM (7/28).",
+          "completedDate": "",
+          "completedBy": "",
+          "addedWeek": "2026-07-21"
+        },
+        {
+          "task": "Timeline for implementation from Sandhya - Potential push of release??",
+          "owner": "Deepak",
+          "due": "July 28",
+          "link": "",
+          "status": "On track",
+          "notes": "Awaiting Sandhya/dev on the fix timeline by tomorrow AM (7/28); the answer decides whether to proceed on plan or trigger triage + client comms. Potential release push if fixes slip.",
+          "completedDate": "",
+          "completedBy": "",
+          "addedWeek": "2026-07-21"
+        },
+        {
+          "task": "Identify clients w search alerts turned on that could be impacted by description issue, crowd source issue",
+          "owner": "Peter / JB",
+          "due": "July 28",
+          "link": "",
+          "status": "Not started",
+          "notes": "Peter provides the spreadsheet; JB analyzes it to identify users with scheduled alerts who could be impacted by the incomplete-results / description-mapping issue. Crowd-source the issue.",
+          "completedDate": "",
+          "completedBy": "",
+          "addedWeek": "2026-07-21"
+        },
+        {
+          "task": "Decide Fedmine + federal-access-list migration strategy",
+          "owner": "Luke",
+          "due": "~Jul 28",
+          "link": "",
+          "status": "On track",
+          "notes": "Finalize the migration plan for Fedmine users and the federal access list; low-usage Fedmine users ride the Sept Opportunities launch.",
+          "completedDate": "",
+          "completedBy": "",
+          "addedWeek": "2026-07-27"
+        },
+        {
+          "task": "Fix incorrect filter migration (default filters missing)",
+          "owner": "Deepak / dev",
+          "due": "Potential fix by Wed Jul 30",
+          "link": "",
+          "status": "On track",
+          "notes": "UAT bug #1: default filters not carrying over in migrated searches. Dev investigating; fix targeted Wednesday.",
+          "completedDate": "",
+          "completedBy": "",
+          "addedWeek": "2026-07-27"
+        },
+        {
+          "task": "Apply pre-2022 exclusion to the migration search set",
+          "owner": "Peter / data platform",
+          "due": "Before Aug 31",
+          "link": "",
+          "status": "On track",
+          "notes": "Exclude searches created or last-updated before 2022 to reduce noise; avoids reloading stale reports that frustrate clients (Shannon).",
+          "completedDate": "",
+          "completedBy": "",
+          "addedWeek": "2026-07-27"
+        },
+        {
+          "task": "Decide on proactive client comms re incomplete search results",
+          "owner": "Luke / group",
+          "due": "By Jul 28 (after tech clarity)",
+          "link": "",
+          "status": "On track",
+          "notes": "If the mapping fix slips, results/alerts may be incomplete. Decide whether to proactively announce potential inconsistencies to manage expectations.",
+          "completedDate": "",
+          "completedBy": "",
+          "addedWeek": "2026-07-27"
+        },
+        {
+          "task": "Coordinate migration coverage with Ann during Lindsay's absence",
+          "owner": "The group",
+          "due": "Near-term",
+          "link": "",
+          "status": "On track",
+          "notes": "Plan with Ann how to handle obstacles/comms while Lindsay is out.",
+          "completedDate": "",
+          "completedBy": "",
+          "addedWeek": "2026-07-27"
+        },
+        {
+          "task": "Present migration overview at next RM meeting",
+          "owner": "Luke",
+          "due": "Next RM meeting",
+          "link": "",
+          "status": "Not started",
+          "notes": "Deliver the team migration overview to RMs.",
+          "completedDate": "",
+          "completedBy": "",
+          "addedWeek": "2026-07-27"
+        },
+        {
+          "task": "Brief Kate on call-campaign objectives + target list",
+          "owner": "Luke",
+          "due": "Near-term",
+          "link": "",
+          "status": "On track",
+          "notes": "Walk Kate through the 4-bucket call-campaign objectives and the target list.",
+          "completedDate": "",
+          "completedBy": "",
+          "addedWeek": "2026-07-27"
+        }
+      ]
+    }
+  ],
+  "weeklies": [
+    {
+      "date": "Jul 21, 2026",
+      "summary": "Cadence note: the group moved to a BI-WEEKLY meeting (many items shifting from active development to steady-state), so next up ~Aug 4. MCP is landing on the RM side (high open opps) but usage still isn't hitting the top selling use cases or the goal; Meghan is collecting ICs' '12 Days of MCP' videos. Slack: marketplace review came back with feedback needing content edits + code changes (Sam); September launch still targeted but dependent on clearing feedback rounds. Opportunities got a hard adoption check: 100 new accounts added, but 800+ clients still lack access and of the ~1,600 with access usage is low, concentrated in the top 10-25 orgs, and decreasing - so re-engagement is now the priority. Root cause is technical (website keywords ineffective/unlinked, no territory or prime/subprime targeting), and the name 'opportunities' confuses clients (reads as bids/RFPs) - a rename to 'Signals' is on the table. Federal is executing: the FPDS->SAM.gov course launched Monday (perfect exam scores), Spending Analytics UAT runs through Thu 7/23 with office hours 7/22 + next week for searches that couldn't auto-copy, and the comms plan (in-platform + emails + September webinars) is set. The Federal Opportunities module slipped to early September because resources are on the territories tool. FedMine transition will pilot with low-risk lapsed users first. Kathryn's 2H-August roadmap: territories, new profile structures, and Federal profile + opportunities.",
+      "added": [
+        {
+          "task": "Collect 12 Days of MCP videos from ICs",
+          "product": "MCP"
+        },
+        {
+          "task": "Address Slack app review feedback (content edits + code changes)",
+          "product": "Slack App Add-On"
+        },
+        {
+          "task": "Develop re-engagement plan for inactive opp-module users",
+          "product": "Opportunities Module"
+        },
+        {
+          "task": "Fix opp-module search deficiencies (keyword linking, territory + prime/subprime targeting)",
+          "product": "Opportunities Module"
+        },
+        {
+          "task": "Spending Analytics UAT (through Thu Jul 23)",
+          "product": "GovSpend Federal"
+        },
+        {
+          "task": "Review Spending Analytics before release",
+          "product": "GovSpend Federal"
+        },
+        {
+          "task": "Update federal enablement deck for Federal Opportunities launch",
+          "product": "GovSpend Federal"
+        },
+        {
+          "task": "Federal Opportunities module launch",
+          "product": "GovSpend Federal"
+        }
+      ],
+      "suggestive": [
+        "Rename the 'Opportunities' module (and the AI-search result label) to something like 'Signals' - clients read 'opportunities' as bids/RFPs. Naming conflict acknowledged; no owner/date yet.",
+        "Roadmap (Kathryn, 2H August): territories launch, new profile structures, Federal profile + opportunities; later, better AI-search prompting and a potential Federal pipeline feature. Not yet tasks.",
+        "Action on you: share the Netlify dashboard link with Michelle so she can review - Luke."
+      ]
+    },
+    {
+      "date": "Jul 7, 2026",
+      "summary": "MCP is landing well - RM leaders and SEs are actively demoing - and IC training is essentially complete (marked done, stragglers picked off individually). But a transparency issue surfaced: MCP returns only ~20-50 records by default and customers aren't told they can ask for more. A long debate (Sam: LLM default behavior; Octavio: Elastic backend caps; Evan: just show a 'top 25 of X' flag) ended with a decision to escalate to tech leadership to confirm the real cause, then craft transparent messaging so we're not selling 'vaporware.' Goaling stays wait-and-see - blocked on defining service-addressable market and on normalizing usage data across modules. Sales use-case training is built but Adam is holding rollout until bandwidth recovers post-June/federal. Slack: full push postponed to align with marketplace publication (~end of July, revisit 3rd/4th week); the in-product button came down after hitting 5 orgs and the webinar drove more engagement; help article stays in beta until Slack is fully live. Opportunities: moderate usage gains but the original 53 still lag; Cluvio over-counts because many accounts set the opp module as their landing page (hits, not consumption); profile restructuring hits UAT this week with LMS training before customer exposure. Federal is the active fire: a COPY (not migration) of 4,214 trial-tied + 2,238 non-trial saved searches, copy expected done ~Jul 14-15. Comms plan runs emails ASAP/Jul 23/Jul 31/Aug 18/Aug 31 + a Jul 30 newsletter + in-platform notices, with a two-touch call campaign (Jul 23 & Aug 18) to 30/60/90-day active users; Daniel is building an FPDS-to-SAM.gov course (Peter reviewing) and Peter/Debbuck will run office hours. Old data cuts over Jul 31, removed Aug 31. (Octavio, on the call: 'compliments on this dashboard, it's very sexy.')",
+      "added": [
+        {
+          "task": "Escalate MCP record-limit question to tech leadership",
+          "product": "MCP"
+        },
+        {
+          "task": "Draft transparent client messaging on MCP record limits",
+          "product": "MCP"
+        },
+        {
+          "task": "Update prompting help article with record-limit + query-specificity tips",
+          "product": "MCP"
+        },
+        {
+          "task": "Profile restructuring - UAT + commercial LMS training before customer exposure",
+          "product": "Opportunities Module"
+        },
+        {
+          "task": "Flag & distribute the copyable saved-search list (w/ account names)",
+          "product": "GovSpend Federal"
+        },
+        {
+          "task": "Execute migration email campaign",
+          "product": "GovSpend Federal"
+        },
+        {
+          "task": "Run migration call campaign",
+          "product": "GovSpend Federal"
+        },
+        {
+          "task": "Build & release FPDS->SAM.gov migration course",
+          "product": "GovSpend Federal"
+        },
+        {
+          "task": "Schedule migration office hours for commercial teams",
+          "product": "GovSpend Federal"
+        }
+      ],
+      "suggestive": [
+        "Bring the prompt library INTO Claude via an onboarding wizard (downloadable prompt package) - Sam vibe-coding a POC, Adam sponsoring. Sam explicitly said 'don't put it on the board yet' - feasibility unconfirmed, no dev, no date.",
+        "Normalize usage data across all modules (AI / Opp / MCP / API / traditional) so reporting is apples-to-apples - BE project, ~2 weeks. Underpins MCP + opp goaling; no single owner/date yet.",
+        "Add a 'showing top N of many' flag/notification to capped MCP query results (Evan's idea) - pending the technical escalation outcome."
+      ]
+    },
+    {
+      "date": "Jun 30, 2026",
+      "summary": "Two weeks post-launch, focus is on adoption and benchmarking. Entitlements backfilled and enforced; use-case video campaign running (2/week + Nate's '90 seconds' series); launch marketing landed (608 placements, 7,000+ views, +20% homepage traffic; webinar 380 registrants, >50% live). MCP usage trending up but not widespread, and goaling is blocked on normalizing usage data across platforms - no North Star yet. AI search at ~1,300 of 2,400 accounts active in 90 days. Slack cleared its big hurdle: submitted to the marketplace (~10-week clock -> ~Sept) after reaching 5 orgs; training held until after July 4. Opportunities: 60% of active clients use it, but only 12 of the 53 pilot accounts engaged in 8 weeks, so the team paused mass enablement for manual onboarding and is fixing profile/keyword/territory confusion. Federal: re-release end of July - legacy data stops Jul 31, historical removed Aug 31; popup not banner; meetings consolidated with Deepo; reengagement after July 4. Also: 148 prospects since the takeover at ~20% conversion (sales to follow up), a customer renewed 6 months early at +$4,000, and you're on the hook to upload this tracker to the Netlify app.",
+      "added": [
+        {
+          "task": "Slack-nudge the remaining reps to finish MCP training",
+          "product": "MCP"
+        },
+        {
+          "task": "Submit Slack app to the marketplace for review",
+          "product": "Slack App Add-On"
+        },
+        {
+          "task": "Collect customer feedback on the opp module",
+          "product": "Opportunities Module"
+        },
+        {
+          "task": "Re-engage Federal outreach campaign",
+          "product": "GovSpend Federal"
+        },
+        {
+          "task": "Present search-migration data at the RM team call",
+          "product": "GovSpend Federal"
+        },
+        {
+          "task": "Create internal migration FAQs",
+          "product": "GovSpend Federal"
+        },
+        {
+          "task": "Share product transition briefing doc",
+          "product": "GovSpend Federal"
+        }
+      ],
+      "suggestive": [
+        "'90 seconds with Nate' MCP video series in production - Nate (no date).",
+        "Linking CRMs / other modules to MCP - team to hold off on consulting until customer use cases are clearer (decision to wait).",
+        "Permissions / API & MCP access meeting - Tiffany to schedule (no date). Login-based OAuth permissions a whole org at once; accepted trade-off.",
+        "Flag high-call / low-record MCP accounts (e.g., Netsync) for outreach + workflow help - Luke (no date).",
+        "Gather MCP use cases/strategies from Sutton - Sam (no date; also noted on the top-3 use-cases task).",
+        "Vendor categorization gaps - POs name resellers not manufacturers; explore vector embeddings / semantic search with Seth - Michelle / Brian (no date).",
+        "Data vectorization for semantic search - Sam to consult David (no date).",
+        "Improve opp-module profile generation (better keyword + exclusion configs) - Kathryn & team (no date; substantive - promote with a date).",
+        "Future: push notifications (enhancement updates / surveys) via Slack once setup allows - Kathryn / Anne.",
+        "New weekly prospect-record review established (sales + RevOps + Data Eng) - Anne. Not a product deliverable; lives in the sales pipeline.",
+        "Add Michelle to the recurring federal-migration call with Deepo & Peter - Lindsay (meetings being consolidated).",
+        "Action on you: upload the updated tracker + supporting docs to the Netlify app - Luke."
+      ]
+    },
+    {
+      "date": "Jun 16, 2026",
+      "summary": "MCP launched to all customers — the headline release. Marketing shipped the website takeover, first press release in years, and LinkedIn enablement; focus now turns to adoption (training completion at 51/80, goaling definition, top-3 use cases, and the 12 Days of MCP video campaign). Slack reset expectations: not a June release — needs 5 active orgs then a ~10-week marketplace approval (~Sept), so the team is driving real test orgs via an AI-search button/popup and Thursday's webinar. Opportunities: 53 accounts enabled but low adoption/tour completion; next tranche on hold until Territory Builder is live (~July); Luke to build account-level usage tracking. Federal: search migration to Jul 31 (~6,000 searches), in-product popup (not banner) after Jul 4, legacy data kept ~1 release cycle for comparison.",
+      "added": [
+        {
+          "task": "12 Days of MCP — assign use-case video topics",
+          "product": "MCP"
+        },
+        {
+          "task": "12 Days of MCP — recording logistics & branding session",
+          "product": "MCP"
+        },
+        {
+          "task": "Post training-completion names in sales thread",
+          "product": "MCP"
+        },
+        {
+          "task": "Monitor MCP training completion (daily reports)",
+          "product": "MCP"
+        },
+        {
+          "task": "Add button + popup in AI search to drive Slack signups",
+          "product": "Slack App Add-On"
+        },
+        {
+          "task": "Recruit 5+ friendly orgs as Slack test users",
+          "product": "Slack App Add-On"
+        },
+        {
+          "task": "Webinar — drive Slack signups + messaging-tool poll",
+          "product": "Slack App Add-On"
+        },
+        {
+          "task": "Newsletter copy on Slack marketplace status",
+          "product": "Slack App Add-On"
+        },
+        {
+          "task": "Monitor org connections toward the 5-org threshold",
+          "product": "Slack App Add-On"
+        },
+        {
+          "task": "Build account-level usage tracking for enabled accounts",
+          "product": "Opportunities Module"
+        },
+        {
+          "task": "Hold next enablement tranche until Territory Builder live",
+          "product": "Opportunities Module"
+        },
+        {
+          "task": "Identify users impacted by GSFed migration",
+          "product": "GovSpend Federal"
+        },
+        {
+          "task": "Estimate easy vs complex search migration (~6,000)",
+          "product": "GovSpend Federal"
+        },
+        {
+          "task": "Build in-product migration popup",
+          "product": "GovSpend Federal"
+        }
+      ],
+      "suggestive": [
+        "Connectivity workflows (MCP ↔ Salesforce / Gong) — Luke offered to restart this, no date set.",
+        "Reach out to Lighthouse for a customer tool-connectivity use-case video — Luke, no date set. (NetSync, Zya also floated.)",
+        "Webinar poll refinement: ask company-PREFERRED LLM, and which tools they connect into their LLM (Outreach / Agentforce / Gong) — Tiffany / Trip.",
+        "Future roadmap: push opportunity notifications directly into Slack channels (after Territory Builder + notification push are built).",
+        "'Interactive tool / middleman' messaging — explain MCP needs middleware to connect to Salesforce/Gong/ZoomInfo; don't say 'no, you can't' — Sam / Tiffany.",
+        "Marketing button on the Opportunities module ('receive opportunities via Slack alert') — parked until the Slack notification push exists.",
+        "Rejected: fudging the 5-org Slack count with internal/legal instances — won't pass marketplace review (Sam/Adam)."
       ]
     }
   ]
@@ -421,11 +1327,11 @@
       </div>
       <div class="bar-controls">
         <div class="meeting-field">
-          <label for="meetingDate">Meeting date</label>
-          <input type="date" id="meetingDate" />
+          <label for="meetingDate">Latest meeting</label>
+          <input type="date" id="meetingDate">
         </div>
         <button class="btn btn-export" id="exportBtn" title="Download the whole dashboard with your changes baked in">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
           Download dashboard
         </button>
       </div>
@@ -435,27 +1341,32 @@
 </header>
 
 <main class="wrap">
-  <!-- Overview panel -->
   <section class="panel active" id="panel-overview" role="tabpanel">
     <div class="ov-head">
       <h2>This month's launches</h2>
-      <p>Four products in flight. Drag each readiness slider as items close out — green means cleared for release.</p>
+      <p>Two readings per product: <b>launch readiness</b> (cleared to ship) and <b>adoption</b> (cleared to ship doesn't mean people are using it). Drag the sliders on each tab.</p>
     </div>
     <div class="ov-grid" id="ovGrid"></div>
     <div class="howto">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
       <div>
-        <b>Keeping this in sync.</b> Make your edits live during the call, then hit <b>Download dashboard</b> — it saves the whole thing as a single HTML file with your changes baked in. Drop that file into a new chat with the meeting transcript and ask Claude to update it; the next version comes back the same way.
-        <div class="exported-stamp" id="exportedStamp"></div>
+        <b>The update loop.</b> Edit live during the call and all week, then hit <b>Download dashboard</b> — it saves everything (including your manual edits) into one HTML file. This downloaded file is the source of truth: next week, drop it back in with the new transcript and ask for an update. Tracked tasks need an owner <i>and</i> a date; loose ideas land in the Weekly tab as suggestive items.
+        <div class="exported-stamp" id="exportedStamp">Last exported Jul 27 at 9:11 AM</div>
       </div>
     </div>
   </section>
-  <!-- Product panels injected here -->
   <div id="productPanels"></div>
+  <section class="panel" id="panel-weekly" role="tabpanel">
+    <div class="wk-head">
+      <h2>Weekly recap</h2>
+      <button class="btn btn-add" id="addRecap">+ Add recap</button>
+    </div>
+    <div id="weeklyList"></div>
+  </section>
 </main>
 
 <div class="toast" id="toast">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
   <span id="toastMsg">Saved</span>
 </div>
 
@@ -463,391 +1374,364 @@
 (function(){
   "use strict";
 
-  /* ---------------- constants ---------------- */
-  var STATUS_OPTS = ["Not started","In progress","Blocked","Done"];
+  var STATUS_OPTS = ["Not started","On track","At risk","Off track","Blocked","Done"];
   var STATUS_COLOR = {
-    "Not started":"#9aa3bd",
-    "In progress":"#0076DE",
-    "Blocked":"#e2483d",
-    "Done":"#2faa57"
+    "Not started":"#9aa3bd","On track":"#2faa57","At risk":"#d39a10",
+    "Off track":"#e0742c","Blocked":"#e2483d","Done":"#0076DE"
   };
+  var PRODUCT_NAMES = []; // filled after load
 
   function band(v){
-    v = Number(v)||0;
-    if(v>=95) return {label:"Ready for release", color:"#2faa57", bg:"#e8f6ec"};
-    if(v>=75) return {label:"Nearly ready",      color:"#5fae33", bg:"#eef7e6"};
-    if(v>=50) return {label:"In progress",       color:"#d39a10", bg:"#fdf4dc"};
-    if(v>=25) return {label:"Early progress",    color:"#e0742c", bg:"#fdeee2"};
-    return         {label:"Not started",        color:"#e2483d", bg:"#fdeceb"};
+    v=Number(v)||0;
+    if(v>=95) return {label:"Ready",       color:"#2faa57", bg:"#e8f6ec"};
+    if(v>=75) return {label:"Nearly there",color:"#5fae33", bg:"#eef7e6"};
+    if(v>=50) return {label:"In progress", color:"#d39a10", bg:"#fdf4dc"};
+    if(v>=25) return {label:"Early",       color:"#e0742c", bg:"#fdeee2"};
+    return        {label:"Not started",   color:"#e2483d", bg:"#fdeceb"};
   }
 
-  /* ---------------- load state ---------------- */
-  var SEED_EL = document.getElementById("gtm-state");
-  var STATE;
-  try {
-    var raw = (SEED_EL.textContent || "").trim();
-    STATE = raw ? JSON.parse(raw) : null;
-  } catch(e){ STATE = null; }
-  if(!STATE || !STATE.products){
-    STATE = {meetingDate:"", products:[]};
-  }
+  var SEED_EL=document.getElementById("gtm-state"), STATE;
+  try{ var raw=(SEED_EL.textContent||"").trim(); STATE=raw?JSON.parse(raw):null; }catch(e){ STATE=null; }
+  if(!STATE||!STATE.products){ STATE={meetingDate:"",products:[],weeklies:[]}; }
+  if(!STATE.weeklies) STATE.weeklies=[];
+  PRODUCT_NAMES = STATE.products.map(function(p){return p.name;});
 
-  /* ---------------- helpers ---------------- */
-  function el(tag, cls, attrs){
-    var n = document.createElement(tag);
-    if(cls) n.className = cls;
-    if(attrs) for(var k in attrs){ n.setAttribute(k, attrs[k]); }
-    return n;
-  }
-  function svgIcon(paths){
-    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+paths+'</svg>';
-  }
-  function toast(msg){
-    var t = document.getElementById("toast");
-    document.getElementById("toastMsg").textContent = msg || "Saved";
-    t.classList.add("show");
-    clearTimeout(toast._t);
-    toast._t = setTimeout(function(){ t.classList.remove("show"); }, 1900);
-  }
+  function el(t,c,a){var n=document.createElement(t);if(c)n.className=c;if(a)for(var k in a)n.setAttribute(k,a[k]);return n;}
+  function ico(p){return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+p+'</svg>';}
+  function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c];});}
+  function toast(m){var t=document.getElementById("toast");document.getElementById("toastMsg").textContent=m||"Saved";t.classList.add("show");clearTimeout(toast._t);toast._t=setTimeout(function(){t.classList.remove("show");},2200);}
 
-  /* ---------------- render: tabs ---------------- */
-  var tabsEl = document.getElementById("tabs");
+  /* tabs */
+  var tabsEl=document.getElementById("tabs");
   function buildTabs(){
-    tabsEl.innerHTML = "";
-    var ov = el("button","tab active",{ "data-target":"panel-overview", "role":"tab" });
-    ov.innerHTML = '<span style="width:9px;height:9px;border-radius:2px;display:inline-block;background:linear-gradient(135deg,#0076DE,#FFC44D)"></span>Overview';
+    tabsEl.innerHTML="";
+    var ov=el("button","tab active",{"data-target":"panel-overview","role":"tab"});
+    ov.innerHTML='<span style="width:9px;height:9px;border-radius:2px;display:inline-block;background:linear-gradient(135deg,#0076DE,#FFC44D)"></span>Overview';
     tabsEl.appendChild(ov);
-
     STATE.products.forEach(function(p){
-      var b = band(p.readiness);
-      var t = el("button","tab",{ "data-target":"panel-"+p.id, "role":"tab" });
-      t.innerHTML = '<span class="dot" style="background:'+b.color+'"></span>'+escapeHtml(p.name)
-        + (p.priority ? '<span class="flag">Priority</span>' : '');
+      var b=band(p.launch);
+      var t=el("button","tab",{"data-target":"panel-"+p.id,"role":"tab"});
+      t.innerHTML='<span class="dot" data-tabdot="'+p.id+'" style="background:'+b.color+'"></span>'+esc(p.name)+(p.priority?'<span class="flag">Priority</span>':'');
       tabsEl.appendChild(t);
     });
-
-    Array.prototype.forEach.call(tabsEl.querySelectorAll(".tab"), function(tab){
-      tab.addEventListener("click", function(){ activate(tab.getAttribute("data-target")); });
+    var wk=el("button","tab",{"data-target":"panel-weekly","role":"tab"});
+    wk.innerHTML='<span style="width:9px;height:9px;border-radius:50%;display:inline-block;background:#aab2c9"></span>Weekly recap';
+    tabsEl.appendChild(wk);
+    Array.prototype.forEach.call(tabsEl.querySelectorAll(".tab"),function(tab){
+      tab.addEventListener("click",function(){activate(tab.getAttribute("data-target"));});
     });
   }
-
-  function activate(panelId){
-    Array.prototype.forEach.call(document.querySelectorAll(".tab"), function(t){
-      t.classList.toggle("active", t.getAttribute("data-target")===panelId);
-    });
-    Array.prototype.forEach.call(document.querySelectorAll(".panel"), function(p){
-      p.classList.toggle("active", p.id===panelId);
-    });
-    window.scrollTo({top:0, behavior:"smooth"});
+  function activate(id){
+    Array.prototype.forEach.call(document.querySelectorAll(".tab"),function(t){t.classList.toggle("active",t.getAttribute("data-target")===id);});
+    Array.prototype.forEach.call(document.querySelectorAll(".panel"),function(p){p.classList.toggle("active",p.id===id);});
+    window.scrollTo({top:0,behavior:"smooth"});
   }
 
-  /* ---------------- render: overview ---------------- */
+  /* overview */
+  function metricRow(label,val){
+    var b=band(val);
+    return '<div class="metric"><div class="ml"><span>'+label+'</span><b style="color:'+b.color+'" data-ov="'+label+'">'+(Number(val)||0)+'%</b></div>'+
+           '<div class="ov-bar"><i data-ovbar="'+label+'" style="width:'+(Number(val)||0)+'%;background:'+b.color+'"></i></div></div>';
+  }
   function buildOverview(){
-    var grid = document.getElementById("ovGrid");
-    grid.innerHTML = "";
+    var g=document.getElementById("ovGrid");g.innerHTML="";
     STATE.products.forEach(function(p){
-      var b = band(p.readiness);
-      var done = p.tasks.filter(function(t){return t.status==="Done";}).length;
-      var card = el("button","ov-card",{ "data-target":"panel-"+p.id });
-      card.innerHTML =
-        '<div class="row1">'+
-          '<span class="pname">'+escapeHtml(p.name)+(p.priority?' <span class="mini-flag">Priority</span>':'')+'</span>'+
-          '<span class="pct" style="color:'+b.color+'" data-ov-pct="'+p.id+'">'+(Number(p.readiness)||0)+'%</span>'+
-        '</div>'+
-        '<div class="ov-bar"><i data-ov-bar="'+p.id+'" style="width:'+(Number(p.readiness)||0)+'%;background:'+b.color+'"></i></div>'+
-        '<div class="ov-meta">'+
-          '<span><b>'+done+'</b>/'+p.tasks.length+' done · target <b>'+escapeHtml(p.targetDate||"—")+'</b></span>'+
-          '<span class="ov-status-pill" data-ov-pill="'+p.id+'" style="color:'+b.color+';background:'+b.bg+'">'+b.label+'</span>'+
-        '</div>';
-      card.addEventListener("click", function(){ activate("panel-"+p.id); });
-      grid.appendChild(card);
+      var done=p.tasks.filter(function(t){return t.status==="Done";}).length;
+      var open=p.tasks.length-done;
+      var card=el("button","ov-card",{"data-target":"panel-"+p.id});
+      card.innerHTML=
+        '<div class="pname">'+esc(p.name)+(p.priority?' <span class="mini-flag">Priority</span>':'')+'</div>'+
+        '<div data-ovmetrics="'+p.id+'">'+metricRow("Launch",p.launch)+metricRow("Adoption",p.adoption)+'</div>'+
+        '<div class="ov-meta"><span><b>'+open+'</b> open · <b>'+done+'</b> done</span><span>target <b>'+esc(p.targetDate||"—")+'</b></span></div>';
+      // scope the data-ov / data-ovbar to this card by re-querying within
+      card.addEventListener("click",function(){activate("panel-"+p.id);});
+      g.appendChild(card);
     });
   }
-  function refreshOverviewFor(p){
-    var b = band(p.readiness);
-    var pct = document.querySelector('[data-ov-pct="'+p.id+'"]');
-    var bar = document.querySelector('[data-ov-bar="'+p.id+'"]');
-    var pill = document.querySelector('[data-ov-pill="'+p.id+'"]');
-    if(pct){ pct.textContent=(Number(p.readiness)||0)+"%"; pct.style.color=b.color; }
-    if(bar){ bar.style.width=(Number(p.readiness)||0)+"%"; bar.style.background=b.color; }
-    if(pill){ pill.textContent=b.label; pill.style.color=b.color; pill.style.background=b.bg; }
+  function refreshOverview(p){
+    var holder=document.querySelector('[data-ovmetrics="'+p.id+'"]');
+    if(!holder)return;
+    [["Launch",p.launch],["Adoption",p.adoption]].forEach(function(pair){
+      var b=band(pair[1]);
+      var val=holder.querySelector('[data-ov="'+pair[0]+'"]');
+      var bar=holder.querySelector('[data-ovbar="'+pair[0]+'"]');
+      if(val){val.textContent=(Number(pair[1])||0)+"%";val.style.color=b.color;}
+      if(bar){bar.style.width=(Number(pair[1])||0)+"%";bar.style.background=b.color;}
+    });
+    var card=holder.closest(".ov-card");
+    if(card){
+      var done=p.tasks.filter(function(t){return t.status==="Done";}).length;
+      var meta=card.querySelector(".ov-meta span:first-child");
+      if(meta)meta.innerHTML='<b>'+(p.tasks.length-done)+'</b> open · <b>'+done+'</b> done';
+      var tgt=card.querySelector(".ov-meta span:last-child");
+      if(tgt)tgt.innerHTML='target <b>'+esc(p.targetDate||"—")+'</b>';
+    }
   }
 
-  /* ---------------- render: product panels ---------------- */
-  var panelsEl = document.getElementById("productPanels");
+  /* product panels */
+  var panelsEl=document.getElementById("productPanels");
+  function gaugeBlock(p,metric,label){
+    var val=p[metric], b=band(val);
+    return '<div class="g-block">'+
+      '<div class="gt"><span class="gauge-label">'+label+'</span>'+
+        '<div class="gstamp"><span class="gpct" data-pct="'+metric+'" style="color:'+b.color+'">'+(Number(val)||0)+'%</span>'+
+        '<span class="gstatus" data-st="'+metric+'" style="color:'+b.color+';background:'+b.bg+';border-color:'+b.color+'33"><span class="led" style="background:'+b.color+'"></span><span data-stl="'+metric+'">'+b.label+'</span></span></div></div>'+
+      '<input type="range" class="rd" min="0" max="100" value="'+(Number(val)||0)+'" data-slider="'+metric+'" aria-label="'+label+' for '+esc(p.name)+'" />'+
+      '<div class="scale"><span>0</span><span>50</span><span>100</span></div></div>';
+  }
   function buildPanels(){
-    panelsEl.innerHTML = "";
+    panelsEl.innerHTML="";
     STATE.products.forEach(function(p){
-      var b = band(p.readiness);
-      var panel = el("section","panel",{ id:"panel-"+p.id, role:"tabpanel" });
-
-      panel.innerHTML =
-        '<div class="phead">'+
-          '<div>'+
-            '<h2>'+escapeHtml(p.name)+(p.priority?' <span class="flag" style="font-size:11px;vertical-align:middle">Priority</span>':'')+'</h2>'+
-            '<div class="ptag">'+p.tasks.length+' deliverable'+(p.tasks.length===1?'':'s')+' tracked</div>'+
-          '</div>'+
-          '<div class="target-field">'+
-            '<label for="tgt-'+p.id+'">Target release</label>'+
-            '<input id="tgt-'+p.id+'" type="text" value="'+escapeAttr(p.targetDate||"")+'" placeholder="e.g. Jun 16" />'+
-          '</div>'+
+      var panel=el("section","panel",{id:"panel-"+p.id,role:"tabpanel"});
+      panel.innerHTML=
+        '<div class="phead"><div>'+
+          '<h2>'+esc(p.name)+(p.priority?' <span class="flag" style="font-size:11px;vertical-align:middle">Priority</span>':'')+'</h2>'+
+          '<div class="ptag" data-ptag></div></div>'+
+          '<div class="target-field"><label for="tgt-'+p.id+'">Launch target</label>'+
+          '<input id="tgt-'+p.id+'" type="text" value="'+esc(p.targetDate||"")+'" placeholder="e.g. Jun 16 — LAUNCHED" /></div>'+
         '</div>'+
-
-        '<div class="gauge">'+
-          '<div class="gauge-top">'+
-            '<span class="gauge-label">Release readiness</span>'+
-            '<div class="gauge-stamp">'+
-              '<span class="gauge-pct" data-pct style="color:'+b.color+'">'+(Number(p.readiness)||0)+'%</span>'+
-              '<span class="gauge-status" data-status style="color:'+b.color+';background:'+b.bg+';border-color:'+b.color+'33">'+
-                '<span class="led" style="background:'+b.color+'"></span><span data-status-label>'+b.label+'</span>'+
-              '</span>'+
-            '</div>'+
-          '</div>'+
-          '<div class="slider-shell">'+
-            '<input type="range" class="readiness" min="0" max="100" value="'+(Number(p.readiness)||0)+'" data-slider aria-label="Release readiness for '+escapeAttr(p.name)+'" />'+
-            '<div class="scale"><span>Not started</span><span>In progress</span><span>Ready</span></div>'+
-          '</div>'+
-          '<div class="notes-line">'+
-            '<label for="notes-'+p.id+'">Status notes</label>'+
-            '<textarea id="notes-'+p.id+'" placeholder="Headline status, blockers, decisions made on the call…">'+escapeHtml(p.notes||"")+'</textarea>'+
-          '</div>'+
+        '<div class="gauge"><div class="gauge-grid">'+
+          gaugeBlock(p,"launch","Launch readiness")+
+          gaugeBlock(p,"adoption","Adoption")+
         '</div>'+
-
-        '<div class="tbl-head">'+
-          '<div><h3>Deliverables</h3><span class="count" data-count></span></div>'+
-          '<button class="btn btn-add" data-add>'+svgIcon('<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>')+'Add task</button>'+
+          '<div class="notes-line"><label for="notes-'+p.id+'">Status notes</label>'+
+          '<textarea id="notes-'+p.id+'" placeholder="Headline status, decisions, blockers…">'+esc(p.notes||"")+'</textarea></div>'+
         '</div>'+
-        '<div class="tbl-card">'+
-          '<table>'+
-            '<thead><tr>'+
-              '<th class="col-task">Task</th>'+
-              '<th class="col-owner">Owner</th>'+
-              '<th class="col-due">Due</th>'+
-              '<th class="col-link">Artifact</th>'+
-              '<th class="col-status">Status</th>'+
-              '<th class="col-x"></th>'+
-            '</tr></thead>'+
-            '<tbody data-rows></tbody>'+
-          '</table>'+
-        '</div>';
-
+        '<div class="tbl-head"><div><h3 style="display:inline">Deliverables</h3><span class="count" data-count></span></div>'+
+          '<div class="tbl-actions"><label class="hide-toggle"><input type="checkbox" data-hidedone> Hide completed</label>'+
+          '<button class="btn btn-add" data-add>'+ico('<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>')+'Add task</button></div></div>'+
+        '<div class="tbl-card"><table><thead><tr>'+
+          '<th class="col-exp"></th><th class="col-task">Task</th><th class="col-owner">Owner</th><th class="col-due">Target</th>'+
+          '<th class="col-link">Artifact</th><th class="col-status">Status</th><th class="col-x"></th>'+
+        '</tr></thead><tbody data-rows></tbody></table></div>';
       panelsEl.appendChild(panel);
 
-      /* wire target date */
-      panel.querySelector("#tgt-"+p.id).addEventListener("input", function(e){
-        p.targetDate = e.target.value;
-        var pill = document.querySelector('[data-ov-pill="'+p.id+'"]');
-        // refresh overview meta line (target shown there)
-        buildOverviewMetaTarget(p);
+      updatePtag(p,panel);
+      panel.querySelector("#tgt-"+p.id).addEventListener("input",function(e){p.targetDate=e.target.value;refreshOverview(p);});
+      panel.querySelector("#notes-"+p.id).addEventListener("input",function(e){p.notes=e.target.value;});
+
+      ["launch","adoption"].forEach(function(metric){
+        var s=panel.querySelector('[data-slider="'+metric+'"]');
+        s.addEventListener("input",function(e){
+          p[metric]=Number(e.target.value);
+          var b=band(p[metric]);
+          panel.querySelector('[data-pct="'+metric+'"]').textContent=p[metric]+"%";
+          panel.querySelector('[data-pct="'+metric+'"]').style.color=b.color;
+          var st=panel.querySelector('[data-st="'+metric+'"]');
+          st.style.color=b.color;st.style.background=b.bg;st.style.borderColor=b.color+"33";
+          st.querySelector(".led").style.background=b.color;
+          panel.querySelector('[data-stl="'+metric+'"]').textContent=b.label;
+          if(metric==="launch"){var d=document.querySelector('[data-tabdot="'+p.id+'"]');if(d)d.style.background=b.color;}
+          refreshOverview(p);
+        });
       });
 
-      /* wire notes */
-      panel.querySelector("#notes-"+p.id).addEventListener("input", function(e){
-        p.notes = e.target.value;
+      panel.querySelector("[data-hidedone]").addEventListener("change",function(e){
+        panel.setAttribute("data-hide", e.target.checked?"1":"0"); renderRows(p,panel);
       });
-
-      /* wire slider */
-      var slider = panel.querySelector("[data-slider]");
-      slider.addEventListener("input", function(e){
-        p.readiness = Number(e.target.value);
-        var bb = band(p.readiness);
-        panel.querySelector("[data-pct]").textContent = p.readiness+"%";
-        panel.querySelector("[data-pct]").style.color = bb.color;
-        var st = panel.querySelector("[data-status]");
-        st.style.color = bb.color; st.style.background = bb.bg; st.style.borderColor = bb.color+"33";
-        st.querySelector(".led").style.background = bb.color;
-        panel.querySelector("[data-status-label]").textContent = bb.label;
-        // tab dot + overview
-        var tabDot = document.querySelector('.tab[data-target="panel-'+p.id+'"] .dot');
-        if(tabDot) tabDot.style.background = bb.color;
-        refreshOverviewFor(p);
+      panel.querySelector("[data-add]").addEventListener("click",function(){
+        p.tasks.push({task:"",owner:"",due:"",link:"",status:"Not started",notes:"",completedDate:"",completedBy:"",addedWeek:STATE.meetingDate});
+        renderRows(p,panel);updatePtag(p,panel);refreshOverview(p);
+        var rows=panel.querySelectorAll("[data-rows] tr.task-row");var last=rows[rows.length-1];
+        if(last){var i=last.querySelector(".cell-input");if(i)i.focus();}
       });
-
-      /* wire add */
-      panel.querySelector("[data-add]").addEventListener("click", function(){
-        p.tasks.push({task:"",owner:"",due:"",link:"",status:"Not started"});
-        renderRows(p, panel);
-        // focus the new first cell
-        var rows = panel.querySelectorAll("[data-rows] tr");
-        var last = rows[rows.length-1];
-        if(last){ var inp = last.querySelector(".cell-input"); if(inp) inp.focus(); }
-        refreshOverviewCounts(p);
-      });
-
-      renderRows(p, panel);
+      renderRows(p,panel);
     });
   }
-
-  function buildOverviewMetaTarget(p){
-    // the overview meta target is part of a larger string; simplest is to rebuild that card's meta
-    var bar = document.querySelector('[data-ov-bar="'+p.id+'"]');
-    if(!bar) return;
-    var card = bar.closest(".ov-card");
-    if(!card) return;
-    var done = p.tasks.filter(function(t){return t.status==="Done";}).length;
-    var meta = card.querySelector(".ov-meta span:first-child");
-    if(meta){ meta.innerHTML = '<b>'+done+'</b>/'+p.tasks.length+' done · target <b>'+escapeHtml(p.targetDate||"—")+'</b>'; }
+  function updatePtag(p,panel){
+    var done=p.tasks.filter(function(t){return t.status==="Done";}).length;
+    var t=panel.querySelector("[data-ptag]");
+    if(t)t.textContent=(p.tasks.length-done)+" open · "+done+" complete of "+p.tasks.length+" tracked";
   }
-  function refreshOverviewCounts(p){ buildOverviewMetaTarget(p); }
+  function setCount(p,panel){
+    var done=p.tasks.filter(function(t){return t.status==="Done";}).length;
+    var c=panel.querySelector("[data-count]");if(c)c.textContent="· "+done+" of "+p.tasks.length+" complete";
+  }
 
-  function renderRows(p, panel){
-    var tbody = panel.querySelector("[data-rows]");
-    tbody.innerHTML = "";
-    panel.querySelector("[data-count]").textContent =
-      p.tasks.filter(function(t){return t.status==="Done";}).length + " of " + p.tasks.length + " complete";
-
-    if(p.tasks.length===0){
-      var er = el("tr","empty-row");
-      er.innerHTML = '<td colspan="6">No deliverables yet. Use <b>Add task</b> to start tracking.</td>';
-      tbody.appendChild(er);
-      refreshOverviewCounts(p);
-      return;
+  function renderRows(p,panel){
+    var tb=panel.querySelector("[data-rows]");tb.innerHTML="";
+    var hide=panel.getAttribute("data-hide")==="1";
+    setCount(p,panel);
+    var visible=p.tasks.filter(function(t){return !(hide && t.status==="Done");});
+    if(visible.length===0){
+      var er=el("tr","empty-row");er.innerHTML='<td colspan="7">'+(p.tasks.length?'All tasks complete and hidden.':'No deliverables yet. Use <b>Add task</b> to start tracking.')+'</td>';
+      tb.appendChild(er);updatePtag(p,panel);return;
     }
+    p.tasks.forEach(function(task,idx){
+      if(hide && task.status==="Done") return;
+      var isDone=task.status==="Done";
+      var tr=el("tr","task-row"+(isDone?" task-done":""));
 
-    p.tasks.forEach(function(task, idx){
-      var tr = el("tr");
+      var tdExp=el("td","col-exp");
+      var expBtn=el("button","exp-btn",{title:"Notes & details"});
+      expBtn.innerHTML=ico('<polyline points="9 18 15 12 9 6"/>');
+      tdExp.appendChild(expBtn);tr.appendChild(tdExp);
 
-      // task
-      var tdTask = el("td"); 
-      var iTask = el("input","cell-input",{type:"text",placeholder:"Describe the deliverable"});
-      iTask.value = task.task||""; 
-      iTask.addEventListener("input", function(){ task.task=iTask.value; });
-      tdTask.appendChild(iTask); tr.appendChild(tdTask);
+      var tdTask=el("td");
+      var taskWrap=el("div");
+      var iTask=el("input","cell-input task-text",{type:"text",placeholder:"Describe the deliverable"});
+      iTask.value=task.task||"";iTask.addEventListener("input",function(){task.task=iTask.value;});
+      taskWrap.appendChild(iTask);
+      if(isDone){
+        var stamp=el("div","done-stamp");
+        stamp.innerHTML=ico('<polyline points="20 6 9 17 4 12"/>')+'Completed '+esc(task.completedDate||"—")+(task.completedBy?' · '+esc(task.completedBy):'');
+        taskWrap.appendChild(stamp);
+      }
+      tdTask.appendChild(taskWrap);tr.appendChild(tdTask);
 
-      // owner
-      var tdOwner = el("td");
-      var iOwner = el("input","cell-input",{type:"text",placeholder:"Owner"});
-      iOwner.value = task.owner||"";
-      iOwner.addEventListener("input", function(){ task.owner=iOwner.value; });
-      tdOwner.appendChild(iOwner); tr.appendChild(tdOwner);
+      var tdOwner=el("td","col-owner");var iOwner=el("input","cell-input",{type:"text",placeholder:"Owner"});
+      iOwner.value=task.owner||"";iOwner.addEventListener("input",function(){task.owner=iOwner.value;});
+      tdOwner.appendChild(iOwner);tr.appendChild(tdOwner);
 
-      // due
-      var tdDue = el("td");
-      var iDue = el("input","cell-input",{type:"text",placeholder:"Due"});
-      iDue.value = task.due||"";
-      iDue.addEventListener("input", function(){ task.due=iDue.value; });
-      tdDue.appendChild(iDue); tr.appendChild(tdDue);
+      var tdDue=el("td","col-due");var iDue=el("input","cell-input",{type:"text",placeholder:"Target"});
+      iDue.value=task.due||"";iDue.addEventListener("input",function(){task.due=iDue.value;});
+      tdDue.appendChild(iDue);tr.appendChild(tdDue);
 
-      // link
-      var tdLink = el("td");
-      var wrap = el("div","link-cell");
-      var iLink = el("input","cell-input",{type:"text",placeholder:"Paste URL"});
-      iLink.value = task.link||"";
-      var open = el("a","link-open"+(task.link?"":" disabled"),{target:"_blank",rel:"noopener",title:"Open artifact"});
-      open.innerHTML = svgIcon('<path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>');
-      if(task.link) open.href = task.link;
-      iLink.addEventListener("input", function(){
-        task.link = iLink.value.trim();
-        if(task.link){ open.href = task.link; open.classList.remove("disabled"); }
-        else { open.removeAttribute("href"); open.classList.add("disabled"); }
+      var tdLink=el("td","col-link");var lw=el("div","link-cell");
+      var iLink=el("input","cell-input",{type:"text",placeholder:"URL"});iLink.value=task.link||"";
+      var open=el("a","link-open"+(task.link?"":" disabled"),{target:"_blank",rel:"noopener",title:"Open"});
+      open.innerHTML=ico('<path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>');
+      if(task.link)open.href=task.link;
+      iLink.addEventListener("input",function(){task.link=iLink.value.trim();if(task.link){open.href=task.link;open.classList.remove("disabled");}else{open.removeAttribute("href");open.classList.add("disabled");}});
+      lw.appendChild(iLink);lw.appendChild(open);tdLink.appendChild(lw);tr.appendChild(tdLink);
+
+      var tdStat=el("td","col-status");var sel=el("select","status-sel");
+      STATUS_OPTS.forEach(function(o){var op=el("option");op.value=o;op.textContent=o;if(o===(task.status||"Not started"))op.selected=true;sel.appendChild(op);});
+      sel.style.color=STATUS_COLOR[task.status||"Not started"];
+      tdStat.appendChild(sel);tr.appendChild(tdStat);
+
+      var tdX=el("td","col-x");var del=el("button","btn-del",{title:"Remove"});
+      del.innerHTML=ico('<polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>');
+      del.addEventListener("click",function(){p.tasks.splice(idx,1);renderRows(p,panel);updatePtag(p,panel);refreshOverview(p);});
+      tdX.appendChild(del);tr.appendChild(tdX);
+
+      // detail row
+      var dr=el("tr","detail-row");var dtd=el("td",null,{colspan:"7"});
+      var dw=el("div","detail-wrap");
+      dw.innerHTML=
+        '<div class="detail-grid"><div class="d-field"><label>Running notes</label>'+
+        '<textarea data-tnotes placeholder="Ongoing notes until this is complete…">'+esc(task.notes||"")+'</textarea></div></div>'+
+        '<div class="completion-row'+(isDone?' show':'')+'" data-comp>'+
+          '<div class="cf"><label>Completed on</label><input data-cdate type="text" value="'+esc(task.completedDate||"")+'" placeholder="e.g. Jun 16"></div>'+
+          '<div class="cf"><label>Completed by</label><input data-cby type="text" value="'+esc(task.completedBy||"")+'" placeholder="who"></div>'+
+        '</div>';
+      dtd.appendChild(dw);dr.appendChild(dtd);
+
+      expBtn.addEventListener("click",function(){
+        var openNow=dr.classList.toggle("open");tr.classList.toggle("expanded",openNow);
+        expBtn.querySelector("svg").style.transform=openNow?"rotate(90deg)":"";
       });
-      wrap.appendChild(iLink); wrap.appendChild(open);
-      tdLink.appendChild(wrap); tr.appendChild(tdLink);
+      dw.querySelector("[data-tnotes]").addEventListener("input",function(e){task.notes=e.target.value;});
+      dw.querySelector("[data-cdate]").addEventListener("input",function(e){task.completedDate=e.target.value;
+        var s2=tr.querySelector(".done-stamp");if(s2)s2.innerHTML=ico('<polyline points="20 6 9 17 4 12"/>')+'Completed '+esc(task.completedDate||"—")+(task.completedBy?' · '+esc(task.completedBy):'');});
+      dw.querySelector("[data-cby]").addEventListener("input",function(e){task.completedBy=e.target.value;
+        var s2=tr.querySelector(".done-stamp");if(s2)s2.innerHTML=ico('<polyline points="20 6 9 17 4 12"/>')+'Completed '+esc(task.completedDate||"—")+(task.completedBy?' · '+esc(task.completedBy):'');});
 
-      // status
-      var tdStat = el("td");
-      var sel = el("select","status-sel");
-      STATUS_OPTS.forEach(function(opt){
-        var o = el("option"); o.value=opt; o.textContent=opt;
-        if(opt===(task.status||"Not started")) o.selected=true;
-        sel.appendChild(o);
+      sel.addEventListener("change",function(){
+        task.status=sel.value;sel.style.color=STATUS_COLOR[sel.value];
+        if(sel.value==="Done" && !task.completedDate){task.completedDate=humanDate(STATE.meetingDate);}
+        renderRows(p,panel);updatePtag(p,panel);refreshOverview(p);
       });
-      sel.style.color = STATUS_COLOR[task.status||"Not started"];
-      sel.addEventListener("change", function(){
-        task.status = sel.value;
-        sel.style.color = STATUS_COLOR[sel.value];
-        panel.querySelector("[data-count]").textContent =
-          p.tasks.filter(function(t){return t.status==="Done";}).length + " of " + p.tasks.length + " complete";
-        refreshOverviewCounts(p);
-      });
-      tdStat.appendChild(sel); tr.appendChild(tdStat);
 
-      // delete
-      var tdX = el("td");
-      var del = el("button","btn-del",{title:"Remove task"});
-      del.innerHTML = svgIcon('<polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>');
-      del.addEventListener("click", function(){
-        p.tasks.splice(idx,1);
-        renderRows(p, panel);
-        refreshOverviewCounts(p);
-      });
-      tdX.appendChild(del); tr.appendChild(tdX);
-
-      tbody.appendChild(tr);
+      tb.appendChild(tr);tb.appendChild(dr);
     });
-    refreshOverviewCounts(p);
+    updatePtag(p,panel);
   }
 
-  /* ---------------- meeting date ---------------- */
-  var mdInput = document.getElementById("meetingDate");
-  mdInput.value = STATE.meetingDate || "";
-  mdInput.addEventListener("input", function(){ STATE.meetingDate = mdInput.value; });
-
-  /* ---------------- export (self-saving file) ---------------- */
-  function serializeStateForScript(){
-    // escape "<" so an embedded URL/text can never break out of the script tag
-    return JSON.stringify(STATE, null, 2).replace(/</g, "\\u003c");
+  function humanDate(iso){
+    if(!iso)return "";
+    try{var d=new Date(iso+"T00:00:00");return d.toLocaleDateString(undefined,{month:"short",day:"numeric"});}catch(e){return iso;}
   }
+
+  /* weekly */
+  var weeklyList=document.getElementById("weeklyList");
+  function buildWeekly(){
+    weeklyList.innerHTML="";
+    if(!STATE.weeklies.length){
+      var e0=el("div","wk-card");e0.innerHTML='<div class="wk-body" style="color:#6b7488;font-size:13.5px">No recaps yet. Add one after your next meeting.</div>';
+      weeklyList.appendChild(e0);return;
+    }
+    STATE.weeklies.forEach(function(wk,wi){
+      var card=el("div","wk-card");
+      card.innerHTML=
+        '<div class="wk-top"><input class="wkdate" value="'+esc(wk.date||"")+'" /><button class="btn-del" data-delwk title="Remove recap" style="color:#cdd5e3">'+ico('<polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/>')+'</button></div>'+
+        '<div class="wk-body">'+
+          '<div class="wk-sec"><h4>Meeting summary</h4><textarea data-summary>'+esc(wk.summary||"")+'</textarea></div>'+
+          '<div class="wk-sec"><h4>Tasks added to the tracker this week</h4><div data-added></div><button class="mini-add" data-addtask>+ Add</button></div>'+
+          '<div class="wk-sec"><h4>Suggestive items (not tracked)</h4><p class="sugg-note">Ideas raised without an owner + date. Promote to a tab when they firm up.</p><div data-sugg></div><button class="mini-add" data-addsugg>+ Add</button></div>'+
+        '</div>';
+      weeklyList.appendChild(card);
+
+      card.querySelector(".wkdate").addEventListener("input",function(e){wk.date=e.target.value;});
+      card.querySelector("[data-delwk]").addEventListener("click",function(){STATE.weeklies.splice(wi,1);buildWeekly();});
+      card.querySelector("[data-summary]").addEventListener("input",function(e){wk.summary=e.target.value;});
+
+      var addedBox=card.querySelector("[data-added]");
+      wk.added=wk.added||[];
+      function renderAdded(){
+        addedBox.innerHTML="";
+        wk.added.forEach(function(a,ai){
+          var row=el("div","added-item");
+          var opts=PRODUCT_NAMES.map(function(n){return '<option value="'+esc(n)+'"'+(n===a.product?' selected':'')+'>'+esc(n)+'</option>';}).join("");
+          row.innerHTML='<input class="ai-task" value="'+esc(a.task||"")+'" placeholder="Task added" /><select>'+opts+'</select><button class="btn-del" title="Remove">'+ico('<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>')+'</button>';
+          row.querySelector("input").addEventListener("input",function(e){a.task=e.target.value;});
+          row.querySelector("select").addEventListener("change",function(e){a.product=e.target.value;});
+          row.querySelector(".btn-del").addEventListener("click",function(){wk.added.splice(ai,1);renderAdded();});
+          addedBox.appendChild(row);
+        });
+      }
+      renderAdded();
+      card.querySelector("[data-addtask]").addEventListener("click",function(){wk.added.push({task:"",product:PRODUCT_NAMES[0]||""});renderAdded();});
+
+      var suggBox=card.querySelector("[data-sugg]");
+      wk.suggestive=wk.suggestive||[];
+      function renderSugg(){
+        suggBox.innerHTML="";
+        wk.suggestive.forEach(function(s,si){
+          var row=el("div","sugg-item");
+          row.innerHTML='<input value="'+esc(s)+'" placeholder="Suggestive item" /><button class="btn-del" title="Remove">'+ico('<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>')+'</button>';
+          row.querySelector("input").addEventListener("input",function(e){wk.suggestive[si]=e.target.value;});
+          row.querySelector(".btn-del").addEventListener("click",function(){wk.suggestive.splice(si,1);renderSugg();});
+          suggBox.appendChild(row);
+        });
+      }
+      renderSugg();
+      card.querySelector("[data-addsugg]").addEventListener("click",function(){wk.suggestive.push("");renderSugg();});
+    });
+  }
+  document.getElementById("addRecap").addEventListener("click",function(){
+    STATE.weeklies.unshift({date:humanDate(STATE.meetingDate)||"New meeting",summary:"",added:[],suggestive:[]});
+    buildWeekly();
+  });
+
+  /* meeting date */
+  var md=document.getElementById("meetingDate");md.value=STATE.meetingDate||"";
+  md.addEventListener("input",function(){STATE.meetingDate=md.value;});
+
+  /* export */
+  function serialize(){return JSON.stringify(STATE,null,2).replace(/</g,"\\u003c");}
   function exportDashboard(){
-    var stamp = new Date();
-    var clone = document.documentElement.cloneNode(true);
-
-    // 1) write current state into the cloned #gtm-state block
-    var st = clone.querySelector("#gtm-state");
-    if(st){ st.textContent = "\n" + serializeStateForScript() + "\n"; }
-
-    // 2) clear dynamically-rendered containers so the saved file is tidy
-    //    (they're rebuilt from STATE on load anyway)
-    ["tabs","ovGrid","productPanels"].forEach(function(id){
-      var n = clone.querySelector("#"+id);
-      if(n) n.innerHTML = "";
-    });
-    var ovPanel = clone.querySelector("#panel-overview");
-    if(ovPanel){ ovPanel.classList.add("active"); }
-
-    // 3) record export time
-    clone.setAttribute("data-exported", stamp.toISOString());
-
-    var html = "<!DOCTYPE html>\n" + clone.outerHTML;
-    var blob = new Blob([html], {type:"text/html"});
-    var url = URL.createObjectURL(blob);
-    var a = document.createElement("a");
-    var d = (STATE.meetingDate || stamp.toISOString().slice(0,10));
-    a.href = url;
-    a.download = "govspend-gtm-tracker-" + d + ".html";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    setTimeout(function(){ URL.revokeObjectURL(url); }, 1500);
-
-    toast("Downloaded — drop it into a new chat with the transcript");
+    var stamp=new Date(),clone=document.documentElement.cloneNode(true);
+    var st=clone.querySelector("#gtm-state");if(st)st.textContent="\n"+serialize()+"\n";
+    ["tabs","ovGrid","productPanels","weeklyList"].forEach(function(id){var n=clone.querySelector("#"+id);if(n)n.innerHTML="";});
+    var ov=clone.querySelector("#panel-overview");if(ov)ov.classList.add("active");
+    Array.prototype.forEach.call(clone.querySelectorAll(".panel"),function(pn){if(pn.id!=="panel-overview")pn.classList.remove("active");});
+    clone.setAttribute("data-exported",stamp.toISOString());
+    var html="<!DOCTYPE html>\n"+clone.outerHTML;
+    var blob=new Blob([html],{type:"text/html"}),url=URL.createObjectURL(blob),a=document.createElement("a");
+    a.href=url;a.download="govspend-gtm-tracker-"+(STATE.meetingDate||stamp.toISOString().slice(0,10))+".html";
+    document.body.appendChild(a);a.click();document.body.removeChild(a);
+    setTimeout(function(){URL.revokeObjectURL(url);},1500);
+    toast("Downloaded — this file is now your source of truth");
   }
-  document.getElementById("exportBtn").addEventListener("click", exportDashboard);
+  document.getElementById("exportBtn").addEventListener("click",exportDashboard);
 
-  /* show last-exported stamp if this file was saved before */
-  var prevExport = document.documentElement.getAttribute("data-exported");
-  if(prevExport){
-    try{
-      var ds = new Date(prevExport);
-      document.getElementById("exportedStamp").textContent =
-        "Last exported " + ds.toLocaleDateString(undefined,{month:"short",day:"numeric"}) +
-        " at " + ds.toLocaleTimeString(undefined,{hour:"numeric",minute:"2-digit"});
-    }catch(e){}
-  }
+  var prev=document.documentElement.getAttribute("data-exported");
+  if(prev){try{var ds=new Date(prev);document.getElementById("exportedStamp").textContent="Last exported "+ds.toLocaleDateString(undefined,{month:"short",day:"numeric"})+" at "+ds.toLocaleTimeString(undefined,{hour:"numeric",minute:"2-digit"});}catch(e){}}
 
-  /* ---------------- escaping ---------------- */
-  function escapeHtml(s){
-    return String(s==null?"":s).replace(/[&<>"']/g, function(c){
-      return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c];
-    });
-  }
-  function escapeAttr(s){ return escapeHtml(s); }
-
-  /* ---------------- boot ---------------- */
-  buildTabs();
-  buildOverview();
-  buildPanels();
+  buildTabs();buildOverview();buildPanels();buildWeekly();
 })();
 </script>
-</body>
-</html>
+
+
+<scribe-shadow id="crxjs-ext" data-crx="okfkdaglfjjjfefdcppliegebpoegaii" style="position: fixed; width: 0px; height: 0px; top: 0px; left: 0px; z-index: 2147483647; overflow: visible; visibility: visible;"></scribe-shadow></body></html>

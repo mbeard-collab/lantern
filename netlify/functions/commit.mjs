@@ -27,6 +27,8 @@ export default async (req) => {
     return json({ error: "Invalid JSON" }, 400);
   }
 
+  const action = body.action || "ship";
+
   // ---- Auth gate (applies to every action) ---------------------------------
   // Human studio admins use email + STUDIO_ADMIN_PASSWORD.
   // The data pipeline uses a dedicated PIPELINE_SECRET token so it doesn't
@@ -46,8 +48,6 @@ export default async (req) => {
   if (!isPipelineAuth && !isHumanAuth) {
     return json({ error: "Not authorized" }, 401);
   }
-
-  const action = body.action || "ship";
 
   // ---- auth-check: just confirm creds, do nothing --------------------------
   if (action === "auth-check") {
@@ -243,13 +243,14 @@ export default async (req) => {
     }
     try {
       const commits = [];
+      const actor = email || 'pipeline';
       for (const f of clean) {
         const path = `${slug}/${f.name}`;
         const sha  = await getSha(path);
         const res  = await putFile(
           path,
           f.content,
-          `Update ${path} via pipeline (by ${email})`,
+          `Update ${path} via pipeline (by ${actor})`,
           sha,
         );
         commits.push({ path, commitSha: res.commit?.sha || null });
