@@ -27,15 +27,27 @@ export default async (req) => {
     return json({ error: "Invalid JSON" }, 400);
   }
 
+  const action = body.action || "ship";
+
   // ---- Auth gate (applies to every action) ---------------------------------
+  // Human studio admins use email + STUDIO_ADMIN_PASSWORD.
+  // The data pipeline uses a dedicated PIPELINE_SECRET token so it doesn't
+  // share the human admin password.
+  const pipelineToken = String(body?.auth?.token || "");
+  const isPipelineAuth =
+    env.PIPELINE_SECRET &&
+    pipelineToken.length > 0 &&
+    pipelineToken === env.PIPELINE_SECRET &&
+    action === "data"; // pipeline token is only accepted for the data action
+
   const email = String(body?.auth?.email || "").trim().toLowerCase();
   const password = String(body?.auth?.password || "");
   const admins = env.STUDIO_ADMINS.split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
-  if (!email || !admins.includes(email) || password !== env.STUDIO_ADMIN_PASSWORD) {
+  const isHumanAuth = email && admins.includes(email) && password === env.STUDIO_ADMIN_PASSWORD;
+
+  if (!isPipelineAuth && !isHumanAuth) {
     return json({ error: "Not authorized" }, 401);
   }
-
-  const action = body.action || "ship";
 
   // ---- auth-check: just confirm creds, do nothing --------------------------
   if (action === "auth-check") {
@@ -197,6 +209,53 @@ export default async (req) => {
         sha,
       );
       return json({ ok: true, commitSha: res.commit?.sha || null });
+    } catch (err) {
+      return json({ error: err.message }, 500);
+    }
+  }
+
+  // ---- DATA action — pipeline commits data files --------------------------
+  // Body: { action:'data', auth, slug, files:[{name, content}] }
+  // Commits each file at <slug>/<name> on main. The slug is already validated
+  // above. File names follow the same rules as dataFiles in the ship action.
+  if (action === 'data') {
+    const files = body.files;
+    if (!Array.isArray(files) || files.length === 0) {
+      return json({ error: 'data action requires a non-empty files array' }, 400);
+    }
+    const ALLOWED_EXT = new Set([
+      'json', 'csv', 'tsv', 'txt', 'geojson', 'svg', 'md', 'js', 'mjs', 'css',
+    ]);
+    const clean = [];
+    for (const f of files) {
+      const name = String(f?.name || '').trim();
+      if (!/^[A-Za-z0-9._-]+(\/[A-Za-z0-9._-]+)*$/.test(name) || name.split('/').includes('..')) {
+        return json({ error: `Invalid file name: ${JSON.stringify(f?.name)}` }, 400);
+      }
+      const ext = name.split('.').pop().toLowerCase();
+      if (!ALLOWED_EXT.has(ext)) {
+        return json({ error: `File "${name}" must end in: ${[...ALLOWED_EXT].join(', ')}` }, 400);
+      }
+      if (typeof f.content !== 'string') {
+        return json({ error: `File "${name}" content must be a string` }, 400);
+      }
+      clean.push({ name, content: f.content });
+    }
+    try {
+      const commits = [];
+      const actor = email || 'pipeline';
+      for (const f of clean) {
+        const path = `${slug}/${f.name}`;
+        const sha  = await getSha(path);
+        const res  = await putFile(
+          path,
+          f.content,
+          `Update ${path} via pipeline (by ${actor})`,
+          sha,
+        );
+        commits.push({ path, commitSha: res.commit?.sha || null });
+      }
+      return json({ ok: true, commitSha: commits[0]?.commitSha || null, files: commits });
     } catch (err) {
       return json({ error: err.message }, 500);
     }
