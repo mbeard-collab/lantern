@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sales Pipeline (Live) — Dashboards</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="./sales_data.js"></script>
+<style>
+:root{
+  --blue:#0076DE;--blue-d:#005ab5;--space:#303650;
+  --bg:#F5F6F8;--card:#fff;--line:#E4E7EC;--line-2:#EEF0F4;
+  --ink:#303650;--muted:#71788A;--good:#1f9d6b;--bad:#d8543f;
+  --amber:#b45309;--amber-bg:#fffbeb;--amber-line:#fde68a;
+  --shadow:0 1px 3px rgba(48,54,80,.07),0 4px 16px rgba(48,54,80,.05);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--bg);color:var(--ink);font-family:-apple-system,"SF Pro Text","Inter",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:var(--blue);text-decoration:none}
+a:hover{text-decoration:underline}
+
+/* Layout */
+.wrap{max-width:1280px;margin:0 auto;padding:0 20px 60px}
+
+/* Header */
+header{background:var(--space);color:#fff}
+.hd{max-width:1280px;margin:0 auto;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.hd-left{display:flex;align-items:center;gap:14px}
+.back{color:#8a93a6;font-size:13px;font-weight:600;text-decoration:none;white-space:nowrap}
+.back:hover{color:#fff;text-decoration:none}
+.htitle{font-size:15px;font-weight:800;letter-spacing:.04em;color:#fff}
+.live-pill{display:inline-flex;align-items:center;gap:5px;background:rgba(39,213,138,.12);color:#27d58a;border:1px solid rgba(39,213,138,.3);border-radius:20px;padding:3px 9px;font-size:11px;font-weight:700}
+.live-dot{width:6px;height:6px;border-radius:50%;background:#27d58a;animation:pulse 2.2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.stamp{font-size:11.5px;color:#8a93a6;text-align:right;line-height:1.6}
+.stamp b{color:#c8cedb}
+
+/* Questions card */
+.q-card{background:var(--amber-bg);border:1px solid var(--amber-line);border-radius:14px;padding:0;margin:22px 0;overflow:hidden}
+.q-head{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;cursor:pointer;user-select:none;gap:12px}
+.q-head-left{display:flex;align-items:center;gap:10px}
+.q-icon{font-size:18px}
+.q-label{font-size:13.5px;font-weight:800;color:var(--amber)}
+.q-sub{font-size:12px;color:#92400e;margin-left:4px}
+.q-toggle{font-size:18px;color:var(--amber);transition:.2s;flex:0 0 auto}
+.q-toggle.open{transform:rotate(180deg)}
+.q-body{padding:0 18px 16px;display:none}
+.q-body.open{display:block}
+.q-body p{font-size:13px;color:#78350f;margin-bottom:12px;line-height:1.55}
+.q-list{list-style:none;display:flex;flex-direction:column;gap:9px}
+.q-list li{display:flex;gap:10px;font-size:13px;color:#92400e;line-height:1.5}
+.q-num{flex:0 0 22px;font-weight:800;color:var(--amber)}
+.q-list strong{color:#78350f}
+
+/* KPI row */
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:22px 0}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;box-shadow:var(--shadow)}
+.kpi-l{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.kpi-v{font-size:28px;font-weight:900;color:var(--space);margin-top:6px;font-variant-numeric:tabular-nums;line-height:1}
+.kpi-s{font-size:12px;color:var(--muted);margin-top:4px}
+
+/* Grid layouts */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.grid-32{display:grid;grid-template-columns:2fr 1.1fr;gap:16px;margin-bottom:16px}
+
+/* Cards */
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow)}
+.card-h{padding:15px 18px 0;display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+.card-h h2{font-size:13px;font-weight:800;color:var(--space)}
+.card-h .hint{font-size:11.5px;color:var(--muted)}
+.card-b{padding:14px 18px 18px}
+.chart-box{height:240px;position:relative}
+
+/* Stage bars */
+.stage-rows{display:flex;flex-direction:column;gap:10px}
+.stage-row{display:flex;align-items:center;gap:10px}
+.stage-name{width:160px;font-size:12.5px;font-weight:700;color:var(--space);flex:0 0 auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stage-bar-wrap{flex:1;height:16px;background:var(--line-2);border-radius:5px;overflow:hidden}
+.stage-bar{height:100%;background:var(--blue);border-radius:5px;transition:.35s}
+.stage-meta{width:130px;text-align:right;flex:0 0 auto;font-size:12px;font-weight:700;color:var(--space);font-variant-numeric:tabular-nums}
+.stage-meta span{font-weight:400;color:var(--muted)}
+
+/* Month table */
+.month-table{width:100%;border-collapse:collapse;font-size:13px}
+.month-table th{text-align:left;padding:8px 10px;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700;border-bottom:1px solid var(--line);white-space:nowrap}
+.month-table th.r{text-align:right}
+.month-table td{padding:8px 10px;border-bottom:1px solid var(--line-2);font-variant-numeric:tabular-nums;vertical-align:middle}
+.month-table td.r{text-align:right;font-weight:700}
+.month-table td.muted{color:var(--muted)}
+.overdue{color:var(--bad);font-size:11px;font-weight:700;margin-left:5px}
+.bar-mini{display:inline-block;height:8px;border-radius:3px;background:var(--blue);vertical-align:middle;min-width:2px}
+
+/* Opps table */
+.tbl-wrap{overflow-x:auto}
+.search-row{display:flex;align-items:center;gap:12px;padding:14px 18px 0;flex-wrap:wrap}
+.search-row input{border:1px solid var(--line);border-radius:9px;padding:8px 12px;font:inherit;font-size:13.5px;min-width:220px;color:var(--ink);outline:none}
+.search-row input:focus{border-color:var(--blue)}
+.search-row select{border:1px solid var(--line);border-radius:9px;padding:8px 12px;font:inherit;font-size:13px;color:var(--ink);cursor:pointer;background:#fff}
+.opps-table{width:100%;border-collapse:collapse;font-size:13px}
+.opps-table th{position:sticky;top:0;background:#fff;text-align:left;padding:10px 14px;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700;border-bottom:1px solid var(--line);cursor:pointer;white-space:nowrap;z-index:1}
+.opps-table th.r{text-align:right}
+.opps-table th.active{color:var(--blue)}
+.opps-table td{padding:9px 14px;border-bottom:1px solid var(--line-2);vertical-align:middle;white-space:nowrap}
+.opps-table td.r{text-align:right;font-variant-numeric:tabular-nums}
+.opps-table tbody tr:hover{background:#f3f8fe;cursor:default}
+.opp-name{font-weight:700;color:var(--space);max-width:220px;overflow:hidden;text-overflow:ellipsis}
+.stage-badge{display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:700}
+.sb-fc{background:#dbeafe;color:#1d4ed8}
+.sb-psn{background:#ede9fe;color:#6d28d9}
+.sb-trial{background:#d1fae5;color:#065f46}
+.sb-dna{background:#fef3c7;color:#92400e}
+.sb-oi{background:#f3f4f6;color:#374151}
+.days-chip{font-size:11px;color:var(--muted)}
+.days-chip.old{color:var(--bad)}
+
+/* CW-style gap note */
+.gap-note{background:#f0f9ff;border:1px solid #bae6fd;border-radius:10px;padding:10px 14px;font-size:12.5px;color:#0369a1;margin-bottom:14px;line-height:1.55}
+.gap-note strong{color:#0c4a6e}
+
+/* Footer */
+.foot{margin-top:28px;padding-top:16px;border-top:1px solid var(--line);font-size:12px;color:var(--muted);line-height:1.8}
+.foot b{color:var(--space)}
+
+@media(max-width:900px){
+  .kpis{grid-template-columns:repeat(2,1fr)}
+  .grid-2,.grid-32{grid-template-columns:1fr}
+  .stage-name{width:120px}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="hd">
+    <div class="hd-left">
+      <a class="back" href="/">← All dashboards</a>
+      <div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <span class="htitle">Sales Pipeline</span>
+          <span class="live-pill"><span class="live-dot"></span>Live from CrateDB</span>
+        </div>
+        <div style="font-size:11px;color:#6b7488;margin-top:2px">New-business pipeline · automated · compare with <a href="/sales/" style="color:#8a93a6;text-decoration:underline">original sales dashboard</a></div>
+      </div>
+    </div>
+    <div class="stamp" id="stamp"></div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- Questions card -->
+  <div class="q-card" id="qcard">
+    <div class="q-head" onclick="toggleQ()">
+      <div class="q-head-left">
+        <span class="q-icon">❓</span>
+        <span class="q-label">Questions for the original dashboard creator</span>
+        <span class="q-sub">— 9 gaps to fill before this can fully replace the original</span>
+      </div>
+      <span class="q-toggle" id="qtoggle">▾</span>
+    </div>
+    <div class="q-body" id="qbody">
+      <p>This dashboard automates what's available in CrateDB. The following data doesn't exist in the database yet — the answers below will determine whether it can be added to the sync or needs a different approach.</p>
+      <ol class="q-list">
+        <li><span class="q-num">1</span><div><strong>Stage filter for new business</strong> — This dashboard filters to: <em>Opportunity Identified, Demo/Needs Analysis, Trial, Proposal Sent/Negotiating, Finalizing Contract</em>. Are these the correct stages for new business? Do any renewals appear in these stages?</div></li>
+        <li><span class="q-num">2</span><div><strong>Push count</strong> — The original shows how many times each deal's close date has been pushed. Is <code>pushCount</code> a Salesforce field, or is it computed by comparing daily close-date snapshots?</div></li>
+        <li><span class="q-num">3</span><div><strong>Next step</strong> — The original shows <code>nextStep</code> notes per deal. Is this the Salesforce standard <code>NextStep</code> field? If so, it can likely be added to the CrateDB sync.</div></li>
+        <li><span class="q-num">4</span><div><strong>Trial indicator</strong> — The original flags deals that have had a trial (<code>hasTrial</code>). Is this from stage progression history, from a platform trial table, or an explicit Salesforce field?</div></li>
+        <li><span class="q-num">5</span><div><strong>Effective start date</strong> — The original shows a contract start date separate from close date. Is this a custom Salesforce field (e.g. <code>Effective_Start_Date__c</code>)? Can it be added to the sync?</div></li>
+        <li><span class="q-num">6</span><div><strong>Opportunity scores</strong> — Each deal has a composite score (Trial=30pts, Stage momentum, ACV, Rep track record, Next step quality, Push penalty). Is this scoring run by Claude each day using a rubric, or a coded algorithm we could replicate here?</div></li>
+        <li><span class="q-num">7</span><div><strong>Quota data</strong> — The original shows YTD attainment vs quota per AE, SDR, and pod. Where does quota data live? Salesforce quota objects, a spreadsheet, or manually maintained?</div></li>
+        <li><span class="q-num">8</span><div><strong>SDR attribution</strong> — The original credits SDRs for sourcing closed-won deals. Is there an <code>Originator__r.Name</code> (or similar) field in Salesforce? Can it be added to the sync?</div></li>
+        <li><span class="q-num">9</span><div><strong>Delta tracking (PREV_RUN)</strong> — The original shows which deals moved, slipped, or disappeared since the last run. Is the previous-run state stored somewhere as a file, or does Claude rebuild it from context each time?</div></li>
+      </ol>
+    </div>
+  </div>
+
+  <!-- KPI row -->
+  <div class="kpis">
+    <div class="kpi">
+      <div class="kpi-l">CW YTD</div>
+      <div class="kpi-v" id="kpi-cw-ytd">—</div>
+      <div class="kpi-s" id="kpi-cw-ytd-s"></div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-l">Open Pipeline</div>
+      <div class="kpi-v" id="kpi-pipe">—</div>
+      <div class="kpi-s" id="kpi-pipe-s"></div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-l">Active Deals</div>
+      <div class="kpi-v" id="kpi-deals">—</div>
+      <div class="kpi-s" id="kpi-deals-s"></div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-l">CW This Month</div>
+      <div class="kpi-v" id="kpi-cw-mo">—</div>
+      <div class="kpi-s" id="kpi-cw-mo-s"></div>
+    </div>
+  </div>
+
+  <!-- Closed Won trend + Pipeline by stage -->
+  <div class="grid-32">
+    <div class="card">
+      <div class="card-h"><h2>Closed Won by Month</h2><span class="hint" id="cw-hint"></span></div>
+      <div class="card-b"><div class="chart-box"><canvas id="cwChart"></canvas></div></div>
+    </div>
+    <div class="card">
+      <div class="card-h"><h2>Open Pipeline by Stage</h2></div>
+      <div class="card-b">
+        <div class="gap-note" style="margin-bottom:16px">
+          <strong>Missing vs original:</strong> ACV here excludes deals with $0 ACV (early-stage/unpriced). Total count includes them.
+        </div>
+        <div class="stage-rows" id="stageRows"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pipeline by close month -->
+  <div class="card" style="margin-bottom:16px">
+    <div class="card-h"><h2>Open Pipeline by Close Month</h2><span class="hint" id="pipe-hint"></span></div>
+    <div class="card-b">
+      <div class="tbl-wrap">
+        <table class="month-table" id="monthTable">
+          <thead><tr>
+            <th>Month</th>
+            <th class="r">ACV</th>
+            <th class="r">Deals</th>
+            <th style="width:40%">Mix</th>
+          </tr></thead>
+          <tbody id="monthBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Open opportunities table -->
+  <div class="card" style="margin-bottom:16px">
+    <div class="card-h"><h2>Open Opportunities</h2><span class="hint" id="opps-hint"></span></div>
+    <div class="search-row">
+      <input id="searchQ" type="search" placeholder="Search name or owner…" oninput="renderOpps()"/>
+      <select id="stageFilter" onchange="renderOpps()">
+        <option value="">All stages</option>
+        <option>Opportunity Identified</option>
+        <option>Demo/Needs Analysis</option>
+        <option>Trial</option>
+        <option>Proposal Sent/Negotiating</option>
+        <option>Finalizing Contract</option>
+      </select>
+    </div>
+    <div class="tbl-wrap" style="max-height:520px;overflow-y:auto">
+      <table class="opps-table">
+        <thead><tr>
+          <th onclick="sortOpps('name')">Opportunity</th>
+          <th onclick="sortOpps('stage')">Stage</th>
+          <th class="r" onclick="sortOpps('acv')">ACV</th>
+          <th onclick="sortOpps('closeDate')">Close date</th>
+          <th onclick="sortOpps('owner')">Owner</th>
+          <th onclick="sortOpps('dsc')">Days in stage</th>
+          <th>Lead source</th>
+        </tr></thead>
+        <tbody id="oppsBody"></tbody>
+      </table>
+    </div>
+    <div style="padding:10px 18px;font-size:12px;color:var(--muted)" id="opps-count"></div>
+  </div>
+
+  <!-- Gaps note -->
+  <div class="gap-note" style="margin-bottom:0">
+    <strong>What's missing vs the original sales dashboard:</strong> Rep/SDR/pod quota attainment, opportunity scores, push counts, next step notes, trial indicator, effective start dates, and delta reasons (what moved since last run). See the questions card above for what's needed to add each of these.
+  </div>
+
+  <div class="foot">
+    <b>Source:</b> <code>analytics.salesforceopportunity</code> in CrateDB ·
+    <b>Stages:</b> Opportunity Identified, Demo/Needs Analysis, Trial, Proposal Sent/Negotiating, Finalizing Contract ·
+    <b>CW history:</b> 2 years · Refresh: run <code>node _pipeline/refresh.mjs sales2 --no-narrative</code>
+  </div>
+
+</div>
+
+<script>
+const D = window.GS_SALES;
+
+// ---- Utilities ----------------------------------------------------------
+function fmt$(n){ if(!n) return '$0'; if(n>=1e6) return '$'+(n/1e6).toFixed(1)+'M'; if(n>=1e3) return '$'+(n/1e3).toFixed(0)+'K'; return '$'+n.toLocaleString(); }
+function fmt$full(n){ return '$'+(Math.round(n)||0).toLocaleString(); }
+function fmtDate(s){ if(!s) return '—'; const [y,m,d]=s.split('-'); const mo=['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']; return mo[+m]+' '+d+', '+y; }
+function monthLabel(key){ const [y,m]=key.split('-'); const mo=['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']; return mo[+m]+' '+y.slice(2); }
+
+// ---- Stamp --------------------------------------------------------------
+document.getElementById('stamp').innerHTML =
+  'Generated <b>'+D.meta.generatedAt+'</b>';
+
+// ---- Questions toggle ---------------------------------------------------
+function toggleQ(){
+  const b=document.getElementById('qbody'), t=document.getElementById('qtoggle');
+  b.classList.toggle('open'); t.classList.toggle('open');
+}
+
+// ---- KPIs ---------------------------------------------------------------
+const K = D.kpis;
+document.getElementById('kpi-cw-ytd').textContent = fmt$(K.cwYtdAcv);
+document.getElementById('kpi-cw-ytd-s').textContent = K.cwYtdDeals+' deals closed this year';
+document.getElementById('kpi-pipe').textContent = fmt$(K.openPipelineAcv);
+document.getElementById('kpi-pipe-s').textContent = K.activeDeals+' open deals';
+document.getElementById('kpi-deals').textContent = K.activeDeals.toLocaleString();
+document.getElementById('kpi-deals-s').textContent = 'across 5 pipeline stages';
+document.getElementById('kpi-cw-mo').textContent = fmt$(K.cwThisMonthAcv);
+document.getElementById('kpi-cw-mo-s').textContent = K.cwThisMonthDeals+' deals this month';
+
+// ---- CW trend chart -----------------------------------------------------
+(function(){
+  const keys = Object.keys(D.histCw).sort();
+  const labels = keys.map(monthLabel);
+  const vals   = keys.map(k => D.histCw[k].acv);
+  const today  = D.meta.today.slice(0,7);
+  const colors = keys.map(k => k >= today ? 'rgba(0,118,222,0.35)' : 'rgba(0,118,222,0.8)');
+  document.getElementById('cw-hint').textContent = keys.length+' months';
+  new Chart(document.getElementById('cwChart'),{
+    type:'bar',
+    data:{ labels, datasets:[{ data:vals, backgroundColor:colors, borderRadius:5, barThickness:18 }] },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{display:false}, tooltip:{
+        backgroundColor:'#0B0F17', borderColor:'#232C42', borderWidth:1,
+        padding:10, cornerRadius:7,
+        callbacks:{ label: ctx => ' '+fmt$full(ctx.raw), title: i => i[0].label }
+      }},
+      scales:{
+        x:{ grid:{display:false}, ticks:{ color:'#71788A', font:{size:11} } },
+        y:{ grid:{ color:'rgba(0,0,0,0.04)' }, ticks:{ color:'#71788A', font:{size:11}, callback: v => fmt$(v) }, border:{display:false} }
+      }
+    }
+  });
+})();
+
+// ---- Stage bars ---------------------------------------------------------
+(function(){
+  const STAGE_ORDER = ['Finalizing Contract','Proposal Sent/Negotiating','Trial','Demo/Needs Analysis','Opportunity Identified'];
+  const maxAcv = Math.max(...STAGE_ORDER.map(s => D.byStage[s]?.acv||0), 1);
+  const el = document.getElementById('stageRows');
+  for(const s of STAGE_ORDER){
+    const d = D.byStage[s] || {acv:0,cnt:0};
+    const pct = d.acv / maxAcv * 100;
+    el.innerHTML += `<div class="stage-row">
+      <div class="stage-name" title="${s}">${s}</div>
+      <div class="stage-bar-wrap"><div class="stage-bar" style="width:${pct}%"></div></div>
+      <div class="stage-meta">${fmt$(d.acv)} <span>(${d.cnt})</span></div>
+    </div>`;
+  }
+})();
+
+// ---- Pipeline by month table -------------------------------------------
+(function(){
+  const today = D.meta.today.slice(0,7);
+  const months = Object.keys(D.byMonth).sort();
+  const maxAcv = Math.max(...months.map(m => D.byMonth[m].acv), 1);
+  const tbody = document.getElementById('monthBody');
+  let html='';
+  for(const m of months){
+    const v = D.byMonth[m];
+    const isPast = m < today;
+    const w = Math.round(v.acv/maxAcv*100);
+    html+=`<tr>
+      <td>${monthLabel(m)}${isPast?'<span class="overdue">overdue</span>':''}</td>
+      <td class="r">${fmt$full(v.acv)}</td>
+      <td class="r muted">${v.cnt}</td>
+      <td><span class="bar-mini" style="width:${w}%"></span></td>
+    </tr>`;
+  }
+  tbody.innerHTML = html || '<tr><td colspan="4" style="color:var(--muted);padding:16px 0">No open pipeline data</td></tr>';
+  document.getElementById('pipe-hint').textContent = months.length+' months';
+})();
+
+// ---- Opps table ---------------------------------------------------------
+const STAGE_CLASS = {
+  'Finalizing Contract':'sb-fc',
+  'Proposal Sent/Negotiating':'sb-psn',
+  'Trial':'sb-trial',
+  'Demo/Needs Analysis':'sb-dna',
+  'Opportunity Identified':'sb-oi',
+};
+let sortKey='closeDate', sortDir=1;
+
+function sortOpps(key){
+  if(sortKey===key) sortDir*=-1; else { sortKey=key; sortDir=1; }
+  document.querySelectorAll('.opps-table th').forEach(th=>th.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+  renderOpps();
+}
+
+function renderOpps(){
+  const q=(document.getElementById('searchQ').value||'').toLowerCase();
+  const sf=document.getElementById('stageFilter').value;
+  let rows=D.opps.filter(o=>{
+    if(sf && o.stage!==sf) return false;
+    if(q && !o.name.toLowerCase().includes(q) && !o.owner.toLowerCase().includes(q)) return false;
+    return true;
+  });
+  rows.sort((a,b)=>{
+    let va=a[sortKey]??'', vb=b[sortKey]??'';
+    if(sortKey==='dsc'){va=a.daysSinceStageChange??999;vb=b.daysSinceStageChange??999;}
+    if(sortKey==='acv'){va=a.acv;vb=b.acv;}
+    if(va<vb) return -sortDir; if(va>vb) return sortDir; return 0;
+  });
+  const tbody=document.getElementById('oppsBody');
+  if(!rows.length){ tbody.innerHTML='<tr><td colspan="7" style="color:var(--muted);padding:20px 14px">No results</td></tr>'; document.getElementById('opps-count').textContent=''; return; }
+  tbody.innerHTML=rows.map(o=>{
+    const dsc=o.daysSinceStageChange;
+    const dscHtml=dsc==null?'—':`<span class="days-chip${dsc>60?' old':''}">${dsc}d</span>`;
+    const today=D.meta.today;
+    const overdue=o.closeDate&&o.closeDate<today?' <span style="color:var(--bad);font-size:10px;font-weight:700">past</span>':'';
+    return`<tr>
+      <td><div class="opp-name" title="${o.name}">${o.name||'—'}</div></td>
+      <td><span class="stage-badge ${STAGE_CLASS[o.stage]||'sb-oi'}">${o.stage}</span></td>
+      <td class="r">${o.acv?fmt$full(o.acv):'<span style="color:var(--muted)">$0</span>'}</td>
+      <td>${fmtDate(o.closeDate)}${overdue}</td>
+      <td>${o.owner||'—'}</td>
+      <td>${dscHtml}</td>
+      <td style="color:var(--muted)">${o.leadSource||'—'}</td>
+    </tr>`;
+  }).join('');
+  document.getElementById('opps-hint').textContent=rows.length+' of '+D.opps.length+' deals';
+  document.getElementById('opps-count').textContent=rows.length+' deals shown · '+D.opps.length+' total open';
+}
+renderOpps();
+</script>
+</body>
+</html>
