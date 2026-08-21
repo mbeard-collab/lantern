@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Slack App — Adoption &amp; Usage | GovSpend</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --blue:#0076DE; --deep:#303650; --xanth:#FFC44D;
+  --blue-soft:#E6F1FC; --blue-mid:#66AFEA; --deep-60:#7A7F94; --deep-30:#C3C6D2;
+  --line:#E3E5EC; --bg:#F6F7FA; --card:#FFFFFF; --ok:#1F9D6B; --warn:#D9822B; --bad:#C4453C;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Lato',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  background:var(--bg);color:var(--deep);line-height:1.5;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1180px;margin:0 auto;padding:0 24px 72px}
+
+/* ── header ─────────────────────────────── */
+header{background:var(--deep);color:#fff;padding:34px 0 30px;margin-bottom:28px}
+header .wrap{padding-bottom:0}
+.eyebrow{font-size:11px;letter-spacing:.16em;text-transform:uppercase;
+  font-weight:700;color:var(--xanth);margin-bottom:9px}
+h1{font-size:32px;font-weight:900;letter-spacing:-.4px;line-height:1.15}
+.sub{color:#B9BDCC;font-size:14px;margin-top:8px;font-weight:300}
+.sub b{color:#fff;font-weight:700}
+.scope{display:inline-block;margin-top:14px;font-size:11.5px;font-weight:700;
+  letter-spacing:.05em;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.22);
+  padding:5px 11px;border-radius:3px;color:#E4E6EE}
+
+/* ── section chrome ─────────────────────── */
+section{margin-bottom:40px}
+.shead{display:flex;align-items:baseline;gap:12px;margin-bottom:4px;
+  border-bottom:2px solid var(--deep);padding-bottom:8px}
+.snum{font-size:11px;font-weight:900;color:var(--blue);letter-spacing:.1em}
+h2{font-size:19px;font-weight:900;letter-spacing:-.2px}
+.sdek{font-size:13.5px;color:var(--deep-60);margin:10px 0 18px;max-width:74ch;font-weight:300}
+
+/* ── kpi ────────────────────────────────── */
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:36px}
+@media (max-width:900px){.kpis{grid-template-columns:repeat(2,1fr)}}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:5px;padding:15px 16px;
+  border-top:3px solid var(--blue)}
+.kpi.alt{border-top-color:var(--xanth)}
+.kpi .lab{font-size:10.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--deep-60);margin-bottom:7px}
+.kpi .val{font-size:29px;font-weight:900;letter-spacing:-1px;line-height:1}
+.kpi .note{font-size:11.5px;color:var(--deep-60);margin-top:6px;font-weight:400}
+.kpi .note b{color:var(--deep);font-weight:700}
+
+/* ── cards ──────────────────────────────── */
+.card{background:var(--card);border:1px solid var(--line);border-radius:5px;padding:20px 22px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.ctitle{font-size:12px;font-weight:900;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--deep);margin-bottom:16px}
+
+/* ── funnel ─────────────────────────────── */
+.fstep{margin-bottom:15px}
+.frow{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px}
+.flab{font-size:13px;font-weight:700}
+.flab span{font-weight:400;color:var(--deep-60);font-size:12px}
+.fval{font-size:14px;font-weight:900;font-variant-numeric:tabular-nums}
+.fbar{height:26px;background:#EDEFF4;border-radius:3px;overflow:hidden}
+.fbar i{display:block;height:100%;background:var(--blue);border-radius:3px;
+  transition:width .8s cubic-bezier(.2,.7,.3,1)}
+.fbar i.s2{background:var(--blue-mid)}
+.fbar i.s3{background:var(--xanth)}
+.fdrop{font-size:11.5px;color:var(--bad);font-weight:700;margin-top:4px}
+.fdrop.none{color:var(--ok)}
+
+/* ── charts ─────────────────────────────── */
+.chartbox{background:var(--card);border:1px solid var(--line);border-radius:5px;padding:20px 22px 12px}
+svg{display:block;width:100%;height:auto;overflow:visible}
+.gl{stroke:var(--line);stroke-width:1}
+.ax{font-size:10px;fill:var(--deep-60);font-weight:700}
+.toggle{display:inline-flex;border:1px solid var(--line);border-radius:4px;overflow:hidden}
+.toggle button{font-family:inherit;font-size:11.5px;font-weight:700;letter-spacing:.05em;
+  padding:6px 15px;border:0;background:#fff;color:var(--deep-60);cursor:pointer}
+.toggle button[aria-pressed="true"]{background:var(--blue);color:#fff}
+.toggle button:focus-visible{outline:2px solid var(--xanth);outline-offset:-2px}
+.chead{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;
+  flex-wrap:wrap;gap:12px}
+.legend{display:flex;gap:16px;font-size:11.5px;color:var(--deep-60);font-weight:700}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:2px;margin-right:5px;
+  vertical-align:-1px}
+
+/* ── tables ─────────────────────────────── */
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;font-size:10.5px;font-weight:900;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--deep-60);padding:0 10px 9px;border-bottom:2px solid var(--line);white-space:nowrap}
+th.n,td.n{text-align:right;font-variant-numeric:tabular-nums}
+th.sortable{cursor:pointer;user-select:none}
+th.sortable:hover{color:var(--blue)}
+th.sortable[data-dir]::after{content:"▾";margin-left:4px;color:var(--blue)}
+th.sortable[data-dir="asc"]::after{content:"▴"}
+td{padding:10px;border-bottom:1px solid var(--line)}
+tbody tr:hover{background:var(--blue-soft)}
+.oname{font-weight:700}
+.pill{display:inline-block;font-size:10px;font-weight:900;letter-spacing:.05em;
+  padding:2px 7px;border-radius:9px;text-transform:uppercase}
+.pill.rep{background:#E4F5EE;color:var(--ok)}
+.pill.one{background:#FBEEE2;color:var(--warn)}
+.pill.cold{background:#F6E7E6;color:var(--bad)}
+.minibar{height:6px;background:#EDEFF4;border-radius:3px;min-width:52px}
+.minibar i{display:block;height:100%;background:var(--blue);border-radius:3px}
+
+/* ── stalled ────────────────────────────── */
+.stalled{border-top:3px solid var(--xanth)}
+.slist{display:grid;grid-template-columns:repeat(auto-fill,minmax(228px,1fr));gap:10px}
+.sitem{border:1px solid var(--line);border-radius:4px;padding:12px 14px;background:#FFFDF7}
+.sitem .nm{font-weight:700;font-size:13.5px;margin-bottom:4px}
+.sitem .mt{font-size:11.5px;color:var(--deep-60)}
+.sitem .mt b{color:var(--warn);font-weight:900}
+
+/* ── tools ──────────────────────────────── */
+.trow{display:grid;grid-template-columns:212px 1fr 74px;gap:16px;align-items:center;
+  padding:8px 0;border-bottom:1px solid var(--line)}
+.trow:last-child{border-bottom:0}
+.tname{font-size:12px;font-weight:700;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+  overflow-wrap:anywhere;line-height:1.3}
+.tfeat{font-size:10px;color:var(--deep-60);font-weight:700;letter-spacing:.05em;
+  text-transform:uppercase;display:block;margin-top:2px;font-family:'Lato',sans-serif}
+.tbar{height:20px;background:#EDEFF4;border-radius:3px;position:relative}
+.tbar i{display:block;height:100%;background:var(--blue);border-radius:3px}
+.tbar i.util{background:var(--deep-30)}
+.tmeta{font-size:11.5px;color:var(--deep-60);text-align:right;font-variant-numeric:tabular-nums}
+.tmeta b{color:var(--deep);font-weight:900;font-size:13px}
+
+/* ── notes ──────────────────────────────── */
+.notes{background:#FFFDF7;border:1px solid #F0E2BE;border-left:3px solid var(--xanth);
+  border-radius:4px;padding:16px 20px;font-size:12.5px;color:#5C5F70}
+.notes h3{font-size:11px;font-weight:900;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--deep);margin-bottom:9px}
+.notes li{margin:0 0 7px 17px}
+.notes code{font-family:ui-monospace,Menlo,monospace;background:#F2F1EA;padding:1px 4px;
+  border-radius:3px;font-size:11.5px}
+footer{margin-top:36px;padding-top:16px;border-top:1px solid var(--line);
+  font-size:11.5px;color:var(--deep-60);display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
+
+@media (max-width:820px){
+  .grid2{grid-template-columns:1fr}
+  h1{font-size:25px}
+  .trow{grid-template-columns:140px 1fr 62px}
+  .tbl-scroll{overflow-x:auto}
+  table{min-width:660px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <div class="eyebrow">GovSpend · Product Analytics</div>
+    <h1>Slack App — Adoption &amp; Usage</h1>
+    <div class="sub">Since launch · <b>May 29 – Aug 21, 2026</b> · first tool call <b>Jul 1</b></div>
+    <div class="scope">External accounts only — GovSpend internal &amp; QA excluded</div>
+  </div>
+</header>
+
+<div class="wrap">
+
+<div class="kpis" id="kpis"></div>
+
+<!-- 1 · FUNNEL -->
+<section>
+  <div class="shead"><span class="snum">01</span><h2>Is it getting adopted?</h2></div>
+  <p class="sdek">Two funnels run in parallel: a workspace installs the app, then individual users
+  link their GovSpend account to their Slack identity. Either one can stall independently —
+  a workspace with linked users and no calls is a different problem than one with no links at all.</p>
+  <div class="grid2">
+    <div class="card"><div class="ctitle">Account funnel</div><div id="funnelOrg"></div></div>
+    <div class="card"><div class="ctitle">User funnel</div><div id="funnelUser"></div></div>
+  </div>
+  <div style="height:16px"></div>
+  <div class="chartbox">
+    <div class="chead">
+      <div class="ctitle" style="margin:0">Installs vs. activated accounts</div>
+      <div class="legend">
+        <span><i style="background:var(--deep-30)"></i>Installed</span>
+        <span><i style="background:var(--blue)"></i>Made ≥1 call</span>
+      </div>
+    </div>
+    <div id="cumChart"></div>
+  </div>
+</section>
+
+<!-- 2 · STALLED -->
+<section>
+  <div class="shead"><span class="snum">02</span><h2>Installed, never used</h2></div>
+  <p class="sdek">These workspaces completed install and linked at least one user, but no one has
+  run a single tool. This is the shortest path to lifting the activation rate.</p>
+  <div class="card stalled">
+    <div class="ctitle">Stalled installs</div>
+    <div class="slist" id="stalled"></div>
+  </div>
+</section>
+
+<!-- 3 · TIMELINE -->
+<section>
+  <div class="shead"><span class="snum">03</span><h2>Usage over time</h2></div>
+  <p class="sdek">Volume is still small enough that single power-user sessions move the daily line.
+  Weekly is the more honest read of the trend; daily is there to spot the spikes and who caused them.</p>
+  <div class="chartbox">
+    <div class="chead">
+      <div class="toggle" role="group" aria-label="Time granularity">
+        <button id="btnWeek" aria-pressed="true">Weekly</button>
+        <button id="btnDay" aria-pressed="false">Daily</button>
+      </div>
+      <div class="legend">
+        <span><i style="background:var(--blue)"></i>Tool calls</span>
+        <span><i style="background:var(--bad)"></i>Failed</span>
+        <span><i style="background:var(--xanth);border-radius:50%"></i>Active users</span>
+      </div>
+    </div>
+    <div id="tsChart"></div>
+  </div>
+</section>
+
+<!-- 4 · ACCOUNTS -->
+<section>
+  <div class="shead"><span class="snum">04</span><h2>Which accounts are on it?</h2></div>
+  <p class="sdek">Sorted by call volume. <b>Seats</b> compares users who have actually run a tool
+  against users who linked their account — the gap inside an already-active workspace.
+  Click any column header to re-sort.</p>
+  <div class="card">
+    <div class="tbl-scroll">
+      <table id="orgTable">
+        <thead><tr>
+          <th class="sortable" data-k="name">Account</th>
+          <th class="n sortable" data-k="calls">Calls</th>
+          <th class="n sortable" data-k="users">Seats used</th>
+          <th class="n sortable" data-k="activeDays">Active days</th>
+          <th class="n sortable" data-k="records">Records</th>
+          <th class="sortable" data-k="first">First call</th>
+          <th class="n sortable" data-k="daysSince">Days idle</th>
+          <th>Pattern</th>
+        </tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- 5 · TOOLS -->
+<section>
+  <div class="shead"><span class="snum">05</span><h2>What are they doing in it?</h2></div>
+  <p class="sdek">Bar length is call volume; the right column is how many distinct accounts reached
+  for that tool. A tool with high volume but low reach is one account's habit, not a product signal.</p>
+  <div class="card">
+    <div class="ctitle">Tool calls &amp; account reach</div>
+    <div id="tools"></div>
+  </div>
+</section>
+
+<!-- 6 · NOTES -->
+<section>
+  <div class="shead"><span class="snum">06</span><h2>How this is built</h2></div>
+  <div class="notes" id="notes"></div>
+</section>
+
+<footer>
+  <span id="gen"></span>
+  <span>Source: <code style="background:#EDEFF4;padding:1px 5px;border-radius:3px">analytics.mcp_usage</code> ·
+  <code style="background:#EDEFF4;padding:1px 5px;border-radius:3px">doc.organization</code> ·
+  <code style="background:#EDEFF4;padding:1px 5px;border-radius:3px">doc.user</code></span>
+</footer>
+
+</div>
+
+<script>
+const DATA = {"meta":{"windowStart":"2026-05-23","windowEnd":"2026-08-21","launchDate":"2026-05-29","firstCall":"2026-07-01","generated":"2026-08-21 14:59 UTC","unattributedCalls":12,"internalCallsExcluded":74},"kpi":{"installs":37,"activeAccounts":29,"repeatAccounts":16,"linkedUsers":65,"activeUsers":46,"repeatUsers":21,"calls":368,"failed":6,"records":2639,"medianLag":0,"reauth":["PowerSchool","Laprea Education","Fleetio","Social News Desk"]},"cumulative":[{"date":"2026-05-29","installed":1,"activated":0},{"date":"2026-05-30","installed":1,"activated":0},{"date":"2026-05-31","installed":1,"activated":0},{"date":"2026-06-01","installed":1,"activated":0},{"date":"2026-06-02","installed":1,"activated":0},{"date":"2026-06-03","installed":1,"activated":0},{"date":"2026-06-04","installed":1,"activated":0},{"date":"2026-06-05","installed":1,"activated":0},{"date":"2026-06-06","installed":1,"activated":0},{"date":"2026-06-07","installed":1,"activated":0},{"date":"2026-06-08","installed":1,"activated":0},{"date":"2026-06-09","installed":1,"activated":0},{"date":"2026-06-10","installed":1,"activated":0},{"date":"2026-06-11","installed":1,"activated":0},{"date":"2026-06-12","installed":1,"activated":0},{"date":"2026-06-13","installed":1,"activated":0},{"date":"2026-06-14","installed":1,"activated":0},{"date":"2026-06-15","installed":1,"activated":0},{"date":"2026-06-16","installed":1,"activated":0},{"date":"2026-06-17","installed":1,"activated":0},{"date":"2026-06-18","installed":3,"activated":0},{"date":"2026-06-19","installed":3,"activated":0},{"date":"2026-06-20","installed":3,"activated":0},{"date":"2026-06-21","installed":3,"activated":0},{"date":"2026-06-22","installed":5,"activated":0},{"date":"2026-06-23","installed":6,"activated":0},{"date":"2026-06-24","installed":6,"activated":0},{"date":"2026-06-25","installed":7,"activated":0},{"date":"2026-06-26","installed":7,"activated":0},{"date":"2026-06-27","installed":7,"activated":0},{"date":"2026-06-28","installed":7,"activated":0},{"date":"2026-06-29","installed":9,"activated":0},{"date":"2026-06-30","installed":9,"activated":0},{"date":"2026-07-01","installed":10,"activated":3},{"date":"2026-07-02","installed":10,"activated":4},{"date":"2026-07-03","installed":10,"activated":4},{"date":"2026-07-04","installed":10,"activated":4},{"date":"2026-07-05","installed":10,"activated":4},{"date":"2026-07-06","installed":10,"activated":5},{"date":"2026-07-07","installed":10,"activated":7},{"date":"2026-07-08","installed":11,"activated":8},{"date":"2026-07-09","installed":11,"activated":8},{"date":"2026-07-10","installed":11,"activated":8},{"date":"2026-07-11","installed":11,"activated":8},{"date":"2026-07-12","installed":11,"activated":8},{"date":"2026-07-13","installed":12,"activated":9},{"date":"2026-07-14","installed":13,"activated":10},{"date":"2026-07-15","installed":13,"activated":10},{"date":"2026-07-16","installed":13,"activated":10},{"date":"2026-07-17","installed":14,"activated":11},{"date":"2026-07-18","installed":14,"activated":11},{"date":"2026-07-19","installed":14,"activated":11},{"date":"2026-07-20","installed":15,"activated":12},{"date":"2026-07-21","installed":16,"activated":12},{"date":"2026-07-22","installed":16,"activated":12},{"date":"2026-07-23","installed":17,"activated":14},{"date":"2026-07-24","installed":18,"activated":14},{"date":"2026-07-25","installed":18,"activated":14},{"date":"2026-07-26","installed":18,"activated":14},{"date":"2026-07-27","installed":21,"activated":16},{"date":"2026-07-28","installed":22,"activated":17},{"date":"2026-07-29","installed":22,"activated":17},{"date":"2026-07-30","installed":24,"activated":19},{"date":"2026-07-31","installed":24,"activated":19},{"date":"2026-08-01","installed":24,"activated":19},{"date":"2026-08-02","installed":24,"activated":19},{"date":"2026-08-03","installed":24,"activated":19},{"date":"2026-08-04","installed":25,"activated":20},{"date":"2026-08-05","installed":26,"activated":20},{"date":"2026-08-06","installed":29,"activated":22},{"date":"2026-08-07","installed":31,"activated":23},{"date":"2026-08-08","installed":31,"activated":23},{"date":"2026-08-09","installed":31,"activated":23},{"date":"2026-08-10","installed":34,"activated":27},{"date":"2026-08-11","installed":35,"activated":28},{"date":"2026-08-12","installed":35,"activated":28},{"date":"2026-08-13","installed":36,"activated":28},{"date":"2026-08-14","installed":36,"activated":28},{"date":"2026-08-15","installed":36,"activated":28},{"date":"2026-08-16","installed":36,"activated":28},{"date":"2026-08-17","installed":37,"activated":28},{"date":"2026-08-18","installed":37,"activated":29},{"date":"2026-08-19","installed":37,"activated":29},{"date":"2026-08-20","installed":37,"activated":29},{"date":"2026-08-21","installed":37,"activated":29}],"daily":[{"date":"2026-07-01","calls":17,"users":3,"orgs":3,"failed":0},{"date":"2026-07-02","calls":5,"users":1,"orgs":1,"failed":0},{"date":"2026-07-03","calls":0,"users":0,"orgs":0,"failed":0},{"date":"2026-07-04","calls":0,"users":0,"orgs":0,"failed":0},{"date":"2026-07-05","calls":0,"users":0,"orgs":0,"failed":0},{"date":"2026-07-06","calls":6,"users":2,"orgs":2,"failed":0},{"date":"2026-07-07","calls":6,"users":3,"orgs":3,"failed":0},{"date":"2026-07-08","calls":4,"users":2,"orgs":2,"failed":0},{"date":"2026-07-09","calls":7,"users":3,"orgs":2,"failed":0},{"date":"2026-07-10","calls":2,"users":2,"orgs":1,"failed":0},{"date":"2026-07-11","calls":0,"users":0,"orgs":0,"failed":0},{"date":"2026-07-12","calls":0,"users":0,"orgs":0,"failed":0},{"date":"2026-07-13","calls":9,"users":2,"orgs":2,"failed":0},{"date":"2026-07-14","calls":17,"users":4,"orgs":4,"failed":0},{"date":"2026-07-15","calls":2,"users":2,"orgs":2,"failed":0},{"date":"2026-07-16","calls":2,"users":1,"orgs":1,"failed":0},{"date":"2026-07-17","calls":5,"users":2,"orgs":2,"failed":0},{"date":"2026-07-18","calls":0,"users":0,"orgs":0,"failed":0},{"date":"2026-07-19","calls":0,"users":0,"orgs":0,"failed":0},{"date":"2026-07-20","calls":1,"users":1,"orgs":1,"failed":0},{"date":"2026-07-21","calls":0,"users":0,"orgs":0,"failed":0},{"date":"2026-07-22","calls":4,"users":2,"orgs":2,"failed":0},{"date":"2026-07-23","calls":11,"users":3,"orgs":3,"failed":0},{"date":"2026-07-24","calls":8,"users":2,"orgs":2,"failed":0},{"date":"2026-07-25","calls":1,"users":1,"orgs":1,"failed":0},{"date":"2026-07-26","calls":0,"users":0,"orgs":0,"failed":0},{"date":"2026-07-27","calls":4,"users":2,"orgs":2,"failed":0},{"date":"2026-07-28","calls":4,"users":3,"orgs":3,"failed":0},{"date":"2026-07-29","calls":3,"users":2,"orgs":2,"failed":0},{"date":"2026-07-30","calls":10,"users":4,"orgs":4,"failed":0},{"date":"2026-07-31","calls":29,"users":3,"orgs":3,"failed":1},{"date":"2026-08-01","calls":0,"users":0,"orgs":0,"failed":0},{"date":"2026-08-02","calls":0,"users":0,"orgs":0,"failed":0},{"date":"2026-08-03","calls":11,"users":2,"orgs":2,"failed":0},{"date":"2026-08-04","calls":3,"users":1,"orgs":1,"failed":0},{"date":"2026-08-05","calls":12,"users":4,"orgs":4,"failed":0},{"date":"2026-08-06","calls":11,"users":2,"orgs":2,"failed":0},{"date":"2026-08-07","calls":13,"users":4,"orgs":4,"failed":0},{"date":"2026-08-08","calls":0,"users":0,"orgs":0,"failed":0},{"date":"2026-08-09","calls":18,"users":1,"orgs":1,"failed":1},{"date":"2026-08-10","calls":14,"users":4,"orgs":4,"failed":1},{"date":"2026-08-11","calls":65,"users":7,"orgs":6,"failed":2},{"date":"2026-08-12","calls":13,"users":1,"orgs":1,"failed":1},{"date":"2026-08-13","calls":3,"users":1,"orgs":1,"failed":0},{"date":"2026-08-14","calls":4,"users":2,"orgs":1,"failed":0},{"date":"2026-08-15","calls":0,"users":0,"orgs":0,"failed":0},{"date":"2026-08-16","calls":8,"users":2,"orgs":2,"failed":0},{"date":"2026-08-17","calls":11,"users":2,"orgs":1,"failed":0},{"date":"2026-08-18","calls":9,"users":1,"orgs":1,"failed":0},{"date":"2026-08-19","calls":11,"users":1,"orgs":1,"failed":0},{"date":"2026-08-20","calls":5,"users":1,"orgs":1,"failed":0},{"date":"2026-08-21","calls":0,"users":0,"orgs":0,"failed":0}],"weekly":[{"date":"2026-06-29","calls":22,"users":4,"orgs":4,"failed":0},{"date":"2026-07-06","calls":25,"users":8,"orgs":6,"failed":0},{"date":"2026-07-13","calls":35,"users":9,"orgs":7,"failed":0},{"date":"2026-07-20","calls":25,"users":9,"orgs":7,"failed":0},{"date":"2026-07-27","calls":50,"users":13,"orgs":11,"failed":1},{"date":"2026-08-03","calls":68,"users":12,"orgs":12,"failed":1},{"date":"2026-08-10","calls":107,"users":14,"orgs":11,"failed":4},{"date":"2026-08-17","calls":36,"users":4,"orgs":3,"failed":0}],"orgs":[{"orgId":"58f930858f27370012fc0782","name":"PowerSchool","calls":56,"users":4,"linked":4,"activeDays":7,"first":"2026-07-30","last":"2026-08-16","failed":2,"records":402,"installed":"2026-08-07","lag":-8,"daysSince":5,"repeat":true},{"orgId":"6666fbcf553888f0702c718b","name":"Polimorphic","calls":45,"users":6,"linked":7,"activeDays":14,"first":"2026-07-02","last":"2026-08-20","failed":0,"records":108,"installed":"2026-06-18","lag":14,"daysSince":1,"repeat":true},{"orgId":"5cc83d4c9c569d001df6e72d","name":"NASPO ValuePoint","calls":38,"users":1,"linked":1,"activeDays":5,"first":"2026-07-06","last":"2026-08-11","failed":1,"records":72,"installed":"2026-06-29","lag":7,"daysSince":10,"repeat":true},{"orgId":"66ba666fb6c13ba54d2db925","name":"Senturo","calls":34,"users":1,"linked":1,"activeDays":4,"first":"2026-07-27","last":"2026-08-05","failed":1,"records":564,"installed":"2026-07-27","lag":0,"daysSince":16,"repeat":true},{"orgId":"57eda4ea7df1ee0009520899","name":"Securly","calls":21,"users":1,"linked":1,"activeDays":3,"first":"2026-08-06","last":"2026-08-16","failed":0,"records":86,"installed":"2026-08-06","lag":0,"daysSince":5,"repeat":true},{"orgId":"662fa87d48e47b96697a6255","name":"Avela","calls":18,"users":1,"linked":2,"activeDays":2,"first":"2026-07-07","last":"2026-08-11","failed":0,"records":46,"installed":"2026-06-18","lag":19,"daysSince":10,"repeat":true},{"orgId":"54d8d6a8fcde685800fa7fc1","name":"Botach Tactical","calls":17,"users":2,"linked":2,"activeDays":6,"first":"2026-07-08","last":"2026-07-22","failed":0,"records":217,"installed":"2026-07-08","lag":0,"daysSince":30,"repeat":true},{"orgId":"689f3bbde208101b6344d8cf","name":"Orlo","calls":17,"users":2,"linked":2,"activeDays":3,"first":"2026-08-10","last":"2026-08-17","failed":0,"records":106,"installed":"2026-08-10","lag":0,"daysSince":4,"repeat":true},{"orgId":"59cabe222bf42e001b870b02","name":"WeVideo","calls":15,"users":1,"linked":1,"activeDays":1,"first":"2026-08-11","last":"2026-08-11","failed":1,"records":147,"installed":"2026-08-11","lag":0,"daysSince":10,"repeat":false},{"orgId":"6969062fa605ccad88849fee","name":"S-Docs","calls":13,"users":1,"linked":1,"activeDays":1,"first":"2026-07-01","last":"2026-07-01","failed":0,"records":29,"installed":"2026-07-01","lag":0,"daysSince":51,"repeat":false},{"orgId":"68273c5d9a2276a37a9e79a6","name":"Laprea Education","calls":11,"users":2,"linked":2,"activeDays":6,"first":"2026-07-07","last":"2026-08-05","failed":0,"records":301,"installed":"2026-07-23","lag":-16,"daysSince":16,"repeat":true},{"orgId":"679a87996a76f8d7ea3443d1","name":"Citian","calls":11,"users":2,"linked":4,"activeDays":3,"first":"2026-07-23","last":"2026-07-31","failed":0,"records":70,"installed":"2026-06-22","lag":31,"daysSince":21,"repeat":true},{"orgId":"66425b80523a0627a0ce9c0d","name":"Carnegie Learning","calls":9,"users":1,"linked":1,"activeDays":1,"first":"2026-08-18","last":"2026-08-18","failed":0,"records":53,"installed":"2026-08-17","lag":1,"daysSince":3,"repeat":false},{"orgId":"66a14a004c2af748418df75b","name":"Fleetio","calls":8,"users":3,"linked":3,"activeDays":4,"first":"2026-07-23","last":"2026-08-07","failed":0,"records":82,"installed":"2026-08-07","lag":-15,"daysSince":14,"repeat":true},{"orgId":"5bf57c650c820f001ec8468e","name":"Critical Mention (Onclusive)","calls":8,"users":1,"linked":1,"activeDays":2,"first":"2026-07-30","last":"2026-08-07","failed":0,"records":21,"installed":"2026-07-30","lag":0,"daysSince":14,"repeat":true},{"orgId":"652944dd72eb19003150e0b7","name":"Zum Services","calls":7,"users":2,"linked":2,"activeDays":2,"first":"2026-07-27","last":"2026-08-14","failed":0,"records":51,"installed":"2026-07-27","lag":0,"daysSince":7,"repeat":true},{"orgId":"69d91b829d130456c08b751a","name":"AirDNA","calls":7,"users":1,"linked":1,"activeDays":1,"first":"2026-08-10","last":"2026-08-10","failed":1,"records":5,"installed":"2026-08-10","lag":0,"daysSince":11,"repeat":false},{"orgId":"66dee43dcb5b525f4182a196","name":"Lumana","calls":6,"users":1,"linked":1,"activeDays":1,"first":"2026-07-13","last":"2026-07-13","failed":0,"records":105,"installed":"2026-07-13","lag":0,"daysSince":39,"repeat":false},{"orgId":"6917a173d2dfe676f0f25dd8","name":"Circool","calls":5,"users":1,"linked":2,"activeDays":2,"first":"2026-07-01","last":"2026-07-06","failed":0,"records":13,"installed":"2026-06-25","lag":6,"daysSince":46,"repeat":true},{"orgId":"5b91a47c7813e8001a628d1f","name":"Ferguson Waterworks - MSMs","calls":4,"users":1,"linked":1,"activeDays":1,"first":"2026-07-17","last":"2026-07-17","failed":0,"records":4,"installed":"2026-07-17","lag":0,"daysSince":35,"repeat":false},{"orgId":"69a1b98c68d0c9f36ae0dad7","name":"Lounge","calls":3,"users":1,"linked":1,"activeDays":1,"first":"2026-08-10","last":"2026-08-10","failed":0,"records":50,"installed":"2026-08-10","lag":0,"daysSince":11,"repeat":false},{"orgId":"5f85b1791de8b100226751fb","name":"Learn21","calls":3,"users":1,"linked":1,"activeDays":1,"first":"2026-08-04","last":"2026-08-04","failed":0,"records":4,"installed":"2026-08-04","lag":0,"daysSince":17,"repeat":false},{"orgId":"6387da8550599e00309cfae4","name":"Sonicu","calls":3,"users":1,"linked":1,"activeDays":2,"first":"2026-07-14","last":"2026-07-28","failed":0,"records":20,"installed":"2026-06-23","lag":21,"daysSince":24,"repeat":true},{"orgId":"698b527261f104a71b5db33d","name":"Social News Desk","calls":3,"users":3,"linked":3,"activeDays":3,"first":"2026-07-01","last":"2026-08-05","failed":0,"records":28,"installed":"2026-07-30","lag":-29,"daysSince":16,"repeat":true},{"orgId":"67040711c4b405e417ada1b2","name":"Happy Numbers","calls":2,"users":1,"linked":6,"activeDays":1,"first":"2026-08-07","last":"2026-08-07","failed":0,"records":0,"installed":"2026-08-05","lag":2,"daysSince":14,"repeat":false},{"orgId":"6a0c5a962dbb43af3ff1cbe8","name":"Volt AI","calls":1,"users":1,"linked":1,"activeDays":1,"first":"2026-08-06","last":"2026-08-06","failed":0,"records":20,"installed":"2026-08-06","lag":0,"daysSince":15,"repeat":false},{"orgId":"5d656e9d0a24a1003e54b1eb","name":"Atlas Copco / Datalink Services","calls":1,"users":1,"linked":1,"activeDays":1,"first":"2026-07-20","last":"2026-07-20","failed":0,"records":10,"installed":"2026-07-20","lag":0,"daysSince":32,"repeat":false},{"orgId":"6865509878ece6f0915cc4d3","name":"SentiLink","calls":1,"users":1,"linked":1,"activeDays":1,"first":"2026-07-28","last":"2026-07-28","failed":0,"records":5,"installed":"2026-07-28","lag":0,"daysSince":24,"repeat":false},{"orgId":"67f8099be9c570f687d79794","name":"Marketplace.city","calls":1,"users":1,"linked":1,"activeDays":1,"first":"2026-08-10","last":"2026-08-10","failed":0,"records":20,"installed":"2026-07-21","lag":20,"daysSince":11,"repeat":false}],"stalled":[{"name":"Truescope","orgId":"63d062d4f3e6d20031448860","installed":"2026-05-29","linked":1,"daysSince":84},{"name":"Atmax Equipment","orgId":"6a393749785d5f8722d44450","installed":"2026-06-22","linked":1,"daysSince":60},{"name":"Wyrestorm Technologies","orgId":"69ea6c587ff6ceeec24a9bbd","installed":"2026-06-29","linked":1,"daysSince":53},{"name":"OCV","orgId":"667462176963c8a20bc38962","installed":"2026-07-14","linked":2,"daysSince":38},{"name":"Ambient AI","orgId":"67e4207f2348e341f442b1ca","installed":"2026-07-24","linked":1,"daysSince":28},{"name":"Coram AI","orgId":"6705815c1b44ab8af9f5fa97","installed":"2026-07-27","linked":1,"daysSince":25},{"name":"SchoolDog Solutions","orgId":"6a50e29573af9206d47f19e3","installed":"2026-08-06","linked":1,"daysSince":15},{"name":"Lightspeed Systems","orgId":"5a2acc13139fff000fdfd890","installed":"2026-08-13","linked":1,"daysSince":8}],"users":[{"org":"NASPO ValuePoint","email":"tcampbell@naspo.org","calls":38,"activeDays":5,"last":"2026-08-11","daysSince":10},{"org":"Senturo","email":"martinav@senturo.com","calls":34,"activeDays":4,"last":"2026-08-05","daysSince":16},{"org":"PowerSchool","email":"chad.dirks@powerschool.com","calls":32,"activeDays":4,"last":"2026-08-16","daysSince":5},{"org":"Securly","email":"rfp@securly.com","calls":21,"activeDays":3,"last":"2026-08-16","daysSince":5},{"org":"Polimorphic","email":"mlebeau@polimorphic.com","calls":19,"activeDays":3,"last":"2026-08-20","daysSince":1},{"org":"Avela","email":"jennifer@avela.org","calls":18,"activeDays":2,"last":"2026-08-11","daysSince":10},{"org":"PowerSchool","email":"namrata.khemchandani@powerschool.com","calls":15,"activeDays":2,"last":"2026-08-12","daysSince":9},{"org":"WeVideo","email":"patrickb@wevideo.com","calls":15,"activeDays":1,"last":"2026-08-11","daysSince":10},{"org":"S-Docs","email":"dquinlivan@sdocs.com","calls":13,"activeDays":1,"last":"2026-07-01","daysSince":51},{"org":"Polimorphic","email":"parth@polimorphic.com","calls":11,"activeDays":5,"last":"2026-08-03","daysSince":18},{"org":"Citian","email":"mglassman@citiansolutions.com","calls":10,"activeDays":2,"last":"2026-07-31","daysSince":21},{"org":"Botach Tactical","email":"samy@botach.com","calls":10,"activeDays":4,"last":"2026-07-22","daysSince":30},{"org":"Orlo","email":"maggie.stanford@orlo.tech","calls":10,"activeDays":3,"last":"2026-08-17","daysSince":4},{"org":"Carnegie Learning","email":"qobrien@carnegielearning.com","calls":9,"activeDays":1,"last":"2026-08-18","daysSince":3},{"org":"Critical Mention (Onclusive)","email":"andrea.geiger@onclusive.com","calls":8,"activeDays":2,"last":"2026-08-07","daysSince":14},{"org":"Botach Tactical","email":"chushim@botach.com","calls":7,"activeDays":2,"last":"2026-07-09","daysSince":43},{"org":"AirDNA","email":"leonardo.borrero@airdna.co","calls":7,"activeDays":1,"last":"2026-08-10","daysSince":11},{"org":"Orlo","email":"michael.corey@orlo.tech","calls":7,"activeDays":1,"last":"2026-08-17","daysSince":4},{"org":"Laprea Education","email":"zoe@structuredliteracy.com","calls":6,"activeDays":4,"last":"2026-07-30","daysSince":22},{"org":"Lumana","email":"ziv.serphos@lumama.ai","calls":6,"activeDays":1,"last":"2026-07-13","daysSince":39},{"org":"Polimorphic","email":"mkhan@polimorphic.com","calls":6,"activeDays":3,"last":"2026-07-29","daysSince":23},{"org":"Laprea Education","email":"danyaal@structuredliteracy.com","calls":5,"activeDays":2,"last":"2026-08-05","daysSince":16},{"org":"Polimorphic","email":"bbusching@polimorphic.com","calls":5,"activeDays":3,"last":"2026-08-11","daysSince":10},{"org":"Circool","email":"jeff.colegrove@circool.com","calls":5,"activeDays":2,"last":"2026-07-06","daysSince":46},{"org":"Zum Services","email":"pkumar@ridezum.com","calls":5,"activeDays":2,"last":"2026-08-14","daysSince":7},{"org":"PowerSchool","email":"kellie.ady@powerschool.com","calls":5,"activeDays":1,"last":"2026-08-11","daysSince":10},{"org":"Fleetio","email":"jpassanisi@fleetio.com","calls":4,"activeDays":2,"last":"2026-07-29","daysSince":23},{"org":"Ferguson Waterworks - MSMs","email":"brian.luff@ferguson.com","calls":4,"activeDays":1,"last":"2026-07-17","daysSince":35},{"org":"PowerSchool","email":"luk.lavery@powerschool.com","calls":4,"activeDays":1,"last":"2026-07-30","daysSince":22},{"org":"Polimorphic","email":"nav@polimorphic.com","calls":3,"activeDays":1,"last":"2026-07-13","daysSince":39},{"org":"Sonicu","email":"jfoster@sonicu.com","calls":3,"activeDays":2,"last":"2026-07-28","daysSince":24},{"org":"Lounge","email":"jack@lounge.live","calls":3,"activeDays":1,"last":"2026-08-10","daysSince":11},{"org":"Learn21","email":"wbabler@learn21.org","calls":3,"activeDays":1,"last":"2026-08-04","daysSince":17},{"org":"Fleetio","email":"ahradecky@fleetio.com","calls":3,"activeDays":1,"last":"2026-07-24","daysSince":28},{"org":"Zum Services","email":"jdentico@ridezum.com","calls":2,"activeDays":1,"last":"2026-08-14","daysSince":7},{"org":"Happy Numbers","email":"daria.l@happynumbers.com","calls":2,"activeDays":1,"last":"2026-08-07","daysSince":14},{"org":"Social News Desk","email":"dcastle@socialnewsdesk.com","calls":1,"activeDays":1,"last":"2026-08-05","daysSince":16},{"org":"Polimorphic","email":"nbeidel@polimorphic.com","calls":1,"activeDays":1,"last":"2026-07-28","daysSince":24},{"org":"Social News Desk","email":"jloveless@socialnewsdesk.com","calls":1,"activeDays":1,"last":"2026-07-30","daysSince":22},{"org":"Marketplace.city","email":"chris@marketplace.city","calls":1,"activeDays":1,"last":"2026-08-10","daysSince":11},{"org":"SentiLink","email":"luke.wolf@sentilink.com","calls":1,"activeDays":1,"last":"2026-07-28","daysSince":24},{"org":"Fleetio","email":"mcooper@fleetio.com","calls":1,"activeDays":1,"last":"2026-08-07","daysSince":14},{"org":"Atlas Copco / Datalink Services","email":"clefebvre@datalinkservices.com","calls":1,"activeDays":1,"last":"2026-07-20","daysSince":32},{"org":"Citian","email":"jdomenico@citiansolutions.com","calls":1,"activeDays":1,"last":"2026-07-25","daysSince":27},{"org":"Social News Desk","email":"abrooks@socialnewsdesk.com","calls":1,"activeDays":1,"last":"2026-07-01","daysSince":51},{"org":"Volt AI","email":"shannon.johlic@volt.ai","calls":1,"activeDays":1,"last":"2026-08-06","daysSince":15}],"tools":[{"feature":"spending","tool":"search_spending","calls":94,"users":25,"orgs":17,"avgMs":498,"failed":0},{"feature":"contracts","tool":"search_contracts","calls":81,"users":21,"orgs":15,"avgMs":763,"failed":0},{"feature":"spending","tool":"analytics_spending","calls":54,"users":8,"orgs":7,"avgMs":637,"failed":4},{"feature":"bids","tool":"search_bids","calls":51,"users":17,"orgs":13,"avgMs":237,"failed":0},{"feature":"utilities","tool":"get_tool_instructions","calls":36,"users":14,"orgs":9,"avgMs":10,"failed":0},{"feature":"contacts","tool":"search_contacts","calls":13,"users":2,"orgs":2,"avgMs":458,"failed":0},{"feature":"utilities","tool":"search_documents","calls":11,"users":1,"orgs":1,"avgMs":352,"failed":0},{"feature":"utilities","tool":"lookup_agency","calls":9,"users":6,"orgs":6,"avgMs":443,"failed":0},{"feature":"contracts","tool":"analytics_contracts","calls":8,"users":2,"orgs":2,"avgMs":208,"failed":1},{"feature":"meetings","tool":"search_meetings","calls":6,"users":2,"orgs":2,"avgMs":231,"failed":1},{"feature":"utilities","tool":"get_result","calls":2,"users":1,"orgs":1,"avgMs":13,"failed":0},{"feature":"core","tool":"get_opportunities","calls":1,"users":1,"orgs":1,"avgMs":123,"failed":0},{"feature":"federal_opps","tool":"search_federal_opportunities","calls":1,"users":1,"orgs":1,"avgMs":180,"failed":0},{"feature":"saved_searches","tool":"create_saved_search","calls":1,"users":1,"orgs":1,"avgMs":177,"failed":0}]};
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+const md = s => { const [y,m,d] = s.split('-'); return `${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][+m-1]} ${+d}`; };
+const pct = (a,b) => b ? Math.round(a/b*100) : 0;
+
+/* ── KPIs ─────────────────────────────── */
+const k = DATA.kpi;
+$('#kpis').innerHTML = [
+  ['Workspaces installed', k.installs, `<b>${DATA.stalled.length}</b> never used`, 0],
+  ['Accounts active', k.activeAccounts, `<b>${pct(k.activeAccounts,k.installs)}%</b> of installs`, 0],
+  ['Accounts returning', k.repeatAccounts, `used on ≥2 days`, 1],
+  ['Users linked', k.linkedUsers, `across ${k.installs} workspaces`, 0],
+  ['Users active', k.activeUsers, `<b>${pct(k.activeUsers,k.linkedUsers)}%</b> of linked`, 0],
+  ['Tool calls', k.calls, `<b>${k.records.toLocaleString()}</b> records returned`, 0],
+  ['Error rate', (k.failed/k.calls*100).toFixed(1)+'%', `${k.failed} failed calls`, 1],
+  ['Gone quiet', DATA.orgs.filter(o => o.daysSince > 21).length,
+   `active accounts idle <b>21d+</b>`, 1],
+].map(([l,v,n,alt]) => `<div class="kpi${alt?' alt':''}"><div class="lab">${l}</div>
+  <div class="val">${typeof v==='number'?v.toLocaleString():v}</div><div class="note">${n}</div></div>`).join('');
+
+/* ── funnels ──────────────────────────── */
+function funnel(el, steps){
+  const top = steps[0][1];
+  el.innerHTML = steps.map(([lab,val,sub,cls],i) => {
+    const prev = i ? steps[i-1][1] : null;
+    const drop = prev !== null ? prev - val : null;
+    return `<div class="fstep">
+      <div class="frow"><div class="flab">${lab} <span>${sub||''}</span></div>
+      <div class="fval">${val} <span style="color:var(--deep-60);font-weight:400">· ${pct(val,top)}%</span></div></div>
+      <div class="fbar"><i class="${cls}" style="width:0" data-w="${pct(val,top)}"></i></div>
+      ${drop!==null ? `<div class="fdrop${drop?'':' none'}">${drop ? `− ${drop} dropped here` : 'no drop-off'}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+funnel($('#funnelOrg'), [
+  ['Installed the app', k.installs, '', ''],
+  ['Ran ≥1 tool', k.activeAccounts, '', 's2'],
+  ['Came back', k.repeatAccounts, 'used on ≥2 separate days', 's3'],
+]);
+funnel($('#funnelUser'), [
+  ['Linked their account', k.linkedUsers, '', ''],
+  ['Ran ≥1 tool', k.activeUsers, '', 's2'],
+  ['Came back', k.repeatUsers, 'used on ≥2 separate days', 's3'],
+]);
+requestAnimationFrame(() => document.querySelectorAll('.fbar i').forEach(b => b.style.width = b.dataset.w + '%'));
+
+/* ── cumulative curve ─────────────────── */
+(function(){
+  const d = DATA.cumulative, W = 1000, H = 240, P = {t:14,r:14,b:30,l:36};
+  const max = Math.ceil(d[d.length-1].installed/5)*5;
+  const x = i => P.l + i*(W-P.l-P.r)/(d.length-1);
+  const y = v => H-P.b - v/max*(H-P.t-P.b);
+  const path = key => d.map((p,i) => (i?'L':'M') + x(i).toFixed(1) + ' ' + y(p[key]).toFixed(1)).join(' ');
+  let g = '';
+  for(let v=0; v<=max; v+=5) g += `<line class="gl" x1="${P.l}" y1="${y(v)}" x2="${W-P.r}" y2="${y(v)}"/>
+    <text class="ax" x="${P.l-8}" y="${y(v)+3.5}" text-anchor="end">${v}</text>`;
+  let lab = '';
+  d.forEach((p,i) => { if(p.date.slice(-2)==='01' || i===d.length-1)
+    lab += `<text class="ax" x="${x(i)}" y="${H-P.b+16}" text-anchor="middle">${md(p.date)}</text>`; });
+  const last = d[d.length-1];
+  $('#cumChart').innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img"
+    aria-label="Cumulative installs versus activated accounts since launch">${g}${lab}
+    <path d="${path('installed')}" fill="none" stroke="var(--deep-30)" stroke-width="2.5"/>
+    <path d="${path('activated')}" fill="none" stroke="var(--blue)" stroke-width="2.5"/>
+    <circle cx="${x(d.length-1)}" cy="${y(last.installed)}" r="4" fill="var(--deep-30)"/>
+    <circle cx="${x(d.length-1)}" cy="${y(last.activated)}" r="4" fill="var(--blue)"/>
+    <text class="ax" x="${x(d.length-1)-10}" y="${y(last.installed)-9}" text-anchor="end"
+      style="fill:var(--deep);font-size:12px;font-weight:900">${last.installed} installed</text>
+    <text class="ax" x="${x(d.length-1)-10}" y="${y(last.activated)+16}" text-anchor="end"
+      style="fill:var(--blue);font-size:12px;font-weight:900">${last.activated} active</text>
+  </svg>`;
+})();
+
+/* ── stalled ──────────────────────────── */
+$('#stalled').innerHTML = DATA.stalled.map(s => `<div class="sitem">
+  <div class="nm">${esc(s.name)}</div>
+  <div class="mt">Installed ${md(s.installed)} · <b>${s.daysSince}d</b> with no calls</div>
+  <div class="mt">${s.linked} user${s.linked===1?'':'s'} linked</div></div>`).join('');
+
+/* ── timeline ─────────────────────────── */
+let mode = 'weekly';
+function drawTS(){
+  const d = DATA[mode], W = 1000, H = 270, P = {t:16,r:34,b:34,l:38};
+  const maxC = Math.max(...d.map(p => p.calls));
+  const step = maxC > 60 ? 25 : maxC > 25 ? 10 : 5;
+  const top = Math.ceil(maxC/step)*step;
+  const maxU = Math.max(...d.map(p => p.users));
+  const iw = (W-P.l-P.r)/d.length, bw = Math.max(3, Math.min(38, iw*0.62));
+  const y = v => H-P.b - v/top*(H-P.t-P.b);
+  const yu = v => H-P.b - v/(maxU*1.25)*(H-P.t-P.b);
+  const cx = i => P.l + i*iw + iw/2;
+  let g = '';
+  for(let v=0; v<=top; v+=step) g += `<line class="gl" x1="${P.l}" y1="${y(v)}" x2="${W-P.r}" y2="${y(v)}"/>
+    <text class="ax" x="${P.l-8}" y="${y(v)+3.5}" text-anchor="end">${v}</text>`;
+  const every = mode==='daily' ? Math.ceil(d.length/13) : 1;
+  const lastTick = Math.floor((d.length-1)/every)*every;
+  const showTick = i => i%every===0 && !(i===lastTick && d.length-1-lastTick < every*0.6);
+  const bars = d.map((p,i) => {
+    const ok = p.calls - p.failed;
+    return `<g><title>${md(p.date)}${mode==='weekly'?' (week of)':''} — ${p.calls} calls, ${p.users} users, ${p.orgs} accounts${p.failed?`, ${p.failed} failed`:''}</title>
+      <rect x="${cx(i)-bw/2}" y="${y(ok)}" width="${bw}" height="${Math.max(0,H-P.b-y(ok))}" fill="var(--blue)" rx="2"/>
+      ${p.failed?`<rect x="${cx(i)-bw/2}" y="${y(p.calls)}" width="${bw}" height="${Math.max(1,y(ok)-y(p.calls))}" fill="var(--bad)" rx="1"/>`:''}
+      </g>${showTick(i)||i===d.length-1?`<text class="ax" x="${cx(i)}" y="${H-P.b+16}" text-anchor="middle">${md(p.date)}</text>`:''}`;
+  }).join('');
+  const line = d.map((p,i) => (i?'L':'M')+cx(i).toFixed(1)+' '+yu(p.users).toFixed(1)).join(' ');
+  const dots = d.map((p,i) => `<circle cx="${cx(i)}" cy="${yu(p.users)}" r="3.5" fill="var(--xanth)" stroke="#fff" stroke-width="1.5"/>`).join('');
+  let ru = '';
+  [0, Math.round(maxU/2), maxU].forEach(v => { ru += `<text class="ax" x="${W-P.r+8}" y="${yu(v)+3.5}" style="fill:var(--warn)">${v}</text>`; });
+  $('#tsChart').innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img"
+    aria-label="${mode} Slack App tool calls and active users">${g}${bars}
+    <path d="${line}" fill="none" stroke="var(--xanth)" stroke-width="2.5"/>${dots}${ru}</svg>`;
+}
+function setMode(m){
+  mode = m;
+  $('#btnWeek').setAttribute('aria-pressed', m==='weekly');
+  $('#btnDay').setAttribute('aria-pressed', m==='daily');
+  drawTS();
+}
+$('#btnWeek').onclick = () => setMode('weekly');
+$('#btnDay').onclick = () => setMode('daily');
+drawTS();
+
+/* ── accounts table ───────────────────── */
+let sortK = 'calls', sortD = 'desc';
+function drawTable(){
+  const rows = [...DATA.orgs].sort((a,b) => {
+    const A = a[sortK], B = b[sortK], s = sortD==='asc' ? 1 : -1;
+    return typeof A === 'string' ? s*A.localeCompare(B) : s*(A-B);
+  });
+  const maxC = Math.max(...rows.map(r => r.calls));
+  $('#orgTable tbody').innerHTML = rows.map(r => {
+    const p = r.activeDays >= 3 ? ['rep','Returning'] : r.activeDays === 2 ? ['rep','Came back']
+      : r.daysSince > 21 ? ['cold','Tried once, cold'] : ['one','Single session'];
+    const seat = r.linked ? `${r.users}<span style="color:var(--deep-60);font-weight:400"> / ${r.linked}</span>` : r.users;
+    return `<tr><td class="oname">${esc(r.name)}</td>
+      <td class="n"><div style="display:flex;align-items:center;gap:8px;justify-content:flex-end">
+        <div class="minibar"><i style="width:${r.calls/maxC*100}%"></i></div><b>${r.calls}</b></div></td>
+      <td class="n">${seat}</td><td class="n">${r.activeDays}</td>
+      <td class="n">${r.records.toLocaleString()}</td><td>${md(r.first)}</td>
+      <td class="n">${r.daysSince}</td>
+      <td><span class="pill ${p[0]}">${p[1]}</span></td></tr>`;
+  }).join('');
+  document.querySelectorAll('#orgTable th.sortable').forEach(th => {
+    if(th.dataset.k === sortK) th.dataset.dir = sortD; else delete th.dataset.dir;
+  });
+}
+document.querySelectorAll('#orgTable th.sortable').forEach(th => {
+  th.onclick = () => {
+    if(sortK === th.dataset.k) sortD = sortD==='desc' ? 'asc' : 'desc';
+    else { sortK = th.dataset.k; sortD = th.dataset.k==='name' ? 'asc' : 'desc'; }
+    drawTable();
+  };
+});
+drawTable();
+
+/* ── tools ────────────────────────────── */
+const maxT = Math.max(...DATA.tools.map(t => t.calls));
+$('#tools').innerHTML = DATA.tools.map(t => `<div class="trow">
+  <div><span class="tname">${esc(t.tool)}</span><span class="tfeat">${esc(t.feature.replace(/_/g,' '))}</span></div>
+  <div class="tbar"><i class="${t.feature==='utilities'?'util':''}" style="width:${t.calls/maxT*100}%"></i></div>
+  <div class="tmeta"><b>${t.calls}</b><br>${t.orgs} acct${t.orgs===1?'':'s'}</div></div>`).join('');
+
+/* ── notes ────────────────────────────── */
+const m = DATA.meta;
+$('#notes').innerHTML = `<h3>Definitions &amp; caveats</h3><ul>
+<li><b>Source of truth.</b> Slack usage is not a separate table — it is <code>analytics.mcp_usage</code>
+filtered to <code>source = 'Slack App'</code>. Install and link state come from
+<code>doc.organization.integrations['slack']</code> and <code>doc.user.integrations['slack']</code>.</li>
+<li><b>Use <code>doc</code>, not <code>analytics</code>, for the funnel.</b> The
+<code>analytics.organization</code> and <code>analytics.user</code> mirrors carry the
+<code>integrations['slack']</code> columns but return zero populated rows. Any refresh script must read
+install/link state from the <code>doc</code> schema.</li>
+<li><b>Window.</b> "Last 90 days" is effectively all-time: the first install was ${md(m.launchDate)}
+and the first tool call ${md(m.firstCall)}, both inside the window.</li>
+<li><b>Excluded.</b> ${m.internalCallsExcluded} calls from the GovSpend workspace and the QA test workspace,
+plus ${m.unattributedCalls} early-July calls that carry no <code>org_id</code> or <code>user_email</code>
+— worth asking engineering why those events landed unattributed.</li>
+<li><b>Install dates reset on re-auth.</b> ${DATA.kpi.reauth.map(n => esc(n)).join(', ')} show an
+<code>installedAt</code> later than their first recorded call, which means the field is overwritten when a
+workspace re-authorizes. Activation lag is not reliable for those accounts and is not charted.</li>
+<li><b>Seats used / linked</b> counts distinct <code>user_email</code> with ≥1 call against users carrying a
+<code>slackUserId</code>. Records returned is the sum of <code>records_returned</code>;
+<code>credits_used</code> is null on every Slack event.</li>
+</ul>`;
+$('#gen').textContent = 'Generated ' + m.generated;
+</script>
+</body>
+</html>
